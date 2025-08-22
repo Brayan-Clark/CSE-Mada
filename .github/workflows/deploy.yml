@@ -29,7 +29,9 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
+          echo "Base URL: ${{ github.event.repository.html_url }}"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -5,6 +5,7 @@ import tailwind from '@astrojs/tailwind';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://brayan-clark.github.io/CSE-Mada',
+  base: '/CSE-Mada',
   integrations: [
     tailwind({
       // Utiliser la configuration par défaut de Tailwind
