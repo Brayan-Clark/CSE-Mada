@@ -1,0 +1,122 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const currentYear = new Date().getFullYear();
+
+const contactInfo = {
+  email: 'camping.storeevent@gmail.com',
+  phone: '+261 34 21 807 57 / 032 75 170 48',
+  address: 'Lazaret nord, Antsiranana MADAGASCAR'
+};
+---
+
+<Layout 
+  title="Politique de Confidentialité - Camping Store & Event" 
+  description="Découvrez comment Camping Store & Event protège vos données personnelles. Notre engagement pour la confidentialité et la sécurité de vos informations.">
+  
+  <div class="bg-white dark:bg-gray-900 py-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- En-tête -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Politique de Confidentialité</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300">En vigueur au 22/08/2025</p>
+      </div>
+
+      <!-- Contenu -->
+      <div class="prose dark:prose-invert max-w-none">
+        <section class="mb-12">
+          <p class="mb-6">Chez Camping Store & Event, nous prenons la protection de vos données personnelles très au sérieux. Cette politique de confidentialité vous explique quelles données nous collectons, comment nous les utilisons et comment nous les protégeons.</p>
+        </section>
+
+        <section class="mb-12" id="donnees-collectees">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">1. Données que nous collectons</h2>
+          <p>Nous pouvons collecter les informations suivantes :</p>
+          <ul class="list-disc pl-6 mt-2 space-y-2">
+            <li>Informations d'identification : nom, prénom, adresse email, numéro de téléphone</li>
+            <li>Informations de facturation : adresse postale, informations de paiement</li>
+            <li>Données de navigation : adresse IP, type de navigateur, pages visitées, durée de visite</li>
+            <li>Données de localisation : informations sur votre position géographique</li>
+          </ul>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">2. Utilisation de vos données</h2>
+          <p>Nous utilisons vos données pour :</p>
+          <ul class="list-disc pl-6 mt-2 space-y-2">
+            <li>Traiter et gérer vos réservations et commandes</li>
+            <li>Vous fournir les services demandés</li>
+            <li>Vous contacter concernant votre compte ou vos réservations</li>
+            <li>Améliorer nos services et personnaliser votre expérience</li>
+            <li>Vous envoyer des offres promotionnelles (avec votre consentement)</li>
+            <li>Respecter nos obligations légales</li>
+          </ul>
+        </section>
+
+        <section class="mb-12" id="cookies">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">3. Cookies et technologies similaires</h2>
+          <p>Notre site utilise des cookies pour :</p>
+          <ul class="list-disc pl-6 mt-2 space-y-2">
+            <li>Assurer le bon fonctionnement du site</li>
+            <li>Mémoriser vos préférences</li>
+            <li>Analyser l'utilisation du site</li>
+            <li>Personnaliser le contenu et les publicités</li>
+          </ul>
+          <p class="mt-4">Vous pouvez gérer vos préférences en matière de cookies via les paramètres de votre navigateur.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">4. Partage de vos données</h2>
+          <p>Nous ne vendons pas vos données personnelles. Nous pouvons les partager avec :</p>
+          <ul class="list-disc pl-6 mt-2 space-y-2">
+            <li>Nos prestataires de services (hébergement, paiement, etc.)</li>
+            <li>Les autorités légales si la loi l'exige</li>
+            <li>En cas de fusion ou d'acquisition de notre entreprise</li>
+          </ul>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">5. Sécurité des données</h2>
+          <p>Nous mettons en œuvre des mesures de sécurité techniques et organisationnelles pour protéger vos données contre tout accès non autorisé, altération, divulgation ou destruction.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">6. Vos droits</h2>
+          <p>Conformément à la réglementation sur la protection des données, vous disposez des droits suivants :</p>
+          <ul class="list-disc pl-6 mt-2 space-y-2">
+            <li>Droit d'accès à vos données</li>
+            <li>Droit de rectification</li>
+            <li>Droit à l'effacement ("droit à l'oubli")</li>
+            <li>Droit à la limitation du traitement</li>
+            <li>Droit à la portabilité des données</li>
+            <li>Droit d'opposition</li>
+          </ul>
+          <p class="mt-4">Pour exercer ces droits, veuillez nous contacter à l'adresse : <a href={`mailto:${contactInfo.email}`} class="text-green-600 dark:text-green-400 hover:underline">{contactInfo.email}</a></p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">7. Conservation des données</h2>
+          <p>Nous conservons vos données personnelles aussi longtemps que nécessaire pour fournir nos services et nous conformer à nos obligations légales. Les délais de conservation varient en fonction du type de données et de la finalité du traitement.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">8. Modifications de la politique de confidentialité</h2>
+          <p>Nous nous réservons le droit de modifier cette politique de confidentialité à tout moment. Toute modification sera publiée sur cette page avec une date de mise à jour révisée.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">9. Nous contacter</h2>
+          <p>Pour toute question concernant cette politique de confidentialité ou pour exercer vos droits, veuillez nous contacter :</p>
+          <address class="not-italic mt-4 space-y-2">
+            <div><strong>Par email :</strong> <a href={`mailto:${contactInfo.email}`} class="text-green-600 dark:text-green-400 hover:underline">{contactInfo.email}</a></div>
+            <div><strong>Par téléphone :</strong> <a href={`tel:${contactInfo.phone.replace(/\s+/g, '')}`} class="text-green-600 dark:text-green-400 hover:underline">{contactInfo.phone}</a></div>
+            <div><strong>Par courrier :</strong> {contactInfo.address}</div>
+          </address>
+        </section>
+
+        <section class="text-sm text-gray-500 dark:text-gray-400 mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <p>Dernière mise à jour : 22 août 2025</p>
+        </section>
+      </div>
+    </div>
+  </div>
+</Layout>

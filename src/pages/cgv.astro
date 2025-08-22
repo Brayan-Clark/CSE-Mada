@@ -1,0 +1,109 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const currentYear = new Date().getFullYear();
+
+const contactInfo = {
+  email: 'camping.storeevent@gmail.com',
+  phone: '+261 34 21 807 57 / 032 75 170 48',
+  address: 'Lazaret nord, Antsiranana MADAGASCAR',
+  company: 'Camping Store & Event'
+};
+---
+
+<Layout 
+  title="Conditions Générales de Vente - Camping Store & Event" 
+  description="Consultez nos conditions générales de vente pour les réservations et locations de matériel de camping. Toutes les informations sur les tarifs, les modalités de paiement et les annulations.">
+  
+  <div class="bg-white dark:bg-gray-900 py-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- En-tête -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Conditions Générales de Vente</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300">En vigueur au 22/08/2025</p>
+      </div>
+
+      <!-- Contenu -->
+      <div class="prose dark:prose-invert max-w-none">
+        <section class="mb-12">
+          <p class="mb-6">Les présentes conditions générales de vente (ci-après les "CGV") s'appliquent à toutes les réservations effectuées auprès de {contactInfo.company}, ci-après dénommée "le Vendeur".</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">1. Objet</h2>
+          <p>Les présentes CGV ont pour objet de définir les conditions de vente des prestations proposées par {contactInfo.company}, à savoir la location de matériel de camping et l'organisation d'événements en plein air.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">2. Prix</h2>
+          <p>Les prix sont indiqués en Ariary (MGA) et sont TTC (toutes taxes comprises). Ils comprennent la location du matériel, son entretien et son nettoyage. Les prix peuvent être révisés à tout moment, mais le tarif applicable est celui en vigueur au moment de la réservation.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">3. Réservation et Paiement</h2>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-2">3.1. Réservation</h3>
+          <p>La réservation est effective à réception d'un acompte de 30% du montant total. Le solde doit être réglé au plus tard le jour de la remise du matériel.</p>
+          
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-2">3.2. Modes de paiement acceptés</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Espèces (Ariary ou Euros)</li>
+            <li>Virement bancaire</li>
+            <li>Mobile Money (MVola, Airtel Money, Orange Money)</li>
+            <li>Carte bancaire (sur place)</li>
+          </ul>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">4. Retrait et retour du matériel</h2>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-2">4.1. Retrait</h3>
+          <p>Le matériel peut être retiré à notre local situé à {contactInfo.address} aux horaires convenus lors de la réservation. Une pièce d'identité et une caution pourront vous être demandées.</p>
+          
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-2">4.2. Retour</h3>
+          <p>Le matériel doit être retourné à la date et à l'heure convenue. Tout retard non justifié pourra entraîner des frais supplémentaires équivalents à une journée de location.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">5. Annulation et remboursement</h2>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-2">5.1. Par le client</h3>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>Plus de 30 jours avant : remboursement intégral de l'acompte</li>
+            <li>Entre 15 et 30 jours avant : rétention de 50% de l'acompte</li>
+            <li>Moins de 15 jours avant : rétention de 100% de l'acompte</li>
+          </ul>
+          
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white mt-6 mb-2">5.2. Par le vendeur</h3>
+          <p>En cas d'annulation de notre part, le client sera intégralement remboursé des sommes versées. Aucune indemnité complémentaire ne pourra être réclamée.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">6. Responsabilité</h2>
+          <p>Le client est responsable du matériel loué dès sa prise en charge jusqu'à son retour. Tre dégradation ou perte du matériel sera facturée au prix de remplacement en vigueur. Une assurance peut être souscrite pour couvrir ces risques.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">7. Litiges</h2>
+          <p>En cas de litige, les parties s'efforceront de trouver une solution amiable. À défaut, les tribunaux de Madagascar seront seuls compétents.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">8. Données personnelles</h2>
+          <p>Les données personnelles collectées lors de la réservation sont traitées conformément à notre <a href="/confidentialite" class="text-green-600 dark:text-green-400 hover:underline">Politique de Confidentialité</a>.</p>
+        </section>
+
+        <section class="mb-12">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">9. Acceptation des CGV</h2>
+          <p>Le fait de procéder à une réservation implique l'acceptation sans réserve des présentes conditions générales de vente.</p>
+        </section>
+
+        <section class="text-sm text-gray-500 dark:text-gray-400 mt-16 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <p>Dernière mise à jour : 22 août 2025</p>
+          <p class="mt-2">Pour toute question concernant nos CGV, veuillez nous contacter :</p>
+          <address class="not-italic mt-2 space-y-1">
+            <div><strong>Email :</strong> <a href={`mailto:${contactInfo.email}`} class="text-green-600 dark:text-green-400 hover:underline">{contactInfo.email}</a></div>
+            <div><strong>Téléphone :</strong> <a href={`tel:${contactInfo.phone.replace(/\s+/g, '')}`} class="text-green-600 dark:text-green-400 hover:underline">{contactInfo.phone}</a></div>
+          </address>
+        </section>
+      </div>
+    </div>
+  </div>
+</Layout>

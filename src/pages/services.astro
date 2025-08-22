@@ -1,0 +1,223 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const services = [
+  {
+    id: 'vente',
+    title: 'Vente d\'articles de camping',
+    description: 'Découvrez notre large sélection d\'équipements de camping de qualité pour toutes vos aventures en plein air. Des tentes aux sacs de couchage, nous avons tout ce dont vous avez besoin.',
+    icon: '🛒',
+    features: [
+      'Matériel de qualité professionnelle',
+      'Grand choix de marques réputées',
+      'Conseils d\'experts',
+      'Garantie sur les produits'
+    ],
+    image: 'https://images.unsplash.com/photo-1537905569824-f89f14cceb68?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    id: 'activites',
+    title: 'Activités de plein air',
+    description: 'Vivez des expériences inoubliables avec nos activités de plein air encadrées par des professionnels. Randonnées, canoë, escalade et bien plus encore !',
+    icon: '🌲',
+    features: [
+      'Activités pour tous les niveaux',
+      'Matériel fourni',
+      'Moniteurs diplômés',
+      'Sécurité assurée'
+    ],
+    image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    id: 'location',
+    title: 'Location d\'articles de camping',
+    description: 'Besoin de matériel pour une courte durée ? Louez notre équipement de qualité pour votre prochaine aventure sans vous ruiner.',
+    icon: '⛺',
+    features: [
+      'Tarifs journaliers et hebdomadaires',
+      'Matériel entretenu et contrôlé',
+      'Assurance optionnelle',
+      'Réservation en ligne simple'
+    ],
+    image: 'https://images.unsplash.com/photo-1691902455547-48ae98e2d51c?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    id: 'evenements',
+    title: 'Organisation d\'événements',
+    description: 'Confiez-nous l\'organisation de votre prochain événement en plein air. Anniversaires, séminaires ou sorties d\'entreprise, nous nous occupons de tout !',
+    icon: '🎉',
+    features: [
+      'Organisation clé en main',
+      'Équipement fourni',
+      'Restauration sur mesure',
+      'Animation incluse'
+    ],
+    image: 'https://images.unsplash.com/photo-1747060928982-0ae2b2249bd8?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  }
+];
+---
+
+<Layout title="Nos Services - Camping Nature & Aventures" description="Découvrez tous nos services pour votre séjour en plein air : vente et location de matériel, activités et organisation d'événements.">
+  <!-- Hero Section -->
+  <div class="relative bg-gray-900 overflow-hidden">
+    <div class="absolute inset-0">
+      <img class="w-full h-full object-cover opacity-40" src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Services de camping">
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8 text-center">
+      <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+        Nos Services
+      </h1>
+      <p class="mt-6 max-w-2xl mx-auto text-xl text-gray-300">
+        Tout ce dont vous avez besoin pour une expérience de camping inoubliable
+      </p>
+    </div>
+  </div>
+
+  <!-- Services Grid -->
+  <div class="bg-white dark:bg-gray-900 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+          Découvrez nos services
+        </h2>
+        <p class="mt-4 max-w-2xl mx-auto text-gray-500 dark:text-gray-400">
+          Nous proposons une gamme complète de services pour répondre à tous vos besoins en matière de camping et de plein air.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-2">
+        {services.map((service, index) => (
+          <div 
+            id={service.id}
+            class={`group relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl ${
+              index % 2 === 0 ? 'lg:-rotate-1 hover:rotate-0' : 'lg:rotate-1 hover:rotate-0'
+            }`}
+          >
+            <div class="relative h-64">
+              <img 
+                src={service.image} 
+                alt={service.title}
+                class="w-full h-full object-cover"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+              <div class="absolute bottom-0 left-0 p-6">
+                <div class="flex items-center">
+                  <span class="text-4xl mr-3">{service.icon}</span>
+                  <h3 class="text-2xl font-bold text-white">{service.title}</h3>
+                </div>
+              </div>
+            </div>
+            <div class="p-6">
+              <p class="text-gray-600 dark:text-gray-300 mb-4">
+                {service.description}
+              </p>
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Ce que nous offrons :</h4>
+              <ul class="space-y-2">
+                {service.features.map((feature, i) => (
+                  <li key={i} class="flex items-start">
+                    <svg class="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-gray-600 dark:text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <div class="mt-6">
+                <a 
+                  href={`/contact?service=${service.id}`} 
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                >
+                  En savoir plus
+                  <svg class="ml-2 -mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="bg-green-700">
+    <div class="max-w-4xl mx-auto py-16 px-4 sm:px-6 sm:py-20 lg:px-8 lg:flex lg:items-center lg:justify-between">
+      <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+        <span class="block">Prêt à vivre l'aventure ?</span>
+        <span class="block text-green-100">Contactez-nous dès aujourd'hui.</span>
+      </h2>
+      <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+        <div class="inline-flex rounded-md shadow">
+          <a href="/contact" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50">
+            Nous contacter
+          </a>
+        </div>
+        <div class="ml-3 inline-flex rounded-md shadow">
+          <a href="/faq" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 bg-opacity-60 hover:bg-opacity-70">
+            FAQ
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Testimonials -->
+  <div class="bg-white dark:bg-gray-900 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
+          Ce que disent nos clients
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+        {[
+          {
+            name: 'Marie D.',
+            role: 'Voyageuse passionnée',
+            content: 'Le matériel de location est de très bonne qualité et l\'équipe est aux petits soins. Je recommande vivement !',
+            rating: 5
+          },
+          {
+            name: 'Thomas L.',
+            role: 'Famille de campeurs',
+            content: 'Les activités proposées sont géniales pour les enfants comme pour les adultes. Une belle découverte !',
+            rating: 5
+          },
+          {
+            name: 'Sophie et Marc',
+            role: 'Nouveaux mariés',
+            content: 'Ils ont organisé notre lune de miel en plein air. Tout était parfait, du début à la fin !',
+            rating: 5
+          }
+        ].map((testimonial, index) => (
+          <div key={index} class="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl shadow">
+            <div class="flex items-center mb-4">
+              <div class="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center text-green-600 dark:text-green-300 text-xl font-bold">
+                {testimonial.name.charAt(0)}
+              </div>
+              <div class="ml-4">
+                <h4 class="font-medium text-gray-900 dark:text-white">{testimonial.name}</h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{testimonial.role}</p>
+              </div>
+            </div>
+            <p class="text-gray-600 dark:text-gray-300 italic mb-4">"{testimonial.content}"</p>
+            <div class="flex">
+              {[...Array(5)].map((_, i) => (
+                <svg
+                  key={i}
+                  className={`h-5 w-5 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>
