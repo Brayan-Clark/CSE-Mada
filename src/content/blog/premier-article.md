@@ -3,7 +3,7 @@ title: "Découvrir les plus beaux sites de randonnée à Madagascar"
 description: "Explorez les paysages époustouflants de Madagascar à travers ses meilleurs sentiers de randonnée. Des Tsingy de Bemaraha aux forêts tropicales, préparez votre aventure dans la Grande Île."
 pubDate: 2025-08-20
 author: "Clarco RAHERINANDRASANA"
-image: "https://images.unsplash.com/photo-1551634037-6d0e0a6f6f8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+image: "https://images.unsplash.com/photo-1510312305653-8ed496efae75?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 tags: ["Randonnée", "Madagascar", "Aventure", "Nature"]
 draft: false
 ---

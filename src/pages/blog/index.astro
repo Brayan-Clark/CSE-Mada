@@ -87,7 +87,7 @@ const paginatedPosts = allPosts.slice(0, pageSize);
             <div class="md:flex">
               <div class="md:flex-shrink-0 md:w-1/2">
                 <img 
-                  class="h-64 w-full object-cover md:h-full" 
+                  class="max-h-72 w-full object-cover md:h-full" 
                   src={allPosts[0].data.image || '/images/placeholder-blog.jpg'} 
                   alt={allPosts[0].data.title}
                   loading="lazy"
