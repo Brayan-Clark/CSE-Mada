@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18.20.3'  # LTS version with better compatibility
+          node-version: '20.13.1'  # Version that meets @astrojs/prism requirements
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
