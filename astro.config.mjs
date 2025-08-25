@@ -5,7 +5,7 @@ import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://brayan-clark.github.io/CSE-Mada',
+  site: 'https://brayan-clark.github.io',
   base: '/CSE-Mada',
   output: 'static',
   integrations: [
@@ -25,7 +25,11 @@ export default defineConfig({
       devSourcemap: true,
     },
     ssr: {
-      noExternal: true
+      noExternal: true,
+      external: ['cssesc']
+    },
+    optimizeDeps: {
+      include: ['cssesc']
     }
   },
   server: {

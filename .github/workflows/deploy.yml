@@ -24,14 +24,21 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci --no-optional
+          npm rebuild
 
       - name: Build
         run: |
+          export NODE_OPTIONS=--experimental-vm-modules
           npm run build
           echo "Base URL: ${{ github.event.repository.html_url }}"
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+          NODE_ENV: production
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

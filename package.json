@@ -14,20 +14,23 @@
     "@astrojs/mdx": "^2.3.1",
     "@astrojs/rss": "^2.4.4",
     "astro": "^4.4.15",
+    "cssesc": "^3.0.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@astrojs/tailwind": "^5.1.0",
     "@tailwindcss/typography": "^0.5.16",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "autoprefixer": "^10.4.16",
+    "@types/node": "^20.11.19",
+    "@typescript-eslint/eslint-plugin": "^7.0.1",
+    "@typescript-eslint/parser": "^7.0.1",
+    "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-astro": "^0.29.0",
-    "postcss": "^8.4.32",
-    "prettier": "^3.1.1",
-    "prettier-plugin-astro": "^0.12.0",
-    "tailwindcss": "^3.4.1"
+    "postcss": "^8.4.35",
+    "prettier": "^3.2.5",
+    "prettier-plugin-astro": "^0.13.0",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
   }
 }
