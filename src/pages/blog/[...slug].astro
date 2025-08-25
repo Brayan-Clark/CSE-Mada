@@ -187,7 +187,7 @@ const relatedPosts = (await getCollection('blog', ({ data, id }) => {
           {relatedPosts.map(post => (
             <article class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
               {post.data.image && (
-                <a href={`/blog/${post.slug}`} class="block h-48 overflow-hidden">
+                <a href={`/CSE-Mada/blog/${post.slug}`} class="block h-48 overflow-hidden">
                   <img 
                     src={post.data.image} 
                     alt={post.data.title}
@@ -209,7 +209,7 @@ const relatedPosts = (await getCollection('blog', ({ data, id }) => {
                 </div>
                 
                 <h4 class="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  <a href={`/blog/${post.slug}`} class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  <a href={`/CSE-Mada/blog/${post.slug}`} class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                     {post.data.title}
                   </a>
                 </h4>
@@ -219,7 +219,7 @@ const relatedPosts = (await getCollection('blog', ({ data, id }) => {
                 </p>
                 
                 <a 
-                  href={`/blog/${post.slug}`} 
+                  href={`/CSE-Mada/blog/${post.slug}`} 
                   class="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
                 >
                   Lire la suite

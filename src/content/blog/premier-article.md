@@ -89,4 +89,4 @@ Madagascar est une destination de choix pour les amoureux de la randonnée et de
 
 ---
 
-*Cet article a été écrit par Jean Dupont, guide de randonnée et passionné par les grands espaces de Madagascar depuis plus de 10 ans.*
+*Cet article a été écrit par Clarco RAHERINANDRASANA, guide de randonnée et passionné par les grands espaces de Madagascar depuis plus de 10 ans.*
