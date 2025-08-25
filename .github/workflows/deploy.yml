@@ -32,7 +32,9 @@ jobs:
           rm -f package-lock.json
           npm cache clean --force
           npm install --no-optional
+          npm install --save-dev rollup@3.29.4
           npm rebuild
+          npx rollup --version
 
       - name: Build
         run: |

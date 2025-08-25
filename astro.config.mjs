@@ -30,11 +30,16 @@ export default defineConfig({
     },
     optimizeDeps: {
       include: ['cssesc'],
-      exclude: ['@rollup/rollup-linux-x64-gnu']
+      exclude: ['@rollup/rollup-linux-x64-gnu', 'rollup']
     },
     build: {
       rollupOptions: {
-        external: ['@rollup/rollup-linux-x64-gnu']
+        external: ['@rollup/rollup-linux-x64-gnu'],
+        output: {
+          manualChunks: {
+            'rollup': ['rollup']
+          }
+        }
       }
     }
   },
