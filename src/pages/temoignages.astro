@@ -1,0 +1,290 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const testimonials = [
+  {
+    id: 1,
+    quote: "L'expérience la plus incroyable de ma vie ! L'équipe de CSEM a rendu notre aventure inoubliable. Les paysages de Madagascar sont à couper le souffle.",
+    author: 'Sophie Martin',
+    role: 'Voyageuse',
+    rating: 5,
+    date: '15 Juin 2023',
+    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    trip: 'Expédition Tsingy'
+  },
+  {
+    id: 2,
+    quote: "Un service exceptionnel du début à la fin. Les guides sont très compétents et attentionnés. Je recommande vivement CSEM pour une aventure authentique à Madagascar.",
+    author: 'Thomas Dubois',
+    role: 'Randonneur',
+    rating: 5,
+    date: '2 Mai 2023',
+    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    trip: 'Randonnée Andringitra'
+  },
+  {
+    id: 3,
+    quote: "Notre voyage de noces a été parfaitement organisé par CSEM. Des moments magiques dans des endroits préservés. Merci pour cette expérience unique !",
+    author: 'Camille et Pierre',
+    role: 'Voyageurs',
+    rating: 5,
+    date: '22 Avril 2023',
+    image: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    trip: 'Voyage de noces sur mesure'
+  },
+  {
+    id: 4,
+    quote: "En tant que photographe, je cherchais des paysages uniques. CSEM a su me guider vers des endroits extraordinaires, loin des sentiers battus.",
+    author: 'Julien Leroy',
+    role: 'Photographe professionnel',
+    rating: 4,
+    date: '10 Mars 2023',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    trip: 'Voyage photo'
+  },
+  {
+    id: 5,
+    quote: "Notre famille a passé des vacances inoubliables grâce à CSEM. Les enfants étaient ravis des activités adaptées à leur âge.",
+    author: 'La famille Moreau',
+    role: 'Famille',
+    rating: 5,
+    date: '5 Février 2023',
+    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    trip: 'Aventure en famille'
+  },
+  {
+    id: 6,
+    quote: "Une organisation irréprochable pour notre voyage d'entreprise. Tous mes collègues ont été ravis de cette expérience de team building dans la nature.",
+    author: 'Marie Dupont',
+    role: 'Responsable RH',
+    rating: 5,
+    date: '15 Janvier 2023',
+    image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    trip: 'Séminaire entreprise'
+  }
+];
+
+const stats = [
+  { id: 1, name: 'Voyageurs satisfaits', value: '98%' },
+  { id: 2, name: 'Expéditions réussies', value: '250+' },
+  { id: 3, name: 'Années d\'expérience', value: '10+' },
+  { id: 4, name: 'Avis 5 étoiles', value: '95%' },
+];
+---
+
+<Layout title="Témoignages - Camping Store & Event Madagascar" description="Découvrez les avis de nos voyageurs et leurs expériences inoubliables avec CSEM à Madagascar.">
+  <!-- Hero Section -->
+  <div class="relative bg-gray-900 overflow-hidden">
+    <div class="absolute inset-0">
+      <img class="w-full h-full object-cover opacity-40" 
+           src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+           alt="Témoignages"
+           loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 mix-blend-multiply"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Témoignages</h1>
+      <p class="mt-6 text-xl text-gray-300 max-w-3xl">Découvrez ce que nos voyageurs disent de leur expérience avec CSEM.</p>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="bg-white dark:bg-gray-900 py-12 sm:py-16 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+      <dl class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.id} class="flex flex-col items-center">
+            <dt class="text-4xl font-bold tracking-tight text-green-600 dark:text-green-400">{stat.value}</dt>
+            <dd class="mt-2 text-base text-gray-600 dark:text-gray-400 text-center">{stat.name}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </div>
+
+  <!-- Testimonials Grid -->
+  <div class="bg-gray-50 dark:bg-gray-800 py-16 sm:py-24 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+          Ce que disent nos voyageurs
+        </h2>
+        <p class="mt-4 max-w-2xl text-xl text-gray-600 dark:text-gray-300 mx-auto">
+          Des expériences authentiques, des souvenirs inoubliables
+        </p>
+      </div>
+
+      <div class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {testimonials.map((testimonial) => (
+          <div key={testimonial.id} class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1">
+            <div class="p-6">
+              <div class="flex items-center">
+                <img class="h-12 w-12 rounded-full object-cover" src={testimonial.image} alt={testimonial.author} loading="lazy">
+                <div class="ml-4">
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-white">{testimonial.author}</h3>
+                  <p class="text-sm text-gray-600 dark:text-gray-300">{testimonial.role}</p>
+                </div>
+              </div>
+              
+              <div class="mt-4 flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <svg 
+                    key={i}
+                    class={`h-5 w-5 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-500'}`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                  {testimonial.rating}/5
+                </span>
+              </div>
+              
+              <blockquote class="mt-4">
+                <p class="text-gray-700 dark:text-gray-300 italic">"{testimonial.quote}"</p>
+              </blockquote>
+              
+              <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                  <span class="font-medium">Voyage :</span> {testimonial.trip}
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                  {testimonial.date}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Testimonials -->
+  <div class="bg-white dark:bg-gray-900 py-16 sm:py-24 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+          Expériences en vidéo
+        </h2>
+        <p class="mt-4 max-w-2xl text-xl text-gray-600 dark:text-gray-300 mx-auto">
+          Découvrez les aventures de nos voyageurs
+        </p>
+      </div>
+
+      <div class="grid gap-8 md:grid-cols-2">
+        <div class="aspect-w-16 aspect-h-9">
+          <div class="rounded-lg overflow-hidden shadow-xl">
+            <div class="relative pb-[56.25%] bg-gray-200 dark:bg-gray-800">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center p-4">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Vidéo de témoignage à venir</p>
+                </div>
+              </div>
+            </div>
+            <div class="p-4 bg-white dark:bg-gray-800">
+              <h3 class="font-medium text-gray-900 dark:text-white">Aventure à Madagascar</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Témoignage vidéo</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="aspect-w-16 aspect-h-9">
+          <div class="rounded-lg overflow-hidden shadow-xl">
+            <div class="relative pb-[56.25%] bg-gray-200 dark:bg-gray-800">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center p-4">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">Vidéo de témoignage à venir</p>
+                </div>
+              </div>
+            </div>
+            <div class="p-4 bg-white dark:bg-gray-800">
+              <h3 class="font-medium text-gray-900 dark:text-white">Randonnée dans les Tsingy</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Témoignage vidéo</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="bg-green-700">
+    <div class="max-w-4xl mx-auto py-16 px-4 sm:px-6 sm:py-20 lg:px-8 lg:flex lg:items-center lg:justify-between">
+      <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+        <span class="block">Prêt à vivre votre propre aventure ?</span>
+        <span class="block text-green-100">Rejoignez nos voyageurs satisfaits.</span>
+      </h2>
+      <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+        <div class="inline-flex rounded-md shadow">
+          <a href="/contact" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50">
+            Contactez-nous
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  /* Animation pour les cartes de témoignages */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .testimonial-card {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  /* Délais d'animation pour chaque carte */
+  .testimonial-card:nth-child(1) { animation-delay: 0.1s; }
+  .testimonial-card:nth-child(2) { animation-delay: 0.2s; }
+  .testimonial-card:nth-child(3) { animation-delay: 0.3s; }
+  .testimonial-card:nth-child(4) { animation-delay: 0.4s; }
+  .testimonial-card:nth-child(5) { animation-delay: 0.5s; }
+  .testimonial-card:nth-child(6) { animation-delay: 0.6s; }
+
+  /* Style pour les citations */
+  blockquote {
+    position: relative;
+    padding-left: 1rem;
+    border-left: 3px solid #10b981;
+  }
+
+  /* Style pour les vidéos */
+  .aspect-w-16 {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+    height: 0;
+    overflow: hidden;
+  }
+
+  .aspect-w-16 iframe,
+  .aspect-w-16 video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+</style>

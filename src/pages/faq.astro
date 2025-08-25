@@ -1,0 +1,337 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const faqCategories = [
+  {
+    id: 'reservations',
+    name: 'Réservations et Paiements',
+    questions: [
+      {
+        id: 'reservation-1',
+        question: 'Comment puis-je réserver une aventure avec CSEM ?',
+        answer: 'Pour réserver une aventure avec CSEM, vous pouvez soit remplir notre formulaire de contact en ligne, nous envoyer un email à contact@csem.mg, ou nous appeler au +261 XX XXX XX XX. Notre équipe vous guidera à travers le processus de réservation et répondra à toutes vos questions.'
+      },
+      {
+        id: 'reservation-2',
+        question: 'Quels sont les modes de paiement acceptés ?',
+        answer: 'Nous acceptons les paiements par virement bancaire, cartes de crédit (Visa, Mastercard) et Mobile Money. Un acompte de 30% est généralement requis pour confirmer votre réservation, le solde devant être réglé 30 jours avant le départ.'
+      },
+      {
+        id: 'reservation-3',
+        question: 'Quelle est votre politique d\'annulation ?',
+        answer: 'Pour les annulations effectuées plus de 60 jours avant le départ, nous remboursons l\'intégralité des sommes versées. Entre 30 et 60 jours avant le départ, nous retenons l\'acompte de 30%. Pour les annulations à moins de 30 jours, le montant total est dû. Nous vous recommandons vivement de souscrire à une assurance annulation.'
+      }
+    ]
+  },
+  {
+    id: 'preparation',
+    name: 'Préparation du voyage',
+    questions: [
+      {
+        id: 'preparation-1',
+        question: 'Quel équipement dois-je prévoir pour une randonnée ?',
+        answer: 'Nous fournissons une liste d\'équipement détaillée adaptée à chaque aventure. De manière générale, prévoyez des chaussures de randonnée imperméables, des vêtements techniques (coupe-vent, polaire, sous-vêtements thermiques), un sac à dos de 30-40L, une lampe frontale, une gourde et de la crème solaire. Le matériel technique spécifique (tentes, cordes, etc.) est fourni par nos soins.'
+      },
+      {
+        id: 'preparation-2',
+        question: 'Faut-il un niveau sportif particulier ?',
+        answer: 'Nos voyages sont classés par niveau de difficulté (facile, modéré, difficile) pour vous aider à choisir l\'aventure qui vous correspond. Les randonnées faciles sont accessibles à toute personne en bonne condition physique, tandis que les niveaux supérieurs nécessitent une certaine expérience de la randonnée et une bonne condition physique. N\'hésitez pas à nous consulter pour évaluer ensemble le voyage le plus adapté à votre niveau.'
+      },
+      {
+        id: 'preparation-3',
+        question: 'Quelles sont les formalités pour se rendre à Madagascar ?',
+        answer: 'Les ressortissants de la plupart des pays ont besoin d\'un visa pour entrer à Madagascar, qui peut être obtenu à l\'arrivée à l\'aéroport ou en ligne avant le départ. Votre passeport doit être valide au moins 6 mois après la date de retour. Aucun vaccin n\'est obligatoire, mais nous recommandons ceux contre l\'hépatite A et B, la fièvre typhoïde et la mise à jour du DT Polio. Un traitement antipaludéen est également recommandé.'
+      }
+    ]
+  },
+  {
+    id: 'sejour',
+    name: 'Pendant le séjour',
+    questions: [
+      {
+        id: 'sejour-1',
+        question: 'Quel est l\'hébergement pendant le voyage ?',
+        answer: 'L\'hébergement varie selon les circuits : nuits en bivouac sous tente, en gîte d\'étape ou en hôtel. Pour les nuits en bivouac, nous fournissons des tentes confortables pour 2 personnes (tentes individuelles possibles avec supplément). Les repas sont préparés par nos soins avec des produits frais et locaux. N\'hésitez pas à nous signaler tout régime alimentaire particulier lors de votre réservation.'
+      },
+      {
+        id: 'sejour-2',
+        question: 'Quelle est la taille des groupes ?',
+        answer: 'Pour garantir la qualité de nos prestations et minimiser notre impact sur l\'environnement, nos groupes sont limités à 12 participants maximum. Cette taille réduite permet une expérience plus personnalisée et une meilleure immersion dans la nature. Pour les voyages en famille ou entre amis, nous proposons également des départs privés sur mesure.'
+      },
+      {
+        id: 'sejour-3',
+        question: 'Les déplacements sont-ils assurés par CSEM ?',
+        answer: 'Oui, tous les déplacements mentionnés dans nos programmes sont inclus et assurés par CSEM. Nous utilisons des véhicules 4x4 adaptés aux routes malgaches pour les transferts, et nos déplacements se font principalement à pied pour les randonnées. Les transferts depuis et vers l\'aéroport sont également inclus dans nos formules.'
+      }
+    ]
+  },
+  {
+    id: 'responsabilite',
+    name: 'Responsabilité et Sécurité',
+    questions: [
+      {
+        id: 'responsabilite-1',
+        question: 'Quelles sont les mesures de sécurité en place ?',
+        answer: 'La sécurité est notre priorité absolue. Tous nos guides sont formés aux premiers secours et équipés de moyens de communication satellite. Nous suivons des protocoles stricts et adaptons nos itinéraires en fonction des conditions météorologiques. Notre matériel est régulièrement contrôlé et répond aux normes de sécurité internationales. Nous vous recommandons toutefois de souscrire une assurance voyage couvrant les activités de plein air.'
+      },
+      {
+        id: 'responsabilite-2',
+        question: 'Quelle est votre politique de tourisme responsable ?',
+        answer: 'CSEM s\'engage dans une démarche de tourisme responsable et durable. Nous limitons la taille de nos groupes, respectons les sentiers balisés, emportons tous nos déchets, utilisons des produits biodégradables et travaillons avec des prestataires locaux. Une partie de nos bénéfices est reversée à des projets de conservation de l\'environnement et de développement communautaire à Madagascar.'
+      }
+    ]
+  }
+];
+
+const popularQuestions = [
+  {
+    id: 'pop-1',
+    question: 'Quelle est la meilleure période pour venir à Madagascar ?',
+    answer: 'La meilleure période pour visiter Madagascar dépend des régions que vous souhaitez explorer. De manière générale, la saison sèche d\'avril à novembre est idéale pour la plupart des régions, avec des températures agréables et peu de pluie. Les mois de septembre à novembre sont particulièrement recommandés pour observer les baleines à Sainte-Marie. La saison des pluies de décembre à mars peut rendre certains chemins impraticables mais offre des paysages luxuriants et moins de touristes.'
+  },
+  {
+    id: 'pop-2',
+    question: 'Puis-je adapter un circuit à mes envies ?',
+    answer: 'Absolument ! Nous proposons des voyages sur mesure pour répondre à vos envies spécifiques. Que vous souhaitiez allonger votre séjour, ajouter des activités particulières, ou créer un itinéraire personnalisé, notre équipe est là pour concrétiser votre projet. Contactez-nous avec vos idées et nous élaborerons ensemble le voyage de vos rêves.'
+  },
+  {
+    id: 'pop-3',
+    question: 'Les enfants peuvent-ils participer aux randonnées ?',
+    answer: 'Oui, certaines de nos randonnées sont adaptées aux enfants à partir de 8 ans. Nous proposons des itinéraires plus courts et des activités spécialement conçues pour les jeunes aventuriers. Les enfants doivent être accompagnés d\'un adulte responsable. N\'hésitez pas à nous consulter pour connaître les circuits les plus adaptés aux familles.'
+  }
+];
+---
+
+<Layout title="FAQ - Camping Store & Event Madagascar" description="Trouvez les réponses à vos questions sur nos aventures, réservations et préparatifs de voyage avec CSEM à Madagascar.">
+  <!-- Hero Section -->
+  <div class="relative bg-gray-900 overflow-hidden">
+    <div class="absolute inset-0">
+      <img class="w-full h-full object-cover opacity-40" 
+           src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+           alt="FAQ"
+           loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 mix-blend-multiply"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Questions fréquentes</h1>
+      <p class="mt-6 text-xl text-gray-300 max-w-3xl">Trouvez les réponses aux questions les plus posées sur nos aventures à Madagascar.</p>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="bg-white dark:bg-gray-900 py-12 transition-colors duration-300">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <input 
+          id="search-faq" 
+          type="text" 
+          class="block w-full pl-10 pr-3 py-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" 
+          placeholder="Rechercher dans la FAQ..."
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Popular Questions -->
+  <div class="bg-gray-50 dark:bg-gray-800 py-16 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-8">Questions populaires</h2>
+      
+      <div class="grid gap-6 md:grid-cols-3">
+        {popularQuestions.map((item) => (
+          <div class="bg-white dark:bg-gray-700 shadow rounded-lg p-6 transition-all duration-200 hover:shadow-lg">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{item.question}</h3>
+            <p class="text-gray-600 dark:text-gray-300">{item.answer}</p>
+            <div class="mt-4">
+              <a href={`#${item.id}`} class="text-green-600 dark:text-green-400 hover:text-green-500 text-sm font-medium">
+                En savoir plus →
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ by Categories -->
+  <div class="bg-white dark:bg-gray-900 py-16 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+        <div class="lg:col-span-3">
+          <nav class="space-y-1 sticky top-6" aria-label="FAQ navigation">
+            {faqCategories.map((category) => (
+              <a 
+                href={`#${category.id}`}
+                class="group flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <span class="truncate">{category.name}</span>
+              </a>
+            ))}
+          </nav>
+        </div>
+
+        <div class="mt-12 lg:mt-0 lg:col-span-9">
+          {faqCategories.map((category) => (
+            <section id={category.id} class="mb-16">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">{category.name}</h2>
+              <div class="space-y-4">
+                {category.questions.map((item) => (
+                  <div id={item.id} class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <h3>
+                      <button 
+                        class="faq-question w-full px-6 py-4 text-left text-base font-medium text-gray-900 dark:text-white bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 flex justify-between items-center"
+                        aria-expanded="false"
+                        aria-controls={`faq-${item.id}`}
+                        data-question-id={item.id}
+                      >
+                        <span>{item.question}</span>
+                        <svg class="h-5 w-5 text-gray-400 transform transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                      </button>
+                    </h3>
+                    <div id={`faq-${item.id}`} class="faq-answer hidden px-6 pb-4 text-gray-600 dark:text-gray-300">
+                      <p>{item.answer}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact CTA -->
+  <div class="bg-green-700">
+    <div class="max-w-4xl mx-auto py-16 px-4 sm:px-6 sm:py-20 lg:px-8 lg:flex lg:items-center lg:justify-between">
+      <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+        <span class="block">Vous ne trouvez pas de réponse ?</span>
+        <span class="block text-green-100">Notre équipe est là pour vous aider.</span>
+      </h2>
+      <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+        <div class="inline-flex rounded-md shadow">
+          <a href="/contact" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50">
+            Contactez-nous
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  // Gestion des accordéons FAQ
+  document.addEventListener('DOMContentLoaded', () => {
+    const questions = document.querySelectorAll('.faq-question');
+    
+    questions.forEach(question => {
+      question.addEventListener('click', () => {
+        const answer = document.getElementById(`faq-${question.dataset.questionId}`);
+        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+        
+        // Fermer tous les autres éléments ouverts
+        document.querySelectorAll('.faq-question').forEach(q => {
+          if (q !== question) {
+            q.setAttribute('aria-expanded', 'false');
+            q.querySelector('svg').classList.remove('rotate-180');
+            const otherAnswer = document.getElementById(`faq-${q.dataset.questionId}`);
+            otherAnswer.classList.add('hidden');
+          }
+        });
+        
+        // Basculer l'état actuel
+        question.setAttribute('aria-expanded', !isExpanded);
+        question.querySelector('svg').classList.toggle('rotate-180');
+        answer.classList.toggle('hidden');
+      });
+    });
+    
+    // Gestion de la recherche
+    const searchInput = document.getElementById('search-faq');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        if (searchTerm.length > 2) {
+          // Recherche dans les questions et réponses
+          document.querySelectorAll('.faq-question').forEach(question => {
+            const questionText = question.textContent.toLowerCase();
+            const answer = document.getElementById(`faq-${question.dataset.questionId}`);
+            const answerText = answer.textContent.toLowerCase();
+            
+            if (questionText.includes(searchTerm) || answerText.includes(searchTerm)) {
+              question.closest('div').style.display = 'block';
+              // Ouvrir la réponse
+              question.setAttribute('aria-expanded', 'true');
+              question.querySelector('svg').classList.add('rotate-180');
+              answer.classList.remove('hidden');
+            } else {
+              question.closest('div').style.display = 'none';
+            }
+          });
+        } else {
+          // Réinitialiser l'affichage si la recherche est trop courte
+          document.querySelectorAll('.faq-question').forEach(question => {
+            question.closest('div').style.display = 'block';
+            question.setAttribute('aria-expanded', 'false');
+            question.querySelector('svg').classList.remove('rotate-180');
+            const answer = document.getElementById(`faq-${question.dataset.questionId}`);
+            answer.classList.add('hidden');
+          });
+        }
+      });
+    }
+    
+    // Gestion des ancres pour ouvrir automatiquement les questions
+    if (window.location.hash) {
+      const target = document.querySelector(window.location.hash);
+      if (target && target.classList.contains('faq-question')) {
+        target.click();
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }
+  });
+</script>
+
+<style>
+  /* Animation pour les réponses */
+  .faq-answer {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Style pour les questions au survol */
+  .faq-question:hover {
+    background-color: rgba(16, 185, 129, 0.05);
+  }
+  
+  /* Animation de rotation de l'icône */
+  .rotate-180 {
+    transform: rotate(180deg);
+  }
+  
+  /* Style pour les liens d'ancrage */
+  a[href^="#"]:not([href="#"]) {
+    scroll-margin-top: 100px;
+  }
+  
+  /* Style pour la navigation latérale */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+  
+  /* Style pour les éléments actifs dans la navigation */
+  nav a[href="#" + window.location.hash.replace('#', '')] {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+</style>

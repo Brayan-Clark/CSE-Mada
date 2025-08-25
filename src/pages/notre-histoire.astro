@@ -1,0 +1,249 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const timeline = [
+  {
+    year: '2010',
+    title: 'Nos débuts',
+    description: 'Fondation de CSEM avec une petite équipe passionnée par les aventures en plein air et le partage de cette passion avec les autres.',
+    icon: '🚀'
+  },
+  {
+    year: '2012',
+    title: 'Premier événement majeur',
+    description: 'Organisation de notre premier grand événement de camping avec plus de 50 participants, marquant le début de notre aventure événementielle.',
+    icon: '🏕️'
+  },
+  {
+    year: '2015',
+    title: 'Expansion des services',
+    description: 'Lancement de notre service de location de matériel de camping haut de gamme pour rendre les aventures en plein air accessibles à tous.',
+    icon: '🛠️'
+  },
+  {
+    year: '2018',
+    title: 'Reconnaissance nationale',
+    description: 'Récompensés pour notre engagement envers le tourisme durable et notre contribution à la promotion des activités de plein air à Madagascar.',
+    icon: '🏆'
+  },
+  {
+    year: '2023',
+    title: 'Nouveaux horizons',
+    description: 'Lancement de nos expéditions guidées dans des régions reculées de Madagascar, offrant des expériences uniques et authentiques.',
+    icon: '🌍'
+  }
+];
+
+const team = [
+  {
+    name: 'Jean Dupont',
+    role: 'Fondateur & Guide',
+    bio: 'Passionné de randonnée depuis plus de 15 ans, Jean a parcouru les plus beaux sentiers de Madagascar.',
+    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    name: 'Marie Laurent',
+    role: 'Responsable Événements',
+    bio: 'Organisatrice d\'événements expérimentée, Marie donne vie à chaque aventure avec créativité.',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  },
+  {
+    name: 'Thomas Ravelo',
+    role: 'Guide Expert',
+    bio: 'Spécialiste de la faune et de la flore malgaches, Thomas partage ses connaissances avec passion.',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  }
+];
+---
+
+<Layout title="Notre Histoire - Camping Store & Event Madagascar" description="Découvrez l'histoire de CSEM, votre partenaire d'aventures en plein air à Madagascar depuis 2010.">
+  <!-- Hero Section -->
+  <div class="relative bg-gray-900 overflow-hidden">
+    <div class="absolute inset-0">
+      <img class="w-full h-full object-cover opacity-40" 
+           src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
+           alt="Notre histoire"
+           loading="lazy">
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 mix-blend-multiply"></div>
+    </div>
+    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Notre Histoire</h1>
+      <p class="mt-6 text-xl text-gray-300 max-w-3xl">Découvrez comment notre passion pour l'aventure en plein air a donné naissance à une aventure exceptionnelle.</p>
+    </div>
+  </div>
+
+  <!-- Notre Histoire Section -->
+  <div class="bg-white dark:bg-gray-900 py-16 sm:py-24 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="lg:text-center">
+        <h2 class="text-base text-green-600 dark:text-green-400 font-semibold tracking-wide uppercase">Notre parcours</h2>
+        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+          Une aventure qui dure depuis plus d'une décennie
+        </p>
+        <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
+          Depuis nos débuts modestes jusqu'à devenir une référence dans l'organisation d'événements de plein air à Madagascar, chaque étape a été marquée par notre passion partagée pour l'aventure.
+        </p>
+      </div>
+
+      <!-- Timeline -->
+      <div class="mt-20">
+        <div class="space-y-12 lg:space-y-0 lg:grid lg:grid-cols-5 lg:gap-x-8">
+          {timeline.map((item, index) => (
+            <div class="relative group">
+              <div class="flex items-center">
+                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 text-2xl font-bold z-10">
+                  {item.icon}
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-lg font-medium text-gray-900">{item.year}</h3>
+                  <p class="mt-1 text-gray-600">{item.title}</p>
+                </div>
+              </div>
+              <div class="mt-4 pl-6 border-l-2 border-gray-200 pb-8 group-last:border-0 group-last:pb-0">
+                <p class="text-base text-gray-600">{item.description}</p>
+              </div>
+              {index < timeline.length - 1 && (
+                <div class="absolute top-16 left-8 w-0.5 h-full bg-gray-200 group-last:hidden"></div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notre Équipe Section -->
+  <div class="bg-gray-50 dark:bg-gray-800 py-16 sm:py-24 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">Notre Équipe</h2>
+        <p class="mt-4 text-xl text-gray-600 dark:text-gray-300">
+          Rencontrez les passionnés qui font de chaque aventure une expérience inoubliable
+        </p>
+      </div>
+
+      <div class="mt-12 grid gap-12 md:grid-cols-2 lg:grid-cols-3">
+        {team.map((member) => (
+          <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+            <img class="w-full h-64 object-cover" src={member.image} alt={member.name} loading="lazy">
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{member.name}</h3>
+              <p class="text-green-600 dark:text-green-400 mt-1">{member.role}</p>
+              <p class="mt-4 text-gray-600 dark:text-gray-300">{member.bio}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Valeurs Section -->
+  <div class="bg-white dark:bg-gray-900 py-16 sm:py-24 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="lg:text-center">
+        <h2 class="text-base text-green-600 dark:text-green-400 font-semibold tracking-wide uppercase">Nos Valeurs</h2>
+        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+          Ce qui nous guide au quotidien
+        </p>
+      </div>
+
+      <div class="mt-12 grid gap-8 md:grid-cols-3">
+        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg transition-colors duration-300">
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400 text-2xl mb-4">
+            🌱
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Respect de l'environnement</h3>
+          <p class="mt-2 text-gray-600 dark:text-gray-300">
+            Nous nous engageons à préserver les espaces naturels que nous explorons et à minimiser notre impact environnemental.
+          </p>
+        </div>
+        
+        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg transition-colors duration-300">
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400 text-2xl mb-4">
+            🤝
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Partage et convivialité</h3>
+          <p class="mt-2 text-gray-600 dark:text-gray-300">
+            Nous croyons que les plus belles aventures se vivent à plusieurs, dans la bonne humeur et le partage.
+          </p>
+        </div>
+        
+        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg transition-colors duration-300">
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400 text-2xl mb-4">
+            🏆
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Excellence</h3>
+          <p class="mt-2 text-gray-600 dark:text-gray-300">
+            Nous nous engageons à fournir des services de qualité supérieure et des expériences mémorables.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="bg-green-700">
+    <div class="max-w-4xl mx-auto py-16 px-4 sm:px-6 sm:py-20 lg:px-8 lg:flex lg:items-center lg:justify-between">
+      <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+        <span class="block">Prêt à vivre l'aventure avec nous ?</span>
+        <span class="block text-green-100">Découvrez nos prochains événements.</span>
+      </h2>
+      <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+        <div class="inline-flex rounded-md shadow">
+          <a href="/services" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50">
+            Voir nos services
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  /* Délais d'animation pour chaque section */
+  .timeline-item {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .team-member {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .value-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  /* Délais d'animation */
+  .timeline-item:nth-child(1) { animation-delay: 0.1s; }
+  .timeline-item:nth-child(2) { animation-delay: 0.3s; }
+  .timeline-item:nth-child(3) { animation-delay: 0.5s; }
+  .timeline-item:nth-child(4) { animation-delay: 0.7s; }
+  .timeline-item:nth-child(5) { animation-delay: 0.9s; }
+
+  .team-member:nth-child(1) { animation-delay: 0.3s; }
+  .team-member:nth-child(2) { animation-delay: 0.5s; }
+  .team-member:nth-child(3) { animation-delay: 0.7s; }
+
+  .value-card:nth-child(1) { animation-delay: 0.2s; }
+  .value-card:nth-child(2) { animation-delay: 0.4s; }
+  .value-card:nth-child(3) { animation-delay: 0.6s; }
+</style>
