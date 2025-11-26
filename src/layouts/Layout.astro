@@ -8,33 +8,38 @@ interface Props {
   description?: string;
 }
 
-const { title = 'Bienvenue', description = 'Un site moderne avec Astro et Tailwind CSS' } = Astro.props;
+const { title = 'Bienvenue', description = 'Un site moderne avec Astro et Tailwind CSS' } =
+  Astro.props;
+const base = '/CSE-Mada';
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    
+
     <title>{title} | Camping Store & Event</title>
-    
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.ico`} />
+    <link rel="manifest" href={`${base}/site.webmanifest`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link 
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" 
-      rel="stylesheet" 
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
     />
   </head>
-  
-  <body class="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-white antialiased">
+
+  <body
+    class="min-h-screen flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-white antialiased"
+  >
     <!-- Indicateur de débogage du thème -->
     <!-- <div class="fixed bottom-4 right-4 p-2 bg-yellow-100 dark:bg-yellow-900 text-xs rounded">
       Thème: <span id="theme-indicator">Chargement...</span>
     </div> -->
-    
+
     <div id="theme-provider">
       <Header />
       <main class="flex-1">
@@ -42,7 +47,7 @@ const { title = 'Bienvenue', description = 'Un site moderne avec Astro et Tailwi
       </main>
       <Footer />
     </div>
-    
+
     <script>
       // Mettre à jour l'indicateur de thème
       function updateThemeIndicator() {
@@ -58,19 +63,20 @@ const { title = 'Bienvenue', description = 'Un site moderne avec Astro et Tailwi
       if (typeof window !== 'undefined') {
         const savedTheme = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
+
         if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
         }
-        
+
         // Mettre à jour l'indicateur
         updateThemeIndicator();
-        
+
         // Écouter les changements de thème système
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-          if (!localStorage.getItem('theme')) { // Seulement si pas de préférence enregistrée
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem('theme')) {
+            // Seulement si pas de préférence enregistrée
             if (e.matches) {
               document.documentElement.classList.add('dark');
             } else {
