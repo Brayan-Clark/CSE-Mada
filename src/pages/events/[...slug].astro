@@ -12,6 +12,7 @@ export async function getStaticPaths() {
 
 const { event } = Astro.props;
 const { Content } = await event.render();
+const base = import.meta.env.BASE_URL;
 
 const { title, description, date, location, image, activity, isFlyerOnly } = event.data;
 
@@ -33,7 +34,7 @@ function formatDate(date: Date) {
         image ? (
           <>
             <div class="absolute inset-0">
-              <img src={image} alt={title} class="w-full h-full object-cover" />
+              <img src={`${base}/${image}`} alt={title} class="w-full h-full object-cover" />
               <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent" />
             </div>
           </>
@@ -118,7 +119,7 @@ function formatDate(date: Date) {
                 <div class="flex flex-col items-center">
                   {image && (
                     <div class="w-full rounded-xl overflow-hidden shadow-lg mb-8">
-                      <img src={image} alt={`Affiche pour ${title}`} class="w-full h-auto" />
+                      <img src={`${base}/${image}`} alt={`Affiche pour ${title}`} class="w-full h-auto" />
                     </div>
                   )}
                   <div class="prose prose-lg dark:prose-invert max-w-none w-full">

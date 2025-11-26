@@ -1,9 +1,9 @@
 ---
-title: 'Randonnée Découverte - Parc National'
-date: 2025-06-15
-location: "Parc National d'Andasibe"
-image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop'
-description: "Une journée d'aventure au cœur de la nature pour découvrir la faune et la flore exceptionnelles de Madagascar."
+title: "Plage & Découverte - 3 Baie d'Antsiranana"
+date: 2025-06-22
+location: "Ramena, Antsiranana"
+image: 'images/events/plage&decouverte.jpg'
+description: "Une journée de découverte à Ramena avec randonnée et baignade en bord de mer, idéale pour les familles et les enfants. Découvrez la nature locale et profitez d'une ambiance chaleureuse à la plage avec des activités familiales adaptées aux enfants, incluant des jeux et des ateliers éducatifs sur la faune et la flore locale."
 activity: 'Randonnée'
 isFlyerOnly: false
 draft: false
