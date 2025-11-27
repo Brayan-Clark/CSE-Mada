@@ -12,6 +12,8 @@ const title = 'Nos Événements';
 const description =
   'Découvrez les prochains événements, sorties et activités organisés par le CSE.';
 
+const base = import.meta.env.BASE_URL;
+
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
@@ -45,7 +47,7 @@ function formatDate(date: Date) {
               <div class="relative h-64 overflow-hidden">
                 {event.data.image ? (
                   <img
-                    src={event.data.image}
+                    src={`${base}/${event.data.image}`}
                     alt={event.data.title}
                     class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                   />
