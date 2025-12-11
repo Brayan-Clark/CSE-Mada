@@ -1,0 +1,322 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../../layouts/Layout.astro';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+// Styles pour la modale
+// const modalStyles = `
+//   /* Style pour le conteneur parent de la modale */
+//   .modal-container {
+//     position: absolute;
+//     display: none;
+//     background-color: #0003;
+//     top: 0;
+//     left: 0;
+//     width: 100%;
+//     height: 100%;
+//     z-index: 10000;
+//   }
+
+//   .modal-container.show {
+//     display: block;
+//   }
+
+//   .modal {
+//     position: fixed;
+//     top: 0;
+//     left: 0;
+//     width: 100%;
+//     height: 100%;
+//     background: rgba(0, 0, 0, 0.95);
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
+//     z-index: 10001;
+//     overflow: hidden;
+//   }
+  
+  
+//   .modal-content {
+//     position: relative;
+//     max-width: 90%;
+//     max-height: 90%;
+//     padding: 20px;
+//   }
+  
+//   .modal-img {
+//     max-width: 90vw;
+//     max-height: 90vh;
+//     width: auto;
+//     height: auto;
+//     display: block;
+//     margin: 0 auto;
+//     object-fit: contain;
+//   }
+  
+//   .close {
+//     position: absolute;
+//     top: -40px;
+//     right: 0;
+//     color: white;
+//     font-size: 35px;
+//     font-weight: bold;
+//     cursor: pointer;
+//   }
+  
+//   .prev, .next {
+//     cursor: pointer;
+//     position: absolute;
+//     top: 50%;
+//     width: auto;
+//     padding: 16px;
+//     margin-top: -22px;
+//     color: white;
+//     font-weight: bold;
+//     font-size: 20px;
+//     background: rgba(0, 0, 0, 0.5);
+//     border: none;
+//     outline: none;
+//   }
+  
+//   .next {
+//     right: 0;
+//     border-radius: 3px 0 0 3px;
+//   }
+  
+//   .prev:hover, .next:hover {
+//     background: rgba(0, 0, 0, 0.8);
+//   }`;
+
+export async function getStaticPaths() {
+  const events = await getCollection('events');
+  return events.map((event) => ({
+    params: { slug: event.slug },
+    props: { event },
+  }));
+}
+
+const { event } = Astro.props;
+const { title } = event.data;
+const base = import.meta.env.BASE_URL;
+
+// Récupérer le nom du fichier sans l'extension
+const fileName = path.basename(event.id, '.md');
+
+// Chemin vers le dossier des images de l'événement
+const eventImagesDir = path.join(process.cwd(), 'public', 'images', 'events', fileName);
+let galleryImages = [];
+let galleryExists = false;
+
+try {
+  // Vérifier si le dossier existe et récupérer les images
+  const files = await fs.readdir(eventImagesDir);
+  galleryImages = files
+    .filter(file => /.(jpg|jpeg|png|gif|webp)$/i.test(file))
+    .map(file => ({
+      src: `${base}/images/events/${fileName}/${file}`,
+      alt: `${title} - ${file.split('.')[0]}`
+    }));
+  galleryExists = galleryImages.length > 0;
+} catch (error) {
+  console.error(`Dossier d'images non trouvé pour l'événement: ${event.slug}`);
+}
+---
+
+<Layout title={`Galerie - ${title}`} description={`Galerie photo de l'événement ${title}`}>
+  <div class="relative min-h-screen bg-white dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+          Galerie - {title}
+        </h1>
+        <p class="mt-4 max-w-2xl mx-auto text-gray-600 dark:text-gray-300">
+          Découvrez les moments forts de notre événement
+        </p>
+      </div>
+
+      {galleryExists ? (
+        <div>
+          <style is:inline>
+            {modalStyles}
+          </style>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="galleryContainer">
+            {galleryImages.map((img, index) => (
+              <div 
+                class="gallery-item group relative block overflow-hidden rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                data-src={img.src}
+                data-alt={img.alt}
+                data-index={index}
+                onclick="openGalleryImage(this)"
+              >
+                <div class="aspect-w-16 aspect-h-9 overflow-hidden">
+                  <img 
+                    src={img.src} 
+                    alt={img.alt}
+                    class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                  <div class="text-white text-sm">
+                    <p class="font-medium">{img.alt}</p>
+                    <p class="text-xs opacity-80">Cliquez pour agrandir</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <!-- Conteneur de la modale -->
+          <div id="modalContainer" class="modal-container absolute top-0 left-0 w-full h-full bg-black/50 items-center justify-center z-50 hidden overflow-hidden">
+            <div id="imageModal" class="modal max-w-[80%] max-h-[80%] relative">
+            <span class="close absolute top-2 right-2 text-2xl cursor-pointer bg-black/30 w-12 h-12 rounded-full p-2 text-white flex items-center justify-center backdrop:blur-md">&times;</span>
+            <a class="prev absolute top-1/2 -left-2 text-2xl cursor-pointer bg-black/30 w-12 h-12 rounded-full p-2 text-white flex items-center justify-center backdrop:blur-md">&#10094;</a>
+            <div class="modal-content">
+              <img class="modal-img" id="modalImage" alt="Image agrandie" />
+            </div>
+            <a class="next absolute top-1/2 -right-2 text-2xl cursor-pointer bg-black/30 w-12 h-12 rounded-full p-2 text-white flex items-center justify-center backdrop:blur-md">&#10095;</a>
+            </div>
+          </div>   
+
+          
+          <!-- Script de la galerie -->
+          <script is:inline>
+            // Attendre que le DOM soit chargé
+            document.addEventListener('DOMContentLoaded', function() {
+              // Éléments du DOM
+              const modalContainer = document.getElementById('modalContainer');
+              const modal = document.getElementById('imageModal');
+              const modalImg = document.getElementById('modalImage');
+              const galleryContainer = document.getElementById('galleryContainer');
+              
+              if (!modalContainer || !modal || !modalImg || !galleryContainer) {
+                console.error('Éléments de la galerie introuvables');
+                return;
+              }
+              
+              // Variables
+              let currentIndex = 0;
+              let galleryItems = [];
+              
+              // Initialisation de la galerie
+              function initGallery() {
+                // Récupérer tous les éléments de la galerie
+                galleryItems = Array.from(galleryContainer.querySelectorAll('.gallery-item'));
+                
+                // Ajouter les écouteurs d'événements
+                galleryItems.forEach((item, index) => {
+                  item.addEventListener('click', () => openModal(index));
+                });
+                
+                // Boutons de navigation
+                const closeBtn = modal.querySelector('.close');
+                const prevBtn = modal.querySelector('.prev');
+                const nextBtn = modal.querySelector('.next');
+                
+                if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                if (prevBtn) prevBtn.addEventListener('click', () => plusSlides(-1));
+                if (nextBtn) nextBtn.addEventListener('click', () => plusSlides(1));
+                
+                // Navigation clavier
+                document.addEventListener('keydown', handleKeyDown);
+              }
+              
+              // Ouvrir la modale
+              function openModal(index) {
+                currentIndex = index;
+                const item = galleryItems[index];
+                if (!item) return;
+                
+                // Mettre à jour l'image
+                modalImg.src = item.dataset.src;
+                modalImg.alt = item.dataset.alt || 'Image agrandie';
+                
+                // Afficher la modale
+                document.body.style.maxHeight = '100vh';
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'auto';
+                modalContainer?.classList.add('overflow-hidden')
+                modalContainer?.classList.add('flex')
+                
+                
+                // Forcer le reflow pour l'animation
+                void modal.offsetWidth;
+                modal.classList.add('block');
+                modalContainer.classList.remove('hidden');
+              }
+              
+              // Fermer la modale
+              function closeModal() {
+                modal.classList.remove('block');
+                modalContainer.classList.add('hidden');
+                setTimeout(() => {
+                  modal.style.display = 'none';
+                  document.body.style.overflow = 'auto';
+                }, 300);
+              }
+              
+              // Navigation entre les images
+              function plusSlides(n) {
+                if (!galleryItems.length) return;
+                currentIndex = (currentIndex + n + galleryItems.length) % galleryItems.length;
+                const item = galleryItems[currentIndex];
+                if (item) {
+                  modalImg.src = item.dataset.src;
+                  modalImg.alt = item.dataset.alt || 'Image agrandie';
+                }
+              }
+              
+              // Gestion du clavier
+              function handleKeyDown(e) {
+                if (modal.style.display !== 'flex') return;
+                
+                switch(e.key) {
+                  case 'Escape':
+                    closeModal();
+                    break;
+                  case 'ArrowLeft':
+                    plusSlides(-1);
+                    e.preventDefault();
+                    break;
+                  case 'ArrowRight':
+                    plusSlides(1);
+                    e.preventDefault();
+                    break;
+                }
+              }
+              
+              // Démarrer la galerie
+              initGallery();
+            });
+          </script>       
+
+        </div>
+      ) : (
+        <div class="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-xl">
+          <div class="max-w-md mx-auto">
+            <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">Galerie à venir</h3>
+            <p class="mt-2 text-gray-500 dark:text-gray-400">
+              La galerie de cet événement sera bientôt disponible. Revenez plus tard pour découvrir les photos !
+            </p>
+            <div class="mt-6">
+              <a 
+                href={`${base}/events/${event.slug}`} 
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                Retour à l'événement
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>

@@ -1,6 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
+// Fonction utilitaire pour tronquer le texte
+const truncateText = (text, maxLength) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
+const base = import.meta.env.BASE_URL;
+
 const features = [
   {
     title: 'Matériel de qualité',
@@ -97,7 +105,6 @@ const features = [
     </div>
 
     <!-- Gallery Section -->
-    <!-- Gallery Section -->
     <div class="py-16 bg-gray-50 dark:bg-gray-800/80">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
@@ -110,44 +117,47 @@ const features = [
           </p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div class="group rounded-xl overflow-hidden shadow-lg dark:shadow-gray-900/50 hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-700">
-            <div class="overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1515876305430-f06edab8282a?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                alt="Camping en forêt" 
-                class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105" />
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Camping en forêt</h3>
-              <p class="text-gray-600 dark:text-gray-300">Immersion totale dans la nature sauvage de Madagascar</p>
-            </div>
-          </div>
-          
-          <div class="group rounded-xl overflow-hidden shadow-lg dark:shadow-gray-900/50 hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-700">
-            <div class="overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1464207687429-7505649dae38?q=80&w=873&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                alt="Randonnée guidée" 
-                class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105" />
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Randonnée guidée</h3>
-              <p class="text-gray-600 dark:text-gray-300">Découvrez des paysages à couper le souffle</p>
-            </div>
-          </div>
-          
-          <div class="group rounded-xl overflow-hidden shadow-lg dark:shadow-gray-900/50 hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-700">
-            <div class="overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1587547131116-a0655a526190?q=80&w=916&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                alt="Matériel de camping" 
-                class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105" />
-            </div>
-            <div class="p-6">
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Matériel haut de gamme</h3>
-              <p class="text-gray-600 dark:text-gray-300">Tout le confort pour votre aventure</p>
-            </div>
-          </div>
+          {(
+            await Astro.glob('../content/events/*.md')
+              .then(events => events
+                .filter(event => !event.frontmatter.draft)
+                .sort((a, b) => new Date(b.frontmatter.date) - new Date(a.frontmatter.date))
+                .slice(0, 3)
+              )
+          ).map(event => (
+            <a href={`${base}/events/gallery/${event.file.split('/').pop()?.replace(/\.md$/, '')?.replace('.', '')}`} class="block group">
+              <div class="h-full rounded-xl overflow-hidden shadow-lg dark:shadow-gray-900/50 hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-700">
+                <div class="overflow-hidden">
+                  <img 
+                    src={event.frontmatter.image || 'https://images.unsplash.com/photo-1515876305430-f06edab8282a?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'} 
+                    alt={event.frontmatter.title} 
+                    class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105" />
+                </div>
+                <div class="p-6">
+                  <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white" title={event.frontmatter.title}>
+                      {truncateText(event.frontmatter.title, 30)}
+                    </h3>
+                    <span class="inline-block px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full dark:bg-green-900/30 dark:text-green-300 whitespace-nowrap">
+                      {new Date(event.frontmatter.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                  <p class="text-gray-600 dark:text-gray-300" title={event.frontmatter.description}>
+                    {truncateText(event.frontmatter.description, 100)}
+                  </p>
+                  {event.frontmatter.location && (
+                    <div class="mt-3 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                      {event.frontmatter.location}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </a>
+          ))}
         </div>
       </div>
     </div>

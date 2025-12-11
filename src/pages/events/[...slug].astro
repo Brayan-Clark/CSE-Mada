@@ -179,15 +179,31 @@ function formatDate(date: Date) {
             </div>
 
             <div class="mt-8">
-              <a
-                href="/CSE-Mada/contact"
-                class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-lg"
-              >
-                Je participe
-              </a>
-              <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3">
-                Contactez-nous pour réserver votre place
-              </p>
+              {new Date(date) < new Date() ? (
+                <>
+                  <a
+                    href={`${base}/events/gallery/${event.slug}`}
+                    class="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-lg"
+                  >
+                    Voir la galerie
+                  </a>
+                  <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3">
+                    Découvrez les photos de l'événement
+                  </p>
+                </>
+              ) : (
+                <>
+                  <a
+                    href="/CSE-Mada/contact"
+                    class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-lg"
+                  >
+                    Je participe
+                  </a>
+                  <p class="text-xs text-center text-gray-500 dark:text-gray-400 mt-3">
+                    Contactez-nous pour réserver votre place
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
