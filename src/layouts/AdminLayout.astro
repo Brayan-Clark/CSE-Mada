@@ -171,8 +171,12 @@ const navItems = [
         }
 
         // En mode Supabase, valide la session réelle (et la rafraîchit) au chargement.
+        // Si le rôle a changé côté serveur (ex. promotion superadmin), on recharge
+        // pour réafficher les menus avec les bonnes permissions.
+        const prevRole = session.role;
         restoreSession().then((s) => {
-          if (!s) window.location.replace(withBase('/admin/login'));
+          if (!s) { window.location.replace(withBase('/admin/login')); return; }
+          if (s.role !== prevRole) window.location.reload();
         });
       }
 

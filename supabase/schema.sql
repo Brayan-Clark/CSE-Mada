@@ -199,31 +199,40 @@ alter table public.orders    enable row level security;
 alter table public.stock_entries enable row level security;
 
 -- =============================================================================
--- RLS — politiques
+-- RLS — politiques  (IDEMPOTENT : on supprime puis recrée → ré-exécutable)
 -- =============================================================================
 
 -- Lecture publique du contenu PUBLIÉ -----------------------------------------
+drop policy if exists "articles_public_read" on public.articles;
 create policy "articles_public_read" on public.articles
   for select using (draft = false);
+drop policy if exists "events_public_read" on public.events;
 create policy "events_public_read" on public.events
   for select using (draft = false);
+drop policy if exists "products_public_read" on public.products;
 create policy "products_public_read" on public.products
   for select using (true);
+drop policy if exists "services_public_read" on public.services;
 create policy "services_public_read" on public.services
   for select using (true);
+drop policy if exists "reviews_public_read" on public.reviews;
 create policy "reviews_public_read" on public.reviews
   for select using (status = 'published');
+drop policy if exists "roles_public_read" on public.roles;
 create policy "roles_public_read" on public.roles
   for select using (true);
 
 -- Écriture publique limitée --------------------------------------------------
 -- Le formulaire de contact peut créer un message.
+drop policy if exists "messages_public_insert" on public.messages;
 create policy "messages_public_insert" on public.messages
   for insert with check (true);
 -- Un visiteur peut déposer un avis, forcément "en attente".
+drop policy if exists "reviews_public_insert" on public.reviews;
 create policy "reviews_public_insert" on public.reviews
   for insert with check (status = 'pending');
 -- Un visiteur peut passer une commande, forcément "nouvelle".
+drop policy if exists "orders_public_insert" on public.orders;
 create policy "orders_public_insert" on public.orders
   for insert with check (status = 'new');
 
@@ -235,6 +244,7 @@ begin
   foreach t in array array[
     'roles','profiles','articles','events','products','services','reviews','messages','orders','stock_entries'
   ] loop
+    execute format('drop policy if exists "%1$s_staff_all" on public.%1$s;', t);
     execute format($f$
       create policy "%1$s_staff_all" on public.%1$s
         for all using (public.is_staff()) with check (public.is_staff());
@@ -327,8 +337,10 @@ end $$;
 -- RLS profiles : chacun lit/écrit son profil ; le staff gère tout.
 -- (les politiques *_staff_all créées plus haut couvrent déjà le staff)
 -- -----------------------------------------------------------------------------
+drop policy if exists "profiles_self_read" on public.profiles;
 create policy "profiles_self_read" on public.profiles
   for select using (auth.uid() = user_id);
+drop policy if exists "profiles_self_update" on public.profiles;
 create policy "profiles_self_update" on public.profiles
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
