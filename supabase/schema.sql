@@ -294,6 +294,35 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Unicité du profil par utilisateur (rend le `on conflict` du trigger effectif
+-- et évite les doublons de profils).
+do $$ begin
+  alter table public.profiles add constraint profiles_user_id_key unique (user_id);
+exception when others then null; end $$;
+
+-- =============================================================================
+-- FILET DE SÉCURITÉ : garantir au moins UN super administrateur.
+-- Utile si le tout premier compte a été créé AVANT l'installation du trigger
+-- (il n'aurait alors pas reçu le rôle superadmin). Idempotent : ne fait rien
+-- s'il existe déjà un superadmin.
+-- =============================================================================
+do $$
+declare first_uid uuid;
+begin
+  if not exists (select 1 from public.profiles where role_id = 'superadmin') then
+    select id into first_uid from auth.users order by created_at asc limit 1;
+    if first_uid is not null then
+      if exists (select 1 from public.profiles where user_id = first_uid) then
+        update public.profiles set role_id = 'superadmin' where user_id = first_uid;
+      else
+        insert into public.profiles (user_id, name, email, role_id)
+        select id, coalesce(raw_user_meta_data->>'name', split_part(email, '@', 1)), email, 'superadmin'
+        from auth.users where id = first_uid;
+      end if;
+    end if;
+  end if;
+end $$;
+
 -- -----------------------------------------------------------------------------
 -- RLS profiles : chacun lit/écrit son profil ; le staff gère tout.
 -- (les politiques *_staff_all créées plus haut couvrent déjà le staff)
