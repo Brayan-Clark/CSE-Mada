@@ -222,8 +222,10 @@ const inputClass =
     import { toast } from '../utils/toast';
 
     productsData.seedIfEmpty(DEFAULT_PRODUCTS);
-    // Cache produits (Supabase si connecté, sinon localStorage) chargé une fois.
-    const products: Product[] = await productsData.list();
+    // Règle : si la base contient des produits on les affiche, sinon on retombe
+    // sur les produits par défaut (jamais de boutique vide).
+    const fromDb = await productsData.list();
+    const products: Product[] = fromDb.length ? fromDb : DEFAULT_PRODUCTS;
 
     const catLabel = (id: string) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.name ?? id;
     const escape = (s: string) =>

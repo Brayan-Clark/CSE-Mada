@@ -147,7 +147,10 @@ const stats = [
     const empty = document.getElementById('testimonials-empty');
     (async () => {
       reviewsData.seedIfEmpty(DEFAULT_REVIEWS);
-      const reviews = (await reviewsData.list()).filter((r) => r.status === 'published');
+      // Règle : base non vide → on affiche la base ; sinon les avis par défaut.
+      const fromDb = await reviewsData.list();
+      const source = fromDb.length ? fromDb : DEFAULT_REVIEWS;
+      const reviews = source.filter((r) => r.status === 'published');
       if (!grid) return;
       if (reviews.length) {
         grid.innerHTML = reviews.map(reviewCardHTML).join('');

@@ -195,7 +195,9 @@ const services = [
     const grid = document.getElementById('services-reviews');
     (async () => {
       reviewsData.seedIfEmpty(DEFAULT_REVIEWS);
-      const reviews = (await reviewsData.list()).filter((r) => r.status === 'published').slice(0, 3);
+      const fromDb = await reviewsData.list();
+      const source = fromDb.length ? fromDb : DEFAULT_REVIEWS;
+      const reviews = source.filter((r) => r.status === 'published').slice(0, 3);
       if (grid && reviews.length) grid.innerHTML = reviews.map(reviewCardHTML).join('');
     })();
   </script>

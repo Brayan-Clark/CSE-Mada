@@ -36,15 +36,14 @@ const readTime = (post: (typeof allPosts)[number]) =>
         <p class="mt-2 text-gray-500 dark:text-gray-400">Conseils, récits d'aventure et actualités sur le camping et la randonnée à Madagascar.</p>
       </div>
 
-      {allPosts.length === 0 && (
-        <div class="mt-12 text-center py-20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
-          <p class="text-4xl mb-3">📝</p>
-          <p class="text-gray-500 dark:text-gray-400 text-lg">Aucun article pour le moment. Revenez bientôt !</p>
-        </div>
-      )}
+      <div id="blog-empty-all" class={`mt-12 text-center py-20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 ${allPosts.length === 0 ? '' : 'hidden'}`}>
+        <p class="text-4xl mb-3">📝</p>
+        <p class="text-gray-500 dark:text-gray-400 text-lg">Aucun article pour le moment. Revenez bientôt !</p>
+      </div>
 
       <!-- Article à la une -->
-      {featured && (
+      <div id="blog-featured">
+        {featured && (
         <a
           href={withBase(`/blog/${featured.slug}`)}
           class="group grid lg:grid-cols-2 gap-6 lg:gap-10 mt-10 mb-14 items-center"
@@ -72,10 +71,10 @@ const readTime = (post: (typeof allPosts)[number]) =>
             </div>
           </div>
         </a>
-      )}
+        )}
+      </div>
 
-      {allPosts.length > 0 && (
-        <div>
+      <div id="blog-list-section" class={allPosts.length === 0 ? 'hidden' : ''}>
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Tous les articles</h2>
             <!-- Filtres par tag -->
@@ -131,8 +130,7 @@ const readTime = (post: (typeof allPosts)[number]) =>
             ))}
           </div>
           <p id="no-results" class="hidden text-center text-gray-500 dark:text-gray-400 py-12">Aucun article pour ce thème.</p>
-        </div>
-      )}
+      </div>
 
       <!-- Newsletter -->
       <div class="mt-16 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-700 p-8 sm:p-10 text-center">
@@ -149,9 +147,88 @@ const readTime = (post: (typeof allPosts)[number]) =>
   </section>
 
   <script>
-    // Filtrage par tag (côté client)
+    import { articlesData } from '../../utils/db';
+    import type { Article } from '../../utils/store';
+    import { withBase } from '../../utils/url';
+
+    const esc = (s: string) =>
+      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const fmtDate = (d: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
+    const readTime = (a: Article) => Math.max(1, Math.round((a.content?.split(/\s+/).length ?? 200) / 200));
+    const detailUrl = (a: Article) => withBase(`/blog/detail?id=${encodeURIComponent(a.id)}`);
+
+    function featuredHTML(a: Article): string {
+      const img = a.image
+        ? `<img src="${esc(withBase(a.image))}" alt="${esc(a.title)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />`
+        : '<div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-700"></div>';
+      return `
+        <a href="${detailUrl(a)}" class="group grid lg:grid-cols-2 gap-6 lg:gap-10 mt-10 mb-14 items-center">
+          <div class="relative rounded-3xl overflow-hidden aspect-[16/10] bg-gray-100 dark:bg-gray-800">
+            ${img}
+            <span class="absolute top-4 left-4 inline-flex rounded-full bg-green-600 text-white px-3 py-1 text-xs font-semibold">À la une</span>
+          </div>
+          <div>
+            ${a.tags?.[0] ? `<span class="text-sm font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">${esc(a.tags[0])}</span>` : ''}
+            <h2 class="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">${esc(a.title)}</h2>
+            <p class="mt-3 text-gray-600 dark:text-gray-300 line-clamp-3">${esc(a.description)}</p>
+            <div class="mt-5 flex items-center gap-3">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 font-bold">${esc((a.author || '?').charAt(0))}</span>
+              <div class="text-sm">
+                <p class="font-medium text-gray-900 dark:text-white">${esc(a.author)}</p>
+                <p class="text-gray-500 dark:text-gray-400">${fmtDate(a.pubDate)} · ${readTime(a)} min de lecture</p>
+              </div>
+            </div>
+          </div>
+        </a>`;
+    }
+
+    function cardHTML(a: Article): string {
+      const img = a.image
+        ? `<img src="${esc(withBase(a.image))}" alt="${esc(a.title)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
+        : '<div class="w-full h-full bg-gradient-to-br from-green-500 to-emerald-600"></div>';
+      const tagPills = (a.tags ?? []).slice(0, 3).map((t) => `<span class="text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">${esc(t)}</span>`).join('');
+      return `
+        <article class="post-card group flex flex-col rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all" data-tags="${esc((a.tags ?? []).map((t) => t.toLowerCase()).join(','))}">
+          <a href="${detailUrl(a)}" class="block aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">${img}</a>
+          <div class="p-5 flex flex-col flex-1">
+            <div class="flex items-center gap-2 text-xs text-gray-400 mb-2"><time>${fmtDate(a.pubDate)}</time><span>·</span><span>${readTime(a)} min</span></div>
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white"><a href="${detailUrl(a)}" class="hover:text-green-700 dark:hover:text-green-400 transition-colors">${esc(a.title)}</a></h3>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-1">${esc(a.description)}</p>
+            ${tagPills ? `<div class="mt-3 flex flex-wrap gap-1.5">${tagPills}</div>` : ''}
+            <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+              <span class="text-sm text-gray-500 dark:text-gray-400">Par ${esc(a.author)}</span>
+              <span class="inline-flex items-center gap-1 text-sm font-medium text-green-700 dark:text-green-400 group-hover:gap-2 transition-all">Lire
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </span>
+            </div>
+          </div>
+        </article>`;
+    }
+
+    // --- Règle : base non vide → on affiche la base ; sinon le MDX (déjà rendu) ---
+    const dbArticles = (await articlesData.list())
+      .filter((a) => !a.draft)
+      .sort((a, b) => b.pubDate.localeCompare(a.pubDate));
+    if (dbArticles.length) {
+      const feat = dbArticles[0];
+      const rest = dbArticles.slice(1);
+      document.getElementById('blog-empty-all')!.classList.add('hidden');
+      document.getElementById('blog-featured')!.innerHTML = featuredHTML(feat);
+      const section = document.getElementById('blog-list-section')!;
+      section.classList.remove('hidden');
+      document.getElementById('posts-grid')!.innerHTML = rest.length ? rest.map(cardHTML).join('') : cardHTML(feat);
+
+      // Reconstruit les filtres par tag.
+      const tags = [...new Set(dbArticles.flatMap((a) => a.tags ?? []))].sort();
+      const tf = document.getElementById('tag-filters');
+      if (tf) {
+        tf.innerHTML = '<button data-tag="all" class="tag-btn rounded-full px-3 py-1.5 text-sm font-medium bg-green-600 text-white">Tous</button>'
+          + tags.map((t) => `<button data-tag="${esc(t.toLowerCase())}" class="tag-btn rounded-full px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">${esc(t)}</button>`).join('');
+      }
+    }
+
+    // --- Filtrage par tag (s'applique au contenu final, MDX ou base) ---
     const filters = document.getElementById('tag-filters');
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('.post-card'));
     const noResults = document.getElementById('no-results');
 
     filters?.addEventListener('click', (e) => {
@@ -168,7 +245,7 @@ const readTime = (post: (typeof allPosts)[number]) =>
         b.classList.toggle('dark:text-gray-300', !on);
       });
       let visible = 0;
-      cards.forEach((card) => {
+      document.querySelectorAll<HTMLElement>('.post-card').forEach((card) => {
         const tagList = (card.dataset.tags ?? '').split(',');
         const show = tag === 'all' || tagList.includes(tag);
         card.classList.toggle('hidden', !show);

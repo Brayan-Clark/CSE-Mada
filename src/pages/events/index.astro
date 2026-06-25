@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import { withBase } from '../../utils/url';
 
+// Fallback statique (MDX) : affiché tant que la base n'a aucun événement.
 const all = (
   await getCollection('events', ({ data }) => {
     return import.meta.env.PROD ? !data.draft : true;
@@ -12,7 +13,6 @@ const all = (
 const now = Date.now();
 const isUpcoming = (d: Date) => d.valueOf() >= now;
 
-// Mise en avant : le prochain événement à venir, sinon le plus récent.
 const upcomingAsc = [...all].filter((e) => isUpcoming(e.data.date)).sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
 const featured = upcomingAsc[0] ?? all[0];
 const rest = all.filter((e) => e.slug !== featured?.slug);
@@ -34,7 +34,7 @@ const whenOf = (d: Date) => (isUpcoming(d) ? 'upcoming' : 'past');
 <Layout title={title} description={description}>
   <section class="bg-white dark:bg-gray-950">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-      <!-- En-tête compact -->
+      <!-- En-tête -->
       <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
         <div>
           <span class="inline-flex items-center gap-1.5 text-green-700 dark:text-green-400 text-sm font-semibold uppercase tracking-wide">
@@ -43,152 +43,248 @@ const whenOf = (d: Date) => (isUpcoming(d) ? 'upcoming' : 'past');
           <h1 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">{title}</h1>
           <p class="mt-2 max-w-xl text-gray-500 dark:text-gray-400">{description}</p>
         </div>
-        <span class="shrink-0 inline-flex items-center gap-2 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-4 py-2 text-sm font-medium">
+        <span id="events-badge" class={`shrink-0 inline-flex items-center gap-2 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-4 py-2 text-sm font-medium ${all.length === 0 ? 'hidden' : ''}`}>
           {upcomingCount} à venir · {pastCount} passé{pastCount > 1 ? 's' : ''}
         </span>
       </div>
 
-      {all.length === 0 && (
-        <div class="text-center py-20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
-          <p class="text-4xl mb-3">📭</p>
-          <p class="text-gray-500 dark:text-gray-400 text-lg">Aucun événement prévu pour le moment.</p>
-        </div>
-      )}
+      <!-- État vide (aucun événement nulle part) -->
+      <div id="events-empty-all" class={`text-center py-20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 ${all.length === 0 ? '' : 'hidden'}`}>
+        <p class="text-4xl mb-3">📭</p>
+        <p class="text-gray-500 dark:text-gray-400 text-lg">Aucun événement prévu pour le moment.</p>
+      </div>
 
       <!-- Barre de filtres -->
-      {all.length > 0 && (
-        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-8">
-          <div id="when-filters" class="flex gap-2">
-            <button data-when="all" class="when-btn rounded-full px-4 py-2 text-sm font-medium bg-green-600 text-white">Tous</button>
-            <button data-when="upcoming" class="when-btn rounded-full px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">À venir</button>
-            <button data-when="past" class="when-btn rounded-full px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Passés</button>
-          </div>
-          {activities.length > 0 && (
-            <select id="activity-filter" class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 lg:w-56">
-              <option value="all">Toutes les activités</option>
-              {activities.map((a) => <option value={a}>{a}</option>)}
-            </select>
-          )}
+      <div id="events-toolbar" class={`flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-8 ${all.length === 0 ? 'hidden' : ''}`}>
+        <div id="when-filters" class="flex gap-2">
+          <button data-when="all" class="when-btn rounded-full px-4 py-2 text-sm font-medium bg-green-600 text-white">Tous</button>
+          <button data-when="upcoming" class="when-btn rounded-full px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">À venir</button>
+          <button data-when="past" class="when-btn rounded-full px-4 py-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Passés</button>
         </div>
-      )}
+        <select id="activity-filter" class={`rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 lg:w-56 ${activities.length === 0 ? 'hidden' : ''}`}>
+          <option value="all">Toutes les activités</option>
+          {activities.map((a) => <option value={a}>{a}</option>)}
+        </select>
+      </div>
 
-      <!-- Événement à la une -->
-      {featured && (
-        <a
-          href={withBase(`/events/${featured.slug}`)}
-          data-event
-          data-when={whenOf(featured.data.date)}
-          data-activity={featured.data.activity ?? ''}
-          class="group relative block rounded-3xl overflow-hidden mb-12 min-h-[20rem] lg:min-h-[24rem] shadow-sm hover:shadow-xl transition-shadow"
-        >
-          {featured.data.image ? (
-            <img src={withBase(featured.data.image)} alt={featured.data.title} class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-          ) : (
-            <div class="absolute inset-0 bg-gradient-to-br from-green-600 to-emerald-700"></div>
-          )}
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-          <div class="relative h-full flex flex-col justify-end p-6 sm:p-10">
-            <div class="flex items-center gap-3 mb-3">
-              <span class="inline-flex flex-col items-center justify-center rounded-xl bg-white text-gray-900 px-3 py-1.5 leading-none shadow">
-                <span class="text-2xl font-extrabold">{day(featured.data.date)}</span>
-                <span class="text-xs font-semibold uppercase text-green-700">{month(featured.data.date)} {year(featured.data.date)}</span>
-              </span>
-              <span class="inline-flex rounded-full bg-green-600 text-white px-3 py-1 text-xs font-semibold">{isUpcoming(featured.data.date) ? 'Prochainement' : 'À la une'}</span>
-              {featured.data.activity && (
-                <span class="inline-flex rounded-full bg-white/20 text-white px-3 py-1 text-xs font-medium backdrop-blur-sm">{featured.data.activity}</span>
+      <!-- Événement à la une (rempli côté serveur par le MDX, remplacé si base non vide) -->
+      <div id="events-featured">
+        {featured && (
+          <a
+            href={withBase(`/events/${featured.slug}`)}
+            data-event
+            data-when={whenOf(featured.data.date)}
+            data-activity={featured.data.activity ?? ''}
+            class="group relative block rounded-3xl overflow-hidden mb-12 min-h-[20rem] lg:min-h-[24rem] shadow-sm hover:shadow-xl transition-shadow"
+          >
+            {featured.data.image ? (
+              <img src={withBase(featured.data.image)} alt={featured.data.title} class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            ) : (
+              <div class="absolute inset-0 bg-gradient-to-br from-green-600 to-emerald-700"></div>
+            )}
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+            <div class="relative h-full flex flex-col justify-end p-6 sm:p-10">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="inline-flex flex-col items-center justify-center rounded-xl bg-white text-gray-900 px-3 py-1.5 leading-none shadow">
+                  <span class="text-2xl font-extrabold">{day(featured.data.date)}</span>
+                  <span class="text-xs font-semibold uppercase text-green-700">{month(featured.data.date)} {year(featured.data.date)}</span>
+                </span>
+                <span class="inline-flex rounded-full bg-green-600 text-white px-3 py-1 text-xs font-semibold">{isUpcoming(featured.data.date) ? 'Prochainement' : 'À la une'}</span>
+                {featured.data.activity && (
+                  <span class="inline-flex rounded-full bg-white/20 text-white px-3 py-1 text-xs font-medium backdrop-blur-sm">{featured.data.activity}</span>
+                )}
+              </div>
+              <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white max-w-2xl">{featured.data.title}</h2>
+              {featured.data.location && (
+                <p class="mt-2 flex items-center gap-1.5 text-gray-200 text-sm">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {featured.data.location}
+                </p>
               )}
+              {featured.data.description && (
+                <p class="mt-3 text-gray-200 max-w-2xl line-clamp-2 hidden sm:block">{featured.data.description}</p>
+              )}
+              <span class="mt-5 inline-flex items-center gap-2 self-start rounded-full bg-white text-gray-900 px-5 py-2.5 text-sm font-semibold group-hover:gap-3 transition-all">
+                Découvrir l'événement
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+              </span>
             </div>
-            <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white max-w-2xl">{featured.data.title}</h2>
-            {featured.data.location && (
-              <p class="mt-2 flex items-center gap-1.5 text-gray-200 text-sm">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                {featured.data.location}
-              </p>
-            )}
-            {featured.data.description && (
-              <p class="mt-3 text-gray-200 max-w-2xl line-clamp-2 hidden sm:block">{featured.data.description}</p>
-            )}
-            <span class="mt-5 inline-flex items-center gap-2 self-start rounded-full bg-white text-gray-900 px-5 py-2.5 text-sm font-semibold group-hover:gap-3 transition-all">
-              Découvrir l'événement
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-            </span>
-          </div>
-        </a>
-      )}
+          </a>
+        )}
+      </div>
 
-      <!-- Timeline des autres événements -->
-      {rest.length > 0 && (
-        <div>
-          <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-5">Toutes les sorties</h2>
-          <ol id="events-timeline" class="relative border-l-2 border-gray-100 dark:border-gray-800 ml-3 sm:ml-4 space-y-6">
-            {rest.map((event) => (
-              <li class="relative pl-6 sm:pl-8" data-event data-when={whenOf(event.data.date)} data-activity={event.data.activity ?? ''}>
-                <span class={`absolute -left-[9px] top-6 h-4 w-4 rounded-full border-2 border-white dark:border-gray-950 ${isUpcoming(event.data.date) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
-                <a
-                  href={withBase(`/events/${event.slug}`)}
-                  class="group flex flex-col sm:flex-row gap-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3 sm:p-4 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all"
-                >
-                  <div class="relative sm:w-44 lg:w-52 shrink-0 h-36 sm:h-auto rounded-xl overflow-hidden">
-                    {event.data.image ? (
-                      <img src={withBase(event.data.image)} alt={event.data.title} class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-3xl">📅</div>
-                    )}
-                    <span class="absolute top-2 left-2 inline-flex flex-col items-center justify-center rounded-lg bg-white/95 text-gray-900 px-2 py-1 leading-none shadow">
-                      <span class="text-lg font-extrabold">{day(event.data.date)}</span>
-                      <span class="text-[10px] font-semibold uppercase text-green-700">{month(event.data.date)}</span>
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0 py-1">
-                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                      <span class="text-xs text-gray-400">{fullDate(event.data.date)}</span>
-                      {isUpcoming(event.data.date) && (
-                        <span class="inline-flex rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 text-xs font-medium">À venir</span>
-                      )}
-                      {event.data.activity && (
-                        <span class="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 text-xs font-medium">{event.data.activity}</span>
-                      )}
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors line-clamp-1">{event.data.title}</h3>
-                    {event.data.location && (
-                      <p class="mt-1 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                        <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        <span class="truncate">{event.data.location}</span>
-                      </p>
-                    )}
-                    {event.data.description && (
-                      <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{event.data.description}</p>
-                    )}
-                  </div>
-                  <span class="hidden sm:flex items-center self-center text-green-600 dark:text-green-400 shrink-0 pr-2">
-                    <svg class="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+      <!-- Timeline -->
+      <div id="events-list-section" class={rest.length === 0 ? 'hidden' : ''}>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-5">Toutes les sorties</h2>
+        <ol id="events-timeline" class="relative border-l-2 border-gray-100 dark:border-gray-800 ml-3 sm:ml-4 space-y-6">
+          {rest.map((event) => (
+            <li class="relative pl-6 sm:pl-8" data-event data-when={whenOf(event.data.date)} data-activity={event.data.activity ?? ''}>
+              <span class={`absolute -left-[9px] top-6 h-4 w-4 rounded-full border-2 border-white dark:border-gray-950 ${isUpcoming(event.data.date) ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}></span>
+              <a
+                href={withBase(`/events/${event.slug}`)}
+                class="group flex flex-col sm:flex-row gap-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3 sm:p-4 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all"
+              >
+                <div class="relative sm:w-44 lg:w-52 shrink-0 h-36 sm:h-auto rounded-xl overflow-hidden">
+                  {event.data.image ? (
+                    <img src={withBase(event.data.image)} alt={event.data.title} class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-3xl">📅</div>
+                  )}
+                  <span class="absolute top-2 left-2 inline-flex flex-col items-center justify-center rounded-lg bg-white/95 text-gray-900 px-2 py-1 leading-none shadow">
+                    <span class="text-lg font-extrabold">{day(event.data.date)}</span>
+                    <span class="text-[10px] font-semibold uppercase text-green-700">{month(event.data.date)}</span>
                   </span>
-                </a>
-              </li>
-            ))}
-          </ol>
-          <p id="events-empty" class="hidden text-center text-gray-500 dark:text-gray-400 py-12">Aucun événement ne correspond à ces filtres.</p>
-        </div>
-      )}
+                </div>
+                <div class="flex-1 min-w-0 py-1">
+                  <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                    <span class="text-xs text-gray-400">{fullDate(event.data.date)}</span>
+                    {isUpcoming(event.data.date) && (
+                      <span class="inline-flex rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 text-xs font-medium">À venir</span>
+                    )}
+                    {event.data.activity && (
+                      <span class="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 text-xs font-medium">{event.data.activity}</span>
+                    )}
+                  </div>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors line-clamp-1">{event.data.title}</h3>
+                  {event.data.location && (
+                    <p class="mt-1 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+                      <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      <span class="truncate">{event.data.location}</span>
+                    </p>
+                  )}
+                  {event.data.description && (
+                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{event.data.description}</p>
+                  )}
+                </div>
+                <span class="hidden sm:flex items-center self-center text-green-600 dark:text-green-400 shrink-0 pr-2">
+                  <svg class="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ol>
+        <p id="events-empty" class="hidden text-center text-gray-500 dark:text-gray-400 py-12">Aucun événement ne correspond à ces filtres.</p>
+      </div>
     </div>
   </section>
 
   <script>
+    import { eventsData } from '../../utils/db';
+    import type { EventItem } from '../../utils/store';
+    import { withBase } from '../../utils/url';
+
+    const esc = (s: string) =>
+      String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const isUpcoming = (d: string) => new Date(d).valueOf() >= Date.now();
+    const fmt = (d: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', o).format(new Date(d));
+    const day = (d: string) => fmt(d, { day: '2-digit' });
+    const month = (d: string) => fmt(d, { month: 'short' }).replace('.', '');
+    const year = (d: string) => fmt(d, { year: 'numeric' });
+    const fullDate = (d: string) => fmt(d, { day: 'numeric', month: 'long', year: 'numeric' });
+    const detailUrl = (ev: EventItem) => withBase(`/events/detail?id=${encodeURIComponent(ev.id)}`);
+
+    function featuredHTML(ev: EventItem): string {
+      const img = ev.image
+        ? `<img src="${esc(withBase(ev.image))}" alt="${esc(ev.title)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />`
+        : '<div class="absolute inset-0 bg-gradient-to-br from-green-600 to-emerald-700"></div>';
+      return `
+        <a href="${detailUrl(ev)}" data-event data-when="${isUpcoming(ev.date) ? 'upcoming' : 'past'}" data-activity="${esc(ev.activity ?? '')}"
+           class="group relative block rounded-3xl overflow-hidden mb-12 min-h-[20rem] lg:min-h-[24rem] shadow-sm hover:shadow-xl transition-shadow">
+          ${img}
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          <div class="relative h-full flex flex-col justify-end p-6 sm:p-10">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="inline-flex flex-col items-center justify-center rounded-xl bg-white text-gray-900 px-3 py-1.5 leading-none shadow">
+                <span class="text-2xl font-extrabold">${day(ev.date)}</span>
+                <span class="text-xs font-semibold uppercase text-green-700">${month(ev.date)} ${year(ev.date)}</span>
+              </span>
+              <span class="inline-flex rounded-full bg-green-600 text-white px-3 py-1 text-xs font-semibold">${isUpcoming(ev.date) ? 'Prochainement' : 'À la une'}</span>
+              ${ev.activity ? `<span class="inline-flex rounded-full bg-white/20 text-white px-3 py-1 text-xs font-medium backdrop-blur-sm">${esc(ev.activity)}</span>` : ''}
+            </div>
+            <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white max-w-2xl">${esc(ev.title)}</h2>
+            ${ev.location ? `<p class="mt-2 flex items-center gap-1.5 text-gray-200 text-sm"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>${esc(ev.location)}</p>` : ''}
+            ${ev.description ? `<p class="mt-3 text-gray-200 max-w-2xl line-clamp-2 hidden sm:block">${esc(ev.description)}</p>` : ''}
+            <span class="mt-5 inline-flex items-center gap-2 self-start rounded-full bg-white text-gray-900 px-5 py-2.5 text-sm font-semibold group-hover:gap-3 transition-all">Découvrir l'événement
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </span>
+          </div>
+        </a>`;
+    }
+
+    function itemHTML(ev: EventItem): string {
+      const up = isUpcoming(ev.date);
+      const img = ev.image
+        ? `<img src="${esc(withBase(ev.image))}" alt="${esc(ev.title)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />`
+        : '<div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white text-3xl">📅</div>';
+      return `
+        <li class="relative pl-6 sm:pl-8" data-event data-when="${up ? 'upcoming' : 'past'}" data-activity="${esc(ev.activity ?? '')}">
+          <span class="absolute -left-[9px] top-6 h-4 w-4 rounded-full border-2 border-white dark:border-gray-950 ${up ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}"></span>
+          <a href="${detailUrl(ev)}" class="group flex flex-col sm:flex-row gap-4 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3 sm:p-4 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all">
+            <div class="relative sm:w-44 lg:w-52 shrink-0 h-36 sm:h-auto rounded-xl overflow-hidden">
+              ${img}
+              <span class="absolute top-2 left-2 inline-flex flex-col items-center justify-center rounded-lg bg-white/95 text-gray-900 px-2 py-1 leading-none shadow">
+                <span class="text-lg font-extrabold">${day(ev.date)}</span>
+                <span class="text-[10px] font-semibold uppercase text-green-700">${month(ev.date)}</span>
+              </span>
+            </div>
+            <div class="flex-1 min-w-0 py-1">
+              <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                <span class="text-xs text-gray-400">${fullDate(ev.date)}</span>
+                ${up ? '<span class="inline-flex rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 text-xs font-medium">À venir</span>' : ''}
+                ${ev.activity ? `<span class="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 text-xs font-medium">${esc(ev.activity)}</span>` : ''}
+              </div>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors line-clamp-1">${esc(ev.title)}</h3>
+              ${ev.location ? `<p class="mt-1 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"><svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg><span class="truncate">${esc(ev.location)}</span></p>` : ''}
+              ${ev.description ? `<p class="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">${esc(ev.description)}</p>` : ''}
+            </div>
+            <span class="hidden sm:flex items-center self-center text-green-600 dark:text-green-400 shrink-0 pr-2">
+              <svg class="h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </span>
+          </a>
+        </li>`;
+    }
+
+    // --- Règle : si la base contient des événements, on remplace le MDX par la base ---
+    const dbEvents = await eventsData.list();
+    if (dbEvents.length) {
+      const sorted = [...dbEvents].sort((a, b) => b.date.localeCompare(a.date));
+      const upAsc = sorted.filter((e) => isUpcoming(e.date)).sort((a, b) => a.date.localeCompare(b.date));
+      const feat = upAsc[0] ?? sorted[0];
+      const rest = sorted.filter((e) => e.id !== feat?.id);
+
+      document.getElementById('events-empty-all')!.classList.add('hidden');
+      document.getElementById('events-toolbar')!.classList.remove('hidden');
+      document.getElementById('events-badge')!.classList.remove('hidden');
+
+      const upCount = sorted.filter((e) => isUpcoming(e.date)).length;
+      const pastN = sorted.length - upCount;
+      document.getElementById('events-badge')!.textContent = `${upCount} à venir · ${pastN} passé${pastN > 1 ? 's' : ''}`;
+
+      document.getElementById('events-featured')!.innerHTML = feat ? featuredHTML(feat) : '';
+
+      const section = document.getElementById('events-list-section')!;
+      section.classList.toggle('hidden', rest.length === 0);
+      document.getElementById('events-timeline')!.innerHTML = rest.map(itemHTML).join('');
+
+      // Reconstruit le filtre par activité.
+      const acts = [...new Set(sorted.map((e) => e.activity).filter(Boolean))].sort();
+      const sel = document.getElementById('activity-filter') as HTMLSelectElement;
+      sel.classList.toggle('hidden', acts.length === 0);
+      sel.innerHTML = '<option value="all">Toutes les activités</option>' + acts.map((a) => `<option value="${esc(a as string)}">${esc(a as string)}</option>`).join('');
+    }
+
+    // --- Filtres (s'appliquent au contenu final, MDX ou base) ---
     let when = 'all';
     let activity = 'all';
-    const items = Array.from(document.querySelectorAll<HTMLElement>('[data-event]'));
     const emptyMsg = document.getElementById('events-empty');
 
     function apply() {
-      let visible = 0;
+      const items = Array.from(document.querySelectorAll<HTMLElement>('[data-event]'));
       items.forEach((el) => {
         const okWhen = when === 'all' || el.dataset.when === when;
         const okAct = activity === 'all' || el.dataset.activity === activity;
-        const show = okWhen && okAct;
-        el.classList.toggle('hidden', !show);
-        if (show) visible++;
+        el.classList.toggle('hidden', !(okWhen && okAct));
       });
-      // n'affiche le message vide que si la timeline est concernée
       const timeline = document.getElementById('events-timeline');
       if (emptyMsg && timeline) {
         const anyTimeline = Array.from(timeline.querySelectorAll<HTMLElement>('[data-event]')).some((el) => !el.classList.contains('hidden'));
