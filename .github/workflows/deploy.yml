@@ -26,24 +26,17 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
-      - name: Clean install dependencies
-        run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-          npm cache clean --force
-          npm install --no-optional
-          npm install --save-dev rollup@3.29.4
-          npm rebuild
-          npx rollup --version
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build
-        run: |
-          export NODE_OPTIONS=--experimental-vm-modules
-          npm run build
-          echo "Base URL: ${{ github.event.repository.html_url }}"
+        run: npm run build
         env:
-          NODE_OPTIONS: --experimental-vm-modules
           NODE_ENV: production
+          # Optionnels : si définis dans les secrets du dépôt, le site se
+          # connecte à Supabase ; sinon il reste en mode démo (voir docs/DATABASE.md).
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

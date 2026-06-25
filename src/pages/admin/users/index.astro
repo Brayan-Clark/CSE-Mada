@@ -1,0 +1,248 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { isSupabaseEnabled } from '../../../utils/supabase';
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<AdminLayout title="Utilisateurs" active="users">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <p class="text-sm text-gray-500 dark:text-gray-400"><span id="user-count">0</span> utilisateur(s)</p>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
+        <input id="user-search" type="search" placeholder="Rechercher…" class="w-full sm:w-52 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+      </div>
+      <button id="add-user" data-requires="users.manage" class="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        Inviter un utilisateur
+      </button>
+    </div>
+  </div>
+
+  {isSupabaseEnabled && (
+    <p class="mb-4 text-sm text-gray-500 dark:text-gray-400" data-superadmin>
+      💡 En invitant un utilisateur, un mot de passe temporaire est généré automatiquement. Communiquez-le à la personne : elle pourra le changer dans « Mon compte ».
+    </p>
+  )}
+
+  <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800/50 text-left text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="px-4 py-3 font-medium">Nom</th>
+            <th class="px-4 py-3 font-medium">Email</th>
+            <th class="px-4 py-3 font-medium">Rôle</th>
+            <th class="px-4 py-3 font-medium">Statut</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-body" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
+      </table>
+    </div>
+    <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400">Aucun utilisateur.</p>
+  </div>
+
+  <!-- Modale -->
+  <div id="user-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl">
+      <h3 id="modal-title" class="text-lg font-bold mb-5">Inviter un utilisateur</h3>
+
+      <!-- Mot de passe généré (après invitation) -->
+      <div id="invite-result" class="hidden mb-4 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-4 text-sm">
+        <p class="text-green-800 dark:text-green-300 font-medium mb-2">✅ Utilisateur créé. Mot de passe temporaire :</p>
+        <div class="flex items-center gap-2">
+          <code id="invite-password" class="flex-1 rounded bg-white dark:bg-gray-800 px-3 py-2 font-mono text-gray-900 dark:text-white break-all"></code>
+          <button type="button" id="copy-password" class="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-800">Copier</button>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">Communiquez-le à l'utilisateur (changeable ensuite dans « Mon compte »).</p>
+      </div>
+
+      <div id="user-error" class="hidden mb-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400"></div>
+
+      <form id="user-form" class="space-y-4">
+        <input type="hidden" id="user-id" />
+        <div>
+          <label for="name" class="block text-sm font-medium mb-1.5">Nom *</label>
+          <input id="name" type="text" required class={inputClass} />
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium mb-1.5">Email *</label>
+          <input id="email" type="email" required class={inputClass} />
+        </div>
+        <div>
+          <label for="role" class="block text-sm font-medium mb-1.5">Rôle</label>
+          <select id="role" class={inputClass}></select>
+        </div>
+        <label id="active-row" class="flex items-center gap-2 text-sm">
+          <input id="active" type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+          Compte actif
+        </label>
+        <div class="flex items-center gap-3 pt-2">
+          <button type="submit" id="user-submit" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Enregistrer</button>
+          <button type="button" id="modal-cancel" class="rounded-lg border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Fermer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { usersData, rolesData } from '../../../utils/db';
+    import { seedRoles, DEFAULT_ROLES, DEFAULT_USERS } from '../../../utils/store';
+    import type { Role, RoleDef, User } from '../../../utils/store';
+    import { can } from '../../../utils/auth';
+    import { getSupabase, isSupabaseEnabled } from '../../../utils/supabase';
+
+    usersData.seedIfEmpty(DEFAULT_USERS);
+    rolesData.seedIfEmpty(DEFAULT_ROLES);
+    seedRoles();
+
+    const canManage = can('users.manage');
+    const body = document.getElementById('users-body')!;
+    const empty = document.getElementById('empty-state')!;
+    const count = document.getElementById('user-count')!;
+    const modal = document.getElementById('user-modal')!;
+    const form = document.getElementById('user-form') as HTMLFormElement;
+    const title = document.getElementById('modal-title')!;
+    const roleSelect = document.getElementById('role') as HTMLSelectElement;
+    const searchInput = document.getElementById('user-search') as HTMLInputElement;
+    const inviteResult = document.getElementById('invite-result')!;
+    const invitePassword = document.getElementById('invite-password')!;
+    const userError = document.getElementById('user-error')!;
+    const f = (id: string) => document.getElementById(id) as HTMLInputElement;
+
+    // Rôles assignables (on n'expose pas superadmin à l'attribution manuelle).
+    const allRoles: RoleDef[] = await rolesData.list();
+    const roles = allRoles.filter((r) => r.id !== 'superadmin');
+    roleSelect.innerHTML = roles.map((r) => `<option value="${r.id}">${r.label}</option>`).join('');
+
+    const roleLabel = (r: Role) => allRoles.find((x) => x.id === r)?.label ?? r;
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    function randomPassword(len = 14): string {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#%';
+      const bytes = crypto.getRandomValues(new Uint8Array(len));
+      return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+    }
+
+    async function render() {
+      const search = searchInput.value.trim().toLowerCase();
+      const users = (await usersData.list())
+        .filter((u) => !search || u.name.toLowerCase().includes(search) || u.email.toLowerCase().includes(search) || roleLabel(u.role).toLowerCase().includes(search));
+      count.textContent = String(users.length);
+      empty.classList.toggle('hidden', users.length > 0);
+      body.innerHTML = users
+        .map((u) => {
+          const status = u.active
+            ? '<span class="inline-flex rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 text-xs">Actif</span>'
+            : '<span class="inline-flex rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 text-xs">Inactif</span>';
+          const actions = canManage
+            ? `<button data-edit="${escape(u.id)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30">Éditer</button>
+               <button data-delete="${escape(u.id)}" data-name="${escape(u.name)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">Supprimer</button>`
+            : '<span class="text-xs text-gray-400">—</span>';
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+              <td class="px-4 py-3 font-medium">${escape(u.name)}</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${escape(u.email)}</td>
+              <td class="px-4 py-3">${escape(roleLabel(u.role))}</td>
+              <td class="px-4 py-3">${status}</td>
+              <td class="px-4 py-3"><div class="flex items-center justify-end gap-2">${actions}</div></td>
+            </tr>`;
+        })
+        .join('');
+    }
+
+    function resetMessages() {
+      inviteResult.classList.add('hidden');
+      userError.classList.add('hidden');
+    }
+
+    function openModal(user?: User) {
+      resetMessages();
+      const editing = Boolean(user);
+      title.textContent = editing ? 'Modifier l’utilisateur' : 'Inviter un utilisateur';
+      f('user-id').value = user?.id ?? '';
+      f('name').value = user?.name ?? '';
+      f('email').value = user?.email ?? '';
+      f('email').disabled = editing; // l'email d'un compte existant ne change pas ici
+      roleSelect.value = user?.role ?? roles[0]?.id ?? 'viewer';
+      f('active').checked = user?.active ?? true;
+      document.getElementById('active-row')!.classList.toggle('hidden', !editing);
+      document.getElementById('user-submit')!.textContent = editing ? 'Enregistrer' : (isSupabaseEnabled ? 'Inviter' : 'Créer');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('add-user')?.addEventListener('click', () => openModal());
+    document.getElementById('modal-cancel')?.addEventListener('click', closeModal);
+    searchInput.addEventListener('input', render);
+
+    document.getElementById('copy-password')?.addEventListener('click', () => {
+      navigator.clipboard?.writeText(invitePassword.textContent ?? '');
+    });
+
+    body.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      const editBtn = target.closest<HTMLButtonElement>('[data-edit]');
+      if (editBtn) {
+        const user = await usersData.get(editBtn.dataset.edit!);
+        if (user) openModal(user);
+        return;
+      }
+      const delBtn = target.closest<HTMLButtonElement>('[data-delete]');
+      if (delBtn && confirm(`Supprimer l'utilisateur « ${delBtn.dataset.name} » ?`)) {
+        await usersData.remove(delBtn.dataset.delete!);
+        render();
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resetMessages();
+      const id = f('user-id').value;
+      const name = f('name').value.trim();
+      const email = f('email').value.trim();
+      const role = roleSelect.value as Role;
+
+      // Édition d'un utilisateur existant
+      if (id) {
+        await usersData.update(id, { name, role, active: f('active').checked });
+        closeModal();
+        render();
+        return;
+      }
+
+      // Invitation (création)
+      const sb = getSupabase();
+      if (sb) {
+        const submit = document.getElementById('user-submit') as HTMLButtonElement;
+        submit.disabled = true; submit.textContent = 'Invitation…';
+        const { data, error } = await sb.functions.invoke('invite-user', { body: { email, name, roleId: role } });
+        submit.disabled = false; submit.textContent = 'Inviter';
+        if (error || (data && data.error)) {
+          userError.textContent = (data && data.error) || error?.message || "Échec de l'invitation.";
+          userError.classList.remove('hidden');
+          return;
+        }
+        invitePassword.textContent = data.password;
+        inviteResult.classList.remove('hidden');
+        render();
+      } else {
+        // Mode démo : création locale + mot de passe généré (illustratif).
+        await usersData.create({ name, email, role, active: true });
+        invitePassword.textContent = randomPassword();
+        inviteResult.classList.remove('hidden');
+        render();
+      }
+    });
+
+    render();
+  </script>
+</AdminLayout>

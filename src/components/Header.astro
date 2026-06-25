@@ -1,30 +1,48 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
+import { withBase } from '../utils/url';
 
-const base = '/CSE-Mada';
 const links = [
-  { name: 'Accueil', href: `${base}/` },
-  { name: 'Matériel', href: `${base}/materiel` },
-  { name: 'Services', href: `${base}/services` },
-  { name: 'Blog', href: `${base}/blog` },
-  { name: 'Events', href: `${base}/events` },
-  { name: 'Contact', href: `${base}/contact` },
+  { name: 'Accueil', href: withBase('/') },
+  { name: 'Matériel', href: withBase('/materiel') },
+  { name: 'Services', href: withBase('/services') },
+  { name: 'Blog', href: withBase('/blog') },
+  { name: 'Events', href: withBase('/events') },
+  { name: 'Contact', href: withBase('/contact') },
 ];
+
+const home = withBase('/').replace(/\/$/, '');
+const current = Astro.url.pathname.replace(/\/$/, '') || home;
+
+function isActive(href: string): boolean {
+  const target = href.replace(/\/$/, '');
+  if (target === home) return current === home;
+  return current === target || current.startsWith(`${target}/`);
+}
 ---
 
 <header
   class="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
 >
   <div class="container w-full mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-    <a href="/CSE-Mada/" class="flex items-center space-x-2 font-bold text-lg">
-      <img src="/CSE-Mada/images/CSE-logo.jpg" alt="Logo" class="w-16" />
+    <a href={withBase('/')} class="flex items-center space-x-2 font-bold text-lg">
+      <img src={withBase('/images/CSE-logo.jpg')} alt="Logo" class="w-16" />
       <span class="text-green-700">Camping Store & Event</span>
     </a>
 
     <nav class="hidden md:flex items-center space-x-6 justify-center">
       {
         links.map((link) => (
-          <a href={link.href} class="text-sm font-medium hover:text-primary transition-colors">
+          <a
+            href={link.href}
+            aria-current={isActive(link.href) ? 'page' : undefined}
+            class:list={[
+              'relative text-sm font-medium transition-colors py-1',
+              isActive(link.href)
+                ? 'text-green-700 dark:text-green-400 after:absolute after:-bottom-px after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-green-600'
+                : 'text-foreground hover:text-green-700 dark:hover:text-green-400',
+            ]}
+          >
             {link.name}
           </a>
         ))
@@ -60,7 +78,13 @@ const links = [
         links.map((link) => (
           <a
             href={link.href}
-            class="block py-2 text-foreground hover:text-primary transition-colors"
+            aria-current={isActive(link.href) ? 'page' : undefined}
+            class:list={[
+              'block py-2 pl-3 border-l-2 transition-colors',
+              isActive(link.href)
+                ? 'border-green-600 text-green-700 dark:text-green-400 font-semibold bg-green-50 dark:bg-green-900/20'
+                : 'border-transparent text-foreground hover:text-green-700 dark:hover:text-green-400',
+            ]}
           >
             {link.name}
           </a>

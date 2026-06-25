@@ -1,0 +1,119 @@
+---
+import { withBase } from '../../utils/url';
+import { DEFAULT_CREDENTIALS } from '../../utils/auth';
+import { isSupabaseEnabled } from '../../utils/supabase';
+import '../../styles/theme.css';
+---
+
+<!doctype html>
+<html lang="fr" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Connexion | Admin CSE</title>
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.ico')} />
+    <script is:inline>
+      const t = localStorage.getItem('theme');
+      if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
+  </head>
+  <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-gray-100 dark:from-gray-950 dark:to-gray-900 px-4 antialiased text-gray-900 dark:text-gray-100">
+    <div class="w-full max-w-md">
+      <div class="text-center mb-8">
+        <span class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-green-600 text-white text-2xl font-bold shadow-lg">C</span>
+        <h1 class="mt-4 text-2xl font-bold">Espace administration</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Camping Store & Event</p>
+      </div>
+
+      <form id="login-form" class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8 space-y-5">
+        <div
+          id="login-error"
+          class="hidden rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400"
+        >
+          Identifiant ou mot de passe incorrect.
+        </div>
+
+        <div>
+          <label for="username" class="block text-sm font-medium mb-1.5">{isSupabaseEnabled ? 'Email' : 'Identifiant'}</label>
+          <input
+            id="username"
+            name="username"
+            type={isSupabaseEnabled ? 'email' : 'text'}
+            autocomplete="username"
+            required
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium mb-1.5">Mot de passe</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+        >
+          Se connecter
+        </button>
+
+        {!isSupabaseEnabled && (
+          <p class="text-xs text-center text-gray-400 dark:text-gray-500">
+            Démo : <code class="font-mono">{DEFAULT_CREDENTIALS.username}</code> /
+            <code class="font-mono">{DEFAULT_CREDENTIALS.password}</code>
+          </p>
+        )}
+      </form>
+
+      <p class="mt-6 text-center">
+        <a href={withBase('/')} class="text-sm text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400">
+          ← Retour au site
+        </a>
+      </p>
+    </div>
+
+    <script>
+      import { login, isAuthenticated } from '../../utils/auth';
+      import { withBase } from '../../utils/url';
+
+      // Déjà connecté → aller directement au tableau de bord.
+      if (isAuthenticated()) {
+        window.location.replace(withBase('/admin'));
+      }
+
+      const form = document.getElementById('login-form') as HTMLFormElement | null;
+      const error = document.getElementById('login-error');
+      const submitBtn = form?.querySelector('button[type=submit]') as HTMLButtonElement | null;
+
+      form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        error?.classList.add('hidden');
+        const data = new FormData(form);
+        const username = String(data.get('username') ?? '');
+        const password = String(data.get('password') ?? '');
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Connexion…'; }
+        const result = await login(username, password);
+        if (result.ok) {
+          window.location.replace(withBase('/admin'));
+        } else {
+          if (error) {
+            error.textContent = result.error ?? 'Identifiant ou mot de passe incorrect.';
+            error.classList.remove('hidden');
+          }
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Se connecter'; }
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,278 +1,547 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { withBase } from '../utils/url';
+import { PRODUCT_CATEGORIES } from '../utils/store';
 
-// Données des catégories de matériel
-const categories = [
-  { id: 'tentes', name: 'Tentes & Abris', icon: '⛺', color: 'from-blue-500 to-blue-400' },
-  { id: 'sac-couchage', name: 'Sacs de couchage', icon: '🛌', color: 'from-purple-500 to-purple-400' },
-  { id: 'cuisine', name: 'Cuisine', icon: '🍳', color: 'from-red-500 to-red-400' },
-  { id: 'randonnee', name: 'Randonnée', icon: '🥾', color: 'from-green-500 to-green-400' },
-  { id: 'camping-car', name: 'Camping-car', icon: '🚐', color: 'from-yellow-500 to-yellow-400' },
-  { id: 'accessoires', name: 'Accessoires', icon: '🎒', color: 'from-pink-500 to-pink-400' },
-];
+// Catégories enrichies d'un visuel pour les filtres.
+const categoryIcons: Record<string, string> = {
+  tentes: '⛺', 'sac-couchage': '🛌', cuisine: '🍳', randonnee: '🥾', 'camping-car': '🚐', accessoires: '🎒',
+};
+const categories = PRODUCT_CATEGORIES.map((c) => ({ ...c, icon: categoryIcons[c.id] ?? '•' }));
 
-// Données des produits
-const products = [
-  {
-    id: 1,
-    name: 'Tente 4 saisons 2-3 personnes',
-    category: 'tentes',
-    price: 249.99,
-    image: 'https://images.unsplash.com/photo-1624923686627-514dd5e57bae?q=80&w=387&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    rating: 4.8,
-    stock: 5,
-    featured: true,
-    tags: ['Nouveauté', 'Populaire']
-  },
-  {
-    id: 2,
-    name: 'Sac de couchage -5°C confort',
-    category: 'sac-couchage',
-    price: 129.99,
-    image: 'https://images.unsplash.com/photo-1558477280-1bfed08ea5db?q=80&w=388&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    rating: 4.9,
-    stock: 8,
-    featured: true,
-    tags: ['Meilleure vente']
-  },
-  {
-    id: 3,
-    name: 'Réchaud de randonnée',
-    category: 'cuisine',
-    price: 89.99,
-    image: 'https://images.unsplash.com/photo-1738220543088-aa5b0f83733b?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    rating: 4.7,
-    stock: 12,
-    featured: true,
-    tags: ['Éco-responsable']
-  },
-  {
-    id: 4,
-    name: 'Sac à dos 60L',
-    category: 'randonnee',
-    price: 149.99,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    rating: 4.9,
-    stock: 6,
-    featured: true,
-    tags: ['Nouveauté']
-  },
-];
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
 ---
 
-<Layout title="Matériel de camping - Location et vente" description="Découvrez notre sélection de matériel de camping de qualité pour toutes vos aventures en plein air. Location et vente de tentes, sacs de couchage et équipements.">
-  <!-- Hero Section -->
+<Layout title="Boutique matériel de camping" description="Achetez votre matériel de camping de qualité : tentes, sacs de couchage, cuisine, randonnée. Prix en Ariary, commande en ligne sans paiement, livraison à Madagascar.">
+  <!-- Hero compact -->
   <div class="relative bg-gray-900 overflow-hidden">
-    <div class="absolute inset-0">
-      <img class="w-full h-full object-cover opacity-40" src="https://images.unsplash.com/photo-1563299796-17596ed6b017?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Matériel de camping">
-      <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+    <img class="absolute inset-0 w-full h-full object-cover opacity-40" src="https://images.unsplash.com/photo-1563299796-17596ed6b017?q=80&w=870&auto=format&fit=crop" alt="Matériel de camping" />
+    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
+    <div class="relative max-w-7xl mx-auto py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-green-600/90 text-white px-3 py-1 text-xs font-semibold">🛒 Boutique en ligne</span>
+      <h1 class="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Notre matériel de camping</h1>
+      <p class="mt-3 max-w-2xl text-lg text-gray-200">Sélectionnez vos équipements, ajoutez-les au panier et validez votre commande. Nous vous recontactons pour la livraison et le règlement.</p>
     </div>
-    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8 text-center">
-      <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-        Matériel de Camping
-      </h1>
-      <p class="mt-6 max-w-2xl mx-auto text-xl text-gray-300">
-        Découvrez notre sélection de matériel de qualité pour toutes vos aventures en plein air.
-      </p>
-      <div class="mt-8 flex justify-center space-x-4">
-        <a href="/CSE-Mada/materiel#produits" class="px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
-          Voir les produits
-        </a>
-        <a href="/CSE-Mada/materiel#location" class="px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gray-700 hover:bg-gray-600 transition-colors">
-          Découvrir la location
-        </a>
+  </div>
+
+  <!-- Barre de recherche & filtres -->
+  <div class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-gray-900/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div class="relative flex-1 sm:max-w-xs">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
+        <input id="search" type="search" placeholder="Rechercher un produit…" class={`${inputClass} pl-9 w-full`} />
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <select id="price" class={`${inputClass} flex-1 sm:w-44`}>
+          <option value="all">Tous les prix</option>
+          <option value="lt200">Moins de 200 000 Ar</option>
+          <option value="200-500">200 000 – 500 000 Ar</option>
+          <option value="gt500">Plus de 500 000 Ar</option>
+        </select>
+        <select id="sort" class={`${inputClass} flex-1 sm:w-44`}>
+          <option value="featured">En avant</option>
+          <option value="price-asc">Prix croissant</option>
+          <option value="price-desc">Prix décroissant</option>
+          <option value="name">Nom (A→Z)</option>
+        </select>
+        <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-3 text-sm whitespace-nowrap cursor-pointer">
+          <input id="stock-only" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+          En stock
+        </label>
       </div>
     </div>
   </div>
 
-  <!-- Catégories -->
-  <div class="bg-white dark:bg-gray-900 py-12">
+  <!-- Grille produits -->
+  <div class="bg-gray-50 dark:bg-gray-800 py-8 min-h-[40vh]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-          Explorez nos catégories
-        </h2>
-        <p class="mt-4 max-w-2xl mx-auto text-gray-500 dark:text-gray-400">
-          Trouvez l'équipement parfait pour votre prochaine aventure
-        </p>
+      <!-- Catégories défilantes (chevrons) -->
+      <div class="relative mb-8">
+        <button id="cat-prev" class="absolute -left-1 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-0 transition" aria-label="Précédent">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <div id="category-filters" class="flex gap-2.5 overflow-x-auto scroll-smooth px-10 py-1" style="scrollbar-width:none;-ms-overflow-style:none;">
+          <button data-cat="all" class="cat-btn whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors bg-green-600 text-white shadow-sm">Tout</button>
+          {categories.map((c) => (
+            <button data-cat={c.id} class="cat-btn whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-green-400 dark:hover:border-green-600">
+              <span class="mr-1">{c.icon}</span>{c.name}
+            </button>
+          ))}
+        </div>
+        <button id="cat-next" class="absolute -right-1 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-0 transition" aria-label="Suivant">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
       </div>
-      
-      <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-6">
-        {categories.map((category) => (
-          <a 
-            href={`#${category.id}`} 
-            class={`group relative bg-gradient-to-br ${category.color} rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
-          >
-            <div class="mx-auto h-16 w-16 bg-white/20 rounded-full flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform">
-              {category.icon}
-            </div>
-            <h3 class="text-sm font-medium text-white group-hover:text-gray-100 transition-colors">
-              {category.name}
-            </h3>
-          </a>
-        ))}
+
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400"><span id="result-count">0</span> produit(s)</p>
+        <button id="reset-filters" class="hidden text-sm text-green-700 dark:text-green-400 hover:underline">Réinitialiser les filtres</button>
       </div>
+
+      <div id="shop-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+      <p id="shop-empty" class="hidden text-center text-gray-500 dark:text-gray-400 py-16">Aucun produit ne correspond à votre recherche.</p>
     </div>
   </div>
 
-  <!-- Produits -->
-  <div id="produits" class="bg-gray-50 dark:bg-gray-800 py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
-            Nos produits phares
-          </h2>
-          <p class="mt-2 text-gray-600 dark:text-gray-300">
-            Découvrez nos meilleurs articles sélectionnés pour vous
-          </p>
-        </div>
-        <div class="mt-4 md:mt-0">
-          <select class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white py-2 pl-3 pr-10 text-base focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm">
-            <option>Trier par : Pertinence</option>
-            <option>Prix croissant</option>
-            <option>Prix décroissant</option>
-            <option>Meilleures notes</option>
-          </select>
-        </div>
-      </div>
+  <!-- Masque la scrollbar de la barre de catégories -->
+  <style is:global>
+    #category-filters::-webkit-scrollbar { display: none; }
+  </style>
 
-      <div class="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
-        {products.map((product) => (
-          <div key={product.id} class="group relative bg-white dark:bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
-            <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-xl bg-gray-200 dark:bg-gray-600">
-              <img
-                src={product.image}
-                alt={product.name}
-                class="h-64 w-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-              />
-              <div class="absolute top-3 left-3 flex space-x-2">
-                {product.tags?.map((tag, i) => (
-                  <span key={i} class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              {product.stock < 5 && (
-                <span class="absolute top-3 right-3 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">
-                  {product.stock} restant{product.stock > 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-            <div class="p-5">
-              <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1 line-clamp-2 h-14">
-                <a href={`/CSE-Mada/produit/${product.id}`} class="hover:text-green-600 dark:hover:text-green-400 transition-colors">
-                  {product.name}
-                </a>
-              </h3>
-              <div class="flex items-center mb-2">
-                <div class="flex items-center">
-                  {[0, 1, 2, 3, 4].map((star) => (
-                    <svg
-                      key={star}
-                      className={`h-4 w-4 ${star < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-500'}`}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                  <span class="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                    {product.rating}
-                  </span>
-                </div>
-              </div>
-              <div class="flex items-center justify-between mt-4">
-                <p class="text-lg font-bold text-gray-900 dark:text-white">
-                  {product.price.toFixed(2)} €
-                </p>
-                <a 
-                  href={`/CSE-Mada/produit/${product.id}`} 
-                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                >
-                  Voir l'article
-                </a>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div class="mt-12 text-center">
-        <a href="/CSE-Mada/produits" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
-          Voir tous les produits
-          <svg class="ml-2 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- Section Location -->
-  <div id="location" class="bg-white dark:bg-gray-900 py-16">
+  <!-- Section Location (conservée) -->
+  <div class="bg-white dark:bg-gray-900 py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl shadow-xl overflow-hidden lg:grid lg:grid-cols-2 lg:gap-4">
-        <div class="pt-10 pb-12 px-6 sm:pt-16 sm:px-16 lg:py-16 lg:pr-0 xl:py-20 xl:px-20">
-          <div class="lg:self-center">
-            <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
-              <span class="block">Location de matériel</span>
-              <span class="block text-green-100">Pour des aventures occasionnelles</span>
-            </h2>
-            <p class="mt-4 text-lg leading-6 text-green-50">
-              Pas besoin d'acheter pour une seule utilisation. Louez du matériel de qualité pour votre prochaine aventure sans vous ruiner.
-            </p>
-            <div class="mt-8 flex flex-wrap gap-4">
-              <a href="/CSE-Mada/location" class="flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50">
-                Découvrir la location
-              </a>
-              <a href="/CSE-Mada/contact" class="flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-500 bg-opacity-60 hover:bg-opacity-70">
-                Nous contacter
-              </a>
-            </div>
+        <div class="py-12 px-6 sm:px-12 lg:py-16">
+          <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+            <span class="block">Location de matériel</span>
+            <span class="block text-green-100 text-2xl mt-1">Pour des aventures occasionnelles</span>
+          </h2>
+          <p class="mt-4 text-lg text-green-50">Pas besoin d'acheter pour une seule sortie. Louez du matériel de qualité sans vous ruiner.</p>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href={withBase('/contact')} class="inline-flex items-center justify-center px-5 py-3 text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 transition-colors">Demander un devis location</a>
           </div>
         </div>
-        <div class="-mt-6 aspect-w-5 aspect-h-3 md:aspect-w-2 md:aspect-h-1">
-          <img class="transform translate-x-6 translate-y-6 rounded-md object-cover object-left-top sm:translate-x-16 lg:translate-y-20" src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Location de matériel de camping" />
+        <div class="relative min-h-[220px] lg:min-h-0">
+          <img class="absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop" alt="Location de matériel de camping" />
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Newsletter -->
-  <div class="bg-gray-50 dark:bg-gray-800 py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="max-w-3xl mx-auto text-center">
-        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-          Restez informé
-        </h2>
-        <p class="mt-4 text-lg text-gray-500 dark:text-gray-300">
-          Inscrivez-vous à notre newsletter pour recevoir nos offres spéciales et conseils d'experts.
-        </p>
-        <form class="mt-8 sm:flex">
-          <label htmlFor="email-address" class="sr-only">Adresse email</label>
-          <input
-            id="email-address"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            class="w-full px-5 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm placeholder-gray-500 focus:ring-green-500 focus:border-green-500"
-            placeholder="Votre adresse email"
-          />
-          <div class="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-            <button
-              type="submit"
-              class="w-full flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              S'inscrire
-            </button>
+  <!-- Bouton panier flottant -->
+  <button id="cart-toggle" class="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-green-600 hover:bg-green-700 text-white pl-4 pr-5 py-3 shadow-lg transition-colors">
+    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v0m0 4a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+    <span class="font-medium">Panier</span>
+    <span id="cart-badge" class="hidden min-w-[1.25rem] h-5 px-1 rounded-full bg-white text-green-700 text-xs font-bold inline-flex items-center justify-center">0</span>
+  </button>
+
+  <!-- Tiroir panier -->
+  <div id="cart-drawer" class="fixed inset-0 z-50 hidden">
+    <div id="cart-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <aside class="absolute right-0 top-0 h-full w-full max-w-md bg-white dark:bg-gray-900 shadow-xl flex flex-col">
+      <header class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+        <h2 class="text-lg font-bold">Votre panier</h2>
+        <button id="cart-close" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Fermer">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </header>
+
+      <!-- Lignes du panier -->
+      <div id="cart-body" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+      <p id="cart-empty" class="flex-1 flex flex-col items-center justify-center text-center text-gray-500 dark:text-gray-400 px-6">
+        <span class="text-4xl mb-3">🛒</span>
+        Votre panier est vide.<br />Parcourez la boutique pour ajouter des articles.
+      </p>
+
+      <!-- Récap + checkout -->
+      <div id="cart-footer" class="hidden border-t border-gray-100 dark:border-gray-800 p-5 space-y-4">
+        <div class="flex items-center justify-between text-base font-semibold">
+          <span>Total</span>
+          <span id="cart-total" class="text-green-700 dark:text-green-400">0 Ar</span>
+        </div>
+        <button id="checkout-open" class="w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-3 transition-colors">Valider la commande</button>
+      </div>
+
+      <!-- Formulaire de commande -->
+      <form id="checkout-form" class="hidden flex-1 overflow-y-auto p-5 space-y-4">
+        <button type="button" id="checkout-back" class="text-sm text-green-700 dark:text-green-400 hover:underline inline-flex items-center gap-1">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          Retour au panier
+        </button>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Aucun paiement en ligne : nous vous recontactons pour confirmer la commande, la livraison et le règlement.</p>
+        <div>
+          <label for="c-name" class="block text-sm font-medium mb-1.5">Nom complet *</label>
+          <input id="c-name" type="text" required class={inputClass} />
+        </div>
+        <div>
+          <label for="c-email" class="block text-sm font-medium mb-1.5">Email *</label>
+          <input id="c-email" type="email" required class={inputClass} />
+        </div>
+        <div>
+          <label for="c-phone" class="block text-sm font-medium mb-1.5">Téléphone</label>
+          <input id="c-phone" type="tel" class={inputClass} />
+        </div>
+        <div>
+          <label for="c-note" class="block text-sm font-medium mb-1.5">Note (optionnel)</label>
+          <textarea id="c-note" rows="3" placeholder="Adresse de livraison, précisions…" class={inputClass}></textarea>
+        </div>
+        <div class="flex items-center justify-between text-base font-semibold pt-1">
+          <span>Total à régler</span>
+          <span id="checkout-total" class="text-green-700 dark:text-green-400">0 Ar</span>
+        </div>
+        <button type="submit" class="w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-3 transition-colors">Envoyer la commande</button>
+      </form>
+
+      <!-- Confirmation -->
+      <div id="checkout-success" class="hidden flex-1 flex-col items-center justify-center text-center p-8 space-y-4">
+        <span class="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 text-3xl">✅</span>
+        <h3 class="text-xl font-bold">Commande envoyée !</h3>
+        <p class="text-gray-500 dark:text-gray-400">Merci. Votre référence : <strong id="order-ref" class="text-gray-900 dark:text-white"></strong>.<br />Notre équipe vous recontactera très vite.</p>
+        <button id="success-close" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2.5 transition-colors">Continuer mes achats</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Modale détail produit -->
+  <div id="product-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="product-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="relative w-full max-w-3xl rounded-2xl bg-white dark:bg-gray-900 shadow-xl overflow-hidden max-h-[90vh] grid md:grid-cols-2">
+      <button id="product-close" class="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 shadow" aria-label="Fermer">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+      <div id="pm-image" class="bg-gray-100 dark:bg-gray-800 min-h-[220px] md:min-h-full"></div>
+      <div class="p-6 overflow-y-auto flex flex-col">
+        <p id="pm-category" class="text-xs font-medium text-green-700 dark:text-green-400 uppercase tracking-wide"></p>
+        <h3 id="pm-name" class="text-2xl font-bold mt-1"></h3>
+        <div id="pm-tags" class="flex flex-wrap gap-1.5 mt-3"></div>
+        <p id="pm-description" class="mt-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed"></p>
+        <p id="pm-stock" class="mt-3 text-sm"></p>
+        <div class="mt-auto pt-6">
+          <p id="pm-price" class="text-2xl font-bold text-green-700 dark:text-green-400"></p>
+          <div class="mt-4 flex items-center gap-3">
+            <div class="inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700">
+              <button id="pm-minus" class="px-3 py-2 text-lg" aria-label="Diminuer">−</button>
+              <span id="pm-qty" class="w-10 text-center font-medium">1</span>
+              <button id="pm-plus" class="px-3 py-2 text-lg" aria-label="Augmenter">+</button>
+            </div>
+            <button id="pm-add" class="flex-1 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 transition-colors">Ajouter au panier</button>
           </div>
-        </form>
-        <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-          Nous respectons votre vie privée. Désabonnez-vous à tout moment.
-        </p>
+        </div>
       </div>
     </div>
   </div>
+
+  <script>
+    import { DEFAULT_PRODUCTS, PRODUCT_CATEGORIES } from '../utils/store';
+    import type { Product, OrderItem } from '../utils/store';
+    import { productsData, ordersData } from '../utils/db';
+    import { getCart, addToCart, setQuantity, clearCart, cartCount, cartTotal } from '../utils/cart';
+    import { formatMGA } from '../utils/format';
+
+    productsData.seedIfEmpty(DEFAULT_PRODUCTS);
+    // Cache produits (Supabase si connecté, sinon localStorage) chargé une fois.
+    const products: Product[] = await productsData.list();
+
+    const catLabel = (id: string) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.name ?? id;
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    const $ = (id: string) => document.getElementById(id)!;
+    const grid = $('shop-grid');
+    const empty = $('shop-empty');
+
+    let activeCat = 'all';
+    let search = '';
+    let sort = 'featured';
+    let priceRange = 'all';
+    let stockOnly = false;
+
+    function inPriceRange(price: number): boolean {
+      switch (priceRange) {
+        case 'lt200': return price < 200000;
+        case '200-500': return price >= 200000 && price <= 500000;
+        case 'gt500': return price > 500000;
+        default: return true;
+      }
+    }
+
+    function filtered(): Product[] {
+      let list = products;
+      if (activeCat !== 'all') list = list.filter((p) => p.category === activeCat);
+      if (stockOnly) list = list.filter((p) => p.stock > 0);
+      list = list.filter((p) => inPriceRange(p.price));
+      if (search) {
+        const q = search.toLowerCase();
+        list = list.filter((p) => p.name.toLowerCase().includes(q) || (p.description ?? '').toLowerCase().includes(q));
+      }
+      switch (sort) {
+        case 'price-asc': list = [...list].sort((a, b) => a.price - b.price); break;
+        case 'price-desc': list = [...list].sort((a, b) => b.price - a.price); break;
+        case 'name': list = [...list].sort((a, b) => a.name.localeCompare(b.name)); break;
+        default: list = [...list].sort((a, b) => Number(b.featured) - Number(a.featured));
+      }
+      return list;
+    }
+
+    function renderGrid() {
+      const list = filtered();
+      empty.classList.toggle('hidden', list.length > 0);
+      $('result-count').textContent = String(list.length);
+      const dirty = activeCat !== 'all' || search !== '' || priceRange !== 'all' || stockOnly || sort !== 'featured';
+      $('reset-filters').classList.toggle('hidden', !dirty);
+      grid.innerHTML = list.map((p) => {
+        const img = p.image
+          ? `<img src="${escape(p.image)}" alt="${escape(p.name)}" class="h-52 w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
+          : '<div class="h-52 w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">Pas d\'image</div>';
+        const tags = (p.tags ?? []).slice(0, 2).map((t) =>
+          `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">${escape(t)}</span>`).join('');
+        const lowStock = p.stock > 0 && p.stock < 5
+          ? `<span class="absolute top-3 right-3 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 text-xs font-medium px-2 py-0.5 rounded-full">${p.stock} restant${p.stock > 1 ? 's' : ''}</span>` : '';
+        const out = p.stock <= 0;
+        return `
+          <article class="group relative bg-white dark:bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow flex flex-col">
+            <button data-view="${escape(p.id)}" class="block text-left overflow-hidden">
+              <div class="relative">${img}
+                <div class="absolute top-3 left-3 flex gap-1.5">${tags}</div>${lowStock}
+              </div>
+            </button>
+            <div class="p-4 flex flex-col flex-1">
+              <p class="text-xs text-gray-400">${escape(catLabel(p.category))}</p>
+              <h3 class="font-semibold text-gray-900 dark:text-white mt-0.5 line-clamp-2">
+                <button data-view="${escape(p.id)}" class="text-left hover:text-green-600 dark:hover:text-green-400 transition-colors">${escape(p.name)}</button>
+              </h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-300 line-clamp-2">${escape(p.description ?? '')}</p>
+              <div class="mt-auto pt-4 flex items-center justify-between gap-2">
+                <span class="font-bold text-gray-900 dark:text-white">${formatMGA(p.price)}</span>
+                ${out
+                  ? '<span class="text-xs font-medium text-red-600 dark:text-red-400">Épuisé</span>'
+                  : `<button data-add="${escape(p.id)}" class="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-medium transition-colors">
+                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                       Ajouter
+                     </button>`}
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    // --- Filtres ---
+    const catTrack = $('category-filters');
+
+    function syncCatButtons() {
+      document.querySelectorAll<HTMLButtonElement>('.cat-btn').forEach((b) => {
+        const on = b.dataset.cat === activeCat;
+        b.classList.toggle('bg-green-600', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('shadow-sm', on);
+        b.classList.toggle('bg-white', !on);
+        b.classList.toggle('dark:bg-gray-900', !on);
+        b.classList.toggle('border', !on);
+        b.classList.toggle('border-gray-200', !on);
+        b.classList.toggle('dark:border-gray-700', !on);
+        b.classList.toggle('text-gray-700', !on);
+        b.classList.toggle('dark:text-gray-300', !on);
+      });
+    }
+
+    catTrack.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-cat]');
+      if (!btn) return;
+      activeCat = btn.dataset.cat!;
+      syncCatButtons();
+      renderGrid();
+    });
+    ($('search') as HTMLInputElement).addEventListener('input', (e) => {
+      search = (e.target as HTMLInputElement).value.trim();
+      renderGrid();
+    });
+    ($('sort') as HTMLSelectElement).addEventListener('change', (e) => {
+      sort = (e.target as HTMLSelectElement).value;
+      renderGrid();
+    });
+    ($('price') as HTMLSelectElement).addEventListener('change', (e) => {
+      priceRange = (e.target as HTMLSelectElement).value;
+      renderGrid();
+    });
+    ($('stock-only') as HTMLInputElement).addEventListener('change', (e) => {
+      stockOnly = (e.target as HTMLInputElement).checked;
+      renderGrid();
+    });
+    $('reset-filters').addEventListener('click', () => {
+      activeCat = 'all'; search = ''; sort = 'featured'; priceRange = 'all'; stockOnly = false;
+      ($('search') as HTMLInputElement).value = '';
+      ($('sort') as HTMLSelectElement).value = 'featured';
+      ($('price') as HTMLSelectElement).value = 'all';
+      ($('stock-only') as HTMLInputElement).checked = false;
+      syncCatButtons();
+      renderGrid();
+    });
+
+    // --- Défilement des catégories via chevrons ---
+    const catPrev = $('cat-prev') as HTMLButtonElement;
+    const catNext = $('cat-next') as HTMLButtonElement;
+    function updateChevrons() {
+      const max = catTrack.scrollWidth - catTrack.clientWidth - 1;
+      catPrev.disabled = catTrack.scrollLeft <= 0;
+      catNext.disabled = catTrack.scrollLeft >= max;
+    }
+    catPrev.addEventListener('click', () => { catTrack.scrollBy({ left: -240, behavior: 'smooth' }); });
+    catNext.addEventListener('click', () => { catTrack.scrollBy({ left: 240, behavior: 'smooth' }); });
+    catTrack.addEventListener('scroll', updateChevrons);
+    window.addEventListener('resize', updateChevrons);
+    updateChevrons();
+
+    // --- Modale détail ---
+    const modal = $('product-modal');
+    let current: Product | null = null;
+    let qty = 1;
+
+    function openProduct(id: string) {
+      const p = products.find((x) => x.id === id);
+      if (!p) return;
+      current = p;
+      qty = 1;
+      $('pm-category').textContent = catLabel(p.category);
+      $('pm-name').textContent = p.name;
+      $('pm-image').innerHTML = p.image
+        ? `<img src="${escape(p.image)}" alt="${escape(p.name)}" class="h-full w-full object-cover" />`
+        : '<div class="h-full w-full flex items-center justify-center text-gray-400">Pas d\'image</div>';
+      $('pm-tags').innerHTML = (p.tags ?? []).map((t) =>
+        `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">${escape(t)}</span>`).join('');
+      $('pm-description').textContent = p.description ?? 'Aucune description disponible.';
+      $('pm-stock').innerHTML = p.stock > 0
+        ? `<span class="text-gray-500 dark:text-gray-400">En stock : ${p.stock}</span>`
+        : '<span class="text-red-600 dark:text-red-400 font-medium">Épuisé</span>';
+      $('pm-price').textContent = formatMGA(p.price);
+      $('pm-qty').textContent = '1';
+      ($('pm-add') as HTMLButtonElement).disabled = p.stock <= 0;
+      ($('pm-add') as HTMLButtonElement).classList.toggle('opacity-50', p.stock <= 0);
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeProduct() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      current = null;
+    }
+    $('pm-minus').addEventListener('click', () => { qty = Math.max(1, qty - 1); $('pm-qty').textContent = String(qty); });
+    $('pm-plus').addEventListener('click', () => {
+      if (current && qty < current.stock) { qty++; $('pm-qty').textContent = String(qty); }
+    });
+    $('pm-add').addEventListener('click', () => {
+      if (!current) return;
+      addToCart({ productId: current.id, name: current.name, price: current.price, image: current.image }, qty);
+      closeProduct();
+      openCart();
+    });
+    $('product-close').addEventListener('click', closeProduct);
+    $('product-backdrop').addEventListener('click', closeProduct);
+
+    // --- Panier ---
+    const drawer = $('cart-drawer');
+    const badge = $('cart-badge');
+
+    function refreshBadge() {
+      const n = cartCount();
+      badge.textContent = String(n);
+      badge.classList.toggle('hidden', n === 0);
+    }
+
+    function renderCart() {
+      const lines = getCart();
+      const body = $('cart-body');
+      const isEmpty = lines.length === 0;
+      $('cart-empty').classList.toggle('hidden', !isEmpty);
+      $('cart-empty').classList.toggle('flex', isEmpty);
+      body.classList.toggle('hidden', isEmpty);
+      $('cart-footer').classList.toggle('hidden', isEmpty);
+      body.innerHTML = lines.map((l) => `
+        <div class="flex gap-3">
+          <div class="h-16 w-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+            ${l.image ? `<img src="${escape(l.image)}" alt="${escape(l.name)}" class="h-full w-full object-cover" />` : ''}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-sm truncate">${escape(l.name)}</p>
+            <p class="text-sm text-green-700 dark:text-green-400 font-semibold">${formatMGA(l.price)}</p>
+            <div class="mt-1.5 inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 text-sm">
+              <button data-dec="${escape(l.productId)}" class="px-2 py-0.5" aria-label="Diminuer">−</button>
+              <span class="w-8 text-center">${l.quantity}</span>
+              <button data-inc="${escape(l.productId)}" class="px-2 py-0.5" aria-label="Augmenter">+</button>
+            </div>
+          </div>
+          <button data-rm="${escape(l.productId)}" class="text-gray-400 hover:text-red-600 self-start" aria-label="Retirer">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>`).join('');
+      $('cart-total').textContent = formatMGA(cartTotal());
+      $('checkout-total').textContent = formatMGA(cartTotal());
+    }
+
+    $('cart-body').addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      const inc = t.closest<HTMLButtonElement>('[data-inc]');
+      const dec = t.closest<HTMLButtonElement>('[data-dec]');
+      const rm = t.closest<HTMLButtonElement>('[data-rm]');
+      const lines = getCart();
+      if (inc) { const l = lines.find((x) => x.productId === inc.dataset.inc); if (l) setQuantity(l.productId, l.quantity + 1); }
+      else if (dec) { const l = lines.find((x) => x.productId === dec.dataset.dec); if (l) setQuantity(l.productId, l.quantity - 1); }
+      else if (rm) { setQuantity(rm.dataset.rm!, 0); }
+    });
+
+    function showCartView(view: 'cart' | 'checkout' | 'success') {
+      $('cart-footer').classList.toggle('hidden', view !== 'cart' || getCart().length === 0);
+      $('cart-body').classList.toggle('hidden', view !== 'cart' || getCart().length === 0);
+      $('cart-empty').classList.toggle('hidden', view !== 'cart' || getCart().length > 0);
+      $('checkout-form').classList.toggle('hidden', view !== 'checkout');
+      $('checkout-form').classList.toggle('flex', view === 'checkout');
+      $('checkout-form').classList.toggle('flex-col', view === 'checkout');
+      $('checkout-success').classList.toggle('hidden', view !== 'success');
+      $('checkout-success').classList.toggle('flex', view === 'success');
+      $('checkout-success').classList.toggle('flex-col', view === 'success');
+    }
+
+    function openCart() {
+      renderCart();
+      showCartView('cart');
+      drawer.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeCart() {
+      drawer.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    $('cart-toggle').addEventListener('click', openCart);
+    $('cart-close').addEventListener('click', closeCart);
+    $('cart-backdrop').addEventListener('click', closeCart);
+    $('checkout-open').addEventListener('click', () => showCartView('checkout'));
+    $('checkout-back').addEventListener('click', () => showCartView('cart'));
+
+    // --- Soumission de la commande ---
+    ($('checkout-form') as HTMLFormElement).addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const lines = getCart();
+      if (lines.length === 0) return;
+      const items: OrderItem[] = lines.map((l) => ({ productId: l.productId, name: l.name, price: l.price, quantity: l.quantity }));
+      const reference = 'CMD-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+      await ordersData.create({
+        reference,
+        customer: {
+          name: ($('c-name') as HTMLInputElement).value.trim(),
+          email: ($('c-email') as HTMLInputElement).value.trim(),
+          phone: ($('c-phone') as HTMLInputElement).value.trim() || undefined,
+        },
+        items,
+        total: cartTotal(),
+        note: ($('c-note') as HTMLTextAreaElement).value.trim() || undefined,
+        status: 'new',
+        date: new Date().toISOString(),
+      });
+      clearCart();
+      ($('checkout-form') as HTMLFormElement).reset();
+      $('order-ref').textContent = reference;
+      showCartView('success');
+    });
+    $('success-close').addEventListener('click', closeCart);
+
+    // Synchronisation badge + tiroir à chaque changement du panier.
+    window.addEventListener('cart:change', () => { refreshBadge(); renderCart(); });
+
+    renderGrid();
+    refreshBadge();
+
+    grid.addEventListener('click', (e) => {
+      const t = e.target as HTMLElement;
+      const add = t.closest<HTMLButtonElement>('[data-add]');
+      if (add) {
+        const p = products.find((x) => x.id === add.dataset.add!);
+        if (p) { addToCart({ productId: p.id, name: p.name, price: p.price, image: p.image }, 1); openCart(); }
+        return;
+      }
+      const view = t.closest<HTMLButtonElement>('[data-view]');
+      if (view) openProduct(view.dataset.view!);
+    });
+  </script>
 </Layout>

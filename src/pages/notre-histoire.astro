@@ -1,249 +1,220 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { withBase } from '../utils/url';
+
+const stats = [
+  { value: '14+', label: "Années d'aventure" },
+  { value: '120+', label: 'Événements organisés' },
+  { value: '3 000+', label: 'Aventuriers accompagnés' },
+  { value: '25+', label: 'Destinations explorées' },
+];
 
 const timeline = [
-  {
-    year: '2010',
-    title: 'Nos débuts',
-    description: 'Fondation de CSEM avec une petite équipe passionnée par les aventures en plein air et le partage de cette passion avec les autres.',
-    icon: '🚀'
-  },
-  {
-    year: '2012',
-    title: 'Premier événement majeur',
-    description: 'Organisation de notre premier grand événement de camping avec plus de 50 participants, marquant le début de notre aventure événementielle.',
-    icon: '🏕️'
-  },
-  {
-    year: '2015',
-    title: 'Expansion des services',
-    description: 'Lancement de notre service de location de matériel de camping haut de gamme pour rendre les aventures en plein air accessibles à tous.',
-    icon: '🛠️'
-  },
-  {
-    year: '2018',
-    title: 'Reconnaissance nationale',
-    description: 'Récompensés pour notre engagement envers le tourisme durable et notre contribution à la promotion des activités de plein air à Madagascar.',
-    icon: '🏆'
-  },
-  {
-    year: '2023',
-    title: 'Nouveaux horizons',
-    description: 'Lancement de nos expéditions guidées dans des régions reculées de Madagascar, offrant des expériences uniques et authentiques.',
-    icon: '🌍'
-  }
+  { year: '2010', title: 'Nos débuts', description: "Fondation de CSEM avec une petite équipe passionnée par les aventures en plein air et le partage de cette passion.", icon: '🚀' },
+  { year: '2012', title: 'Premier grand événement', description: "Organisation de notre premier grand camping avec plus de 50 participants — le début de notre aventure événementielle.", icon: '🏕️' },
+  { year: '2015', title: 'Expansion des services', description: "Lancement de la location de matériel de camping haut de gamme pour rendre l'aventure accessible à tous.", icon: '🛠️' },
+  { year: '2018', title: 'Reconnaissance nationale', description: "Récompensés pour notre engagement envers le tourisme durable à Madagascar.", icon: '🏆' },
+  { year: '2023', title: 'Nouveaux horizons', description: "Lancement d'expéditions guidées dans des régions reculées : des expériences uniques et authentiques.", icon: '🌍' },
+];
+
+const values = [
+  { icon: '🌱', title: "Respect de l'environnement", text: "Nous préservons les espaces naturels que nous explorons et minimisons notre impact." },
+  { icon: '🤝', title: 'Partage & convivialité', text: "Les plus belles aventures se vivent à plusieurs, dans la bonne humeur et le partage." },
+  { icon: '🏆', title: 'Excellence', text: "Des services de qualité supérieure et des expériences vraiment mémorables." },
 ];
 
 const team = [
-  {
-    name: 'Jean Dupont',
-    role: 'Fondateur & Guide',
-    bio: 'Passionné de randonnée depuis plus de 15 ans, Jean a parcouru les plus beaux sentiers de Madagascar.',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-  },
-  {
-    name: 'Marie Laurent',
-    role: 'Responsable Événements',
-    bio: 'Organisatrice d\'événements expérimentée, Marie donne vie à chaque aventure avec créativité.',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-  },
-  {
-    name: 'Thomas Ravelo',
-    role: 'Guide Expert',
-    bio: 'Spécialiste de la faune et de la flore malgaches, Thomas partage ses connaissances avec passion.',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
-  }
+  { name: 'Jean Dupont', role: 'Fondateur & Guide', bio: "Passionné de randonnée depuis plus de 15 ans, il a parcouru les plus beaux sentiers de Madagascar.", image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop' },
+  { name: 'Marie Laurent', role: 'Responsable Événements', bio: "Organisatrice expérimentée, elle donne vie à chaque aventure avec créativité.", image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400&auto=format&fit=crop' },
+  { name: 'Thomas Ravelo', role: 'Guide Expert', bio: "Spécialiste de la faune et de la flore malgaches, il partage ses connaissances avec passion.", image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop' },
 ];
 ---
 
 <Layout title="Notre Histoire - Camping Store & Event Madagascar" description="Découvrez l'histoire de CSEM, votre partenaire d'aventures en plein air à Madagascar depuis 2010.">
-  <!-- Hero Section -->
-  <div class="relative bg-gray-900 overflow-hidden">
-    <div class="absolute inset-0">
-      <img class="w-full h-full object-cover opacity-40" 
-           src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-           alt="Notre histoire"
-           loading="lazy">
-      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 mix-blend-multiply"></div>
+  <!-- HERO immersif -->
+  <section class="relative min-h-[80vh] flex items-center overflow-hidden">
+    <img class="absolute inset-0 w-full h-full object-cover" src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1600&auto=format&fit=crop" alt="Paysage de Madagascar" />
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-950/90 via-gray-900/70 to-green-900/60"></div>
+    <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 w-full">
+      <span class="inline-flex items-center gap-2 rounded-full bg-green-500/20 border border-green-400/30 text-green-300 px-4 py-1.5 text-sm font-semibold backdrop-blur-sm" data-reveal>
+        <span class="h-1.5 w-1.5 rounded-full bg-green-400"></span> Depuis 2010
+      </span>
+      <h1 class="mt-6 text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white max-w-3xl leading-tight" data-reveal>
+        Une passion devenue <span class="text-green-400">aventure</span>, à Madagascar
+      </h1>
+      <p class="mt-6 text-lg sm:text-xl text-gray-200 max-w-2xl" data-reveal>
+        De nos premiers feux de camp à nos expéditions guidées, découvrez le parcours d'une équipe qui vit pour le grand air et le partage.
+      </p>
+      <div class="mt-10 flex flex-wrap gap-4" data-reveal>
+        <a href={withBase('/events')} class="inline-flex items-center gap-2 rounded-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 font-semibold transition-colors">
+          Nos événements
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        </a>
+        <a href={withBase('/contact')} class="inline-flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/30 text-white px-6 py-3 font-semibold backdrop-blur-sm transition-colors">
+          Nous rencontrer
+        </a>
+      </div>
     </div>
-    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Notre Histoire</h1>
-      <p class="mt-6 text-xl text-gray-300 max-w-3xl">Découvrez comment notre passion pour l'aventure en plein air a donné naissance à une aventure exceptionnelle.</p>
+    <!-- vague décorative -->
+    <div class="absolute bottom-0 inset-x-0 leading-[0]">
+      <svg viewBox="0 0 1440 80" class="w-full h-12 sm:h-20" preserveAspectRatio="none"><path fill="currentColor" class="text-white dark:text-gray-950" d="M0 80h1440V40c-240 40-480 40-720 16C480 32 240 24 0 48z" /></svg>
     </div>
-  </div>
+  </section>
 
-  <!-- Notre Histoire Section -->
-  <div class="bg-white dark:bg-gray-900 py-16 sm:py-24 transition-colors duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="lg:text-center">
-        <h2 class="text-base text-green-600 dark:text-green-400 font-semibold tracking-wide uppercase">Notre parcours</h2>
-        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-          Une aventure qui dure depuis plus d'une décennie
+  <!-- BANDE STATS -->
+  <section class="bg-white dark:bg-gray-950">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-2 pb-12">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <div class="rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-900 border border-green-100 dark:border-gray-800 p-6 text-center" data-reveal>
+            <p class="text-3xl sm:text-4xl font-extrabold text-green-700 dark:text-green-400">{s.value}</p>
+            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- MISSION -->
+  <section class="bg-white dark:bg-gray-950 py-12 lg:py-20">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+      <div class="relative" data-reveal>
+        <img class="rounded-3xl shadow-xl w-full aspect-[4/3] object-cover" src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=900&auto=format&fit=crop" alt="Bivouac au coucher du soleil" />
+        <div class="absolute -bottom-5 -right-3 sm:-right-5 rounded-2xl bg-green-600 text-white px-5 py-4 shadow-lg">
+          <p class="text-2xl font-extrabold leading-none">100%</p>
+          <p class="text-xs text-green-100">local & passionné</p>
+        </div>
+      </div>
+      <div data-reveal>
+        <span class="text-sm font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Notre mission</span>
+        <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">Rendre la grande nature accessible à tous</h2>
+        <p class="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+          Depuis nos débuts modestes jusqu'à devenir une référence de l'aventure en plein air à Madagascar, chaque étape a été guidée par une même conviction : la nature se partage. Nous équipons, accompagnons et inspirons celles et ceux qui veulent explorer l'île autrement.
         </p>
-        <p class="mt-4 max-w-2xl text-xl text-gray-500 dark:text-gray-400 lg:mx-auto">
-          Depuis nos débuts modestes jusqu'à devenir une référence dans l'organisation d'événements de plein air à Madagascar, chaque étape a été marquée par notre passion partagée pour l'aventure.
-        </p>
+        <ul class="mt-6 space-y-3">
+          {['Matériel de qualité, vendu et loué', 'Guides diplômés et passionnés', 'Engagement pour un tourisme durable'].map((t) => (
+            <li class="flex items-start gap-3 text-gray-700 dark:text-gray-200">
+              <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-sm">✓</span>
+              {t}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TIMELINE alternée -->
+  <section class="bg-gray-50 dark:bg-gray-900 py-16 lg:py-24">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-14" data-reveal>
+        <span class="text-sm font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Notre parcours</span>
+        <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">Une aventure qui dure depuis plus d'une décennie</h2>
       </div>
 
-      <!-- Timeline -->
-      <div class="mt-20">
-        <div class="space-y-12 lg:space-y-0 lg:grid lg:grid-cols-5 lg:gap-x-8">
-          {timeline.map((item, index) => (
-            <div class="relative group">
-              <div class="flex items-center">
-                <div class="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 text-2xl font-bold z-10">
-                  {item.icon}
-                </div>
-                <div class="ml-4">
-                  <h3 class="text-lg font-medium text-gray-900">{item.year}</h3>
-                  <p class="mt-1 text-gray-600">{item.title}</p>
+      <div class="relative">
+        <!-- ligne centrale -->
+        <div class="absolute left-6 lg:left-1/2 lg:-translate-x-1/2 top-0 bottom-0 w-0.5 bg-green-200 dark:bg-green-900/60"></div>
+        <div class="space-y-10">
+          {timeline.map((item, i) => (
+            <div class={`relative flex items-start gap-6 lg:gap-0 ${i % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'}`} data-reveal>
+              <!-- pastille -->
+              <div class="absolute left-6 lg:left-1/2 lg:-translate-x-1/2 -translate-x-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white dark:bg-gray-950 border-2 border-green-500 text-xl shadow z-10">
+                {item.icon}
+              </div>
+              <!-- carte -->
+              <div class={`ml-16 lg:ml-0 lg:w-1/2 ${i % 2 === 0 ? 'lg:pr-12 lg:text-right' : 'lg:pl-12'}`}>
+                <div class="rounded-2xl bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <span class="inline-flex rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-3 py-0.5 text-sm font-bold">{item.year}</span>
+                  <h3 class="mt-3 text-lg font-bold text-gray-900 dark:text-white">{item.title}</h3>
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{item.description}</p>
                 </div>
               </div>
-              <div class="mt-4 pl-6 border-l-2 border-gray-200 pb-8 group-last:border-0 group-last:pb-0">
-                <p class="text-base text-gray-600">{item.description}</p>
-              </div>
-              {index < timeline.length - 1 && (
-                <div class="absolute top-16 left-8 w-0.5 h-full bg-gray-200 group-last:hidden"></div>
-              )}
+              <div class="hidden lg:block lg:w-1/2"></div>
             </div>
           ))}
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Notre Équipe Section -->
-  <div class="bg-gray-50 dark:bg-gray-800 py-16 sm:py-24 transition-colors duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center">
-        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">Notre Équipe</h2>
-        <p class="mt-4 text-xl text-gray-600 dark:text-gray-300">
-          Rencontrez les passionnés qui font de chaque aventure une expérience inoubliable
-        </p>
+  <!-- VALEURS -->
+  <section class="bg-white dark:bg-gray-950 py-16 lg:py-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12" data-reveal>
+        <span class="text-sm font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Nos valeurs</span>
+        <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">Ce qui nous guide au quotidien</h2>
       </div>
+      <div class="grid gap-6 md:grid-cols-3">
+        {values.map((v) => (
+          <div class="group rounded-2xl border border-gray-100 dark:border-gray-800 p-8 hover:border-green-300 dark:hover:border-green-700 hover:-translate-y-1 transition-all" data-reveal>
+            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100 dark:bg-green-900/40 text-3xl group-hover:scale-110 transition-transform">{v.icon}</div>
+            <h3 class="mt-5 text-lg font-bold text-gray-900 dark:text-white">{v.title}</h3>
+            <p class="mt-2 text-gray-600 dark:text-gray-300">{v.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
 
-      <div class="mt-12 grid gap-12 md:grid-cols-2 lg:grid-cols-3">
+  <!-- ÉQUIPE -->
+  <section class="bg-gray-50 dark:bg-gray-900 py-16 lg:py-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12" data-reveal>
+        <span class="text-sm font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">Notre équipe</span>
+        <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">Les passionnés derrière chaque aventure</h2>
+      </div>
+      <div class="grid gap-8 md:grid-cols-3">
         {team.map((member) => (
-          <div class="bg-white dark:bg-gray-700 rounded-lg shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
-            <img class="w-full h-64 object-cover" src={member.image} alt={member.name} loading="lazy">
-            <div class="p-6">
-              <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{member.name}</h3>
-              <p class="text-green-600 dark:text-green-400 mt-1">{member.role}</p>
-              <p class="mt-4 text-gray-600 dark:text-gray-300">{member.bio}</p>
+          <div class="group relative overflow-hidden rounded-3xl shadow-sm hover:shadow-xl transition-shadow" data-reveal>
+            <img class="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-500" src={member.image} alt={member.name} loading="lazy" />
+            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent p-6 pt-16">
+              <h3 class="text-xl font-bold text-white">{member.name}</h3>
+              <p class="text-green-300 text-sm font-medium">{member.role}</p>
+              <p class="mt-2 text-sm text-gray-200 opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-32 transition-all duration-500">{member.bio}</p>
             </div>
           </div>
         ))}
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Valeurs Section -->
-  <div class="bg-white dark:bg-gray-900 py-16 sm:py-24 transition-colors duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="lg:text-center">
-        <h2 class="text-base text-green-600 dark:text-green-400 font-semibold tracking-wide uppercase">Nos Valeurs</h2>
-        <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-          Ce qui nous guide au quotidien
-        </p>
-      </div>
-
-      <div class="mt-12 grid gap-8 md:grid-cols-3">
-        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg transition-colors duration-300">
-          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400 text-2xl mb-4">
-            🌱
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Respect de l'environnement</h3>
-          <p class="mt-2 text-gray-600 dark:text-gray-300">
-            Nous nous engageons à préserver les espaces naturels que nous explorons et à minimiser notre impact environnemental.
-          </p>
-        </div>
-        
-        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg transition-colors duration-300">
-          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400 text-2xl mb-4">
-            🤝
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Partage et convivialité</h3>
-          <p class="mt-2 text-gray-600 dark:text-gray-300">
-            Nous croyons que les plus belles aventures se vivent à plusieurs, dans la bonne humeur et le partage.
-          </p>
-        </div>
-        
-        <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg transition-colors duration-300">
-          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center text-green-600 dark:text-green-400 text-2xl mb-4">
-            🏆
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 dark:text-white">Excellence</h3>
-          <p class="mt-2 text-gray-600 dark:text-gray-300">
-            Nous nous engageons à fournir des services de qualité supérieure et des expériences mémorables.
-          </p>
+  <!-- CTA -->
+  <section class="bg-white dark:bg-gray-950 py-16">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-green-600 to-emerald-700 px-6 py-12 sm:px-12 sm:py-16 text-center" data-reveal>
+        <div class="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-12 -left-8 h-48 w-48 rounded-full bg-white/10"></div>
+        <h2 class="relative text-3xl sm:text-4xl font-extrabold text-white">Prêt à vivre l'aventure avec nous ?</h2>
+        <p class="relative mt-3 text-green-50 max-w-xl mx-auto">Découvrez nos prochains événements et notre matériel, ou contactez-nous pour préparer votre prochaine sortie.</p>
+        <div class="relative mt-8 flex flex-wrap justify-center gap-4">
+          <a href={withBase('/services')} class="inline-flex items-center justify-center rounded-full bg-white text-green-700 px-6 py-3 font-semibold hover:bg-green-50 transition-colors">Voir nos services</a>
+          <a href={withBase('/materiel')} class="inline-flex items-center justify-center rounded-full bg-green-800/40 text-white border border-white/30 px-6 py-3 font-semibold hover:bg-green-800/60 transition-colors">Explorer la boutique</a>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- CTA Section -->
-  <div class="bg-green-700">
-    <div class="max-w-4xl mx-auto py-16 px-4 sm:px-6 sm:py-20 lg:px-8 lg:flex lg:items-center lg:justify-between">
-      <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-        <span class="block">Prêt à vivre l'aventure avec nous ?</span>
-        <span class="block text-green-100">Découvrez nos prochains événements.</span>
-      </h2>
-      <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-        <div class="inline-flex rounded-md shadow">
-          <a href="/services" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50">
-            Voir nos services
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
+  <script>
+    // Révélation au défilement (progressive enhancement)
+    const els = document.querySelectorAll<HTMLElement>('[data-reveal]');
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      els.forEach((el) => el.classList.add('reveal-in'));
+    } else {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) { e.target.classList.add('reveal-in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      els.forEach((el) => io.observe(el));
+    }
+  </script>
+
+  <style>
+    /* Le contenu est TOUJOURS visible par défaut (aucun risque de rester masqué).
+       L'observateur ajoute .reveal-in qui joue une animation d'entrée unique. */
+    @keyframes revealUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: no-preference) {
+      [data-reveal].reveal-in { animation: revealUp 0.6s ease both; }
+    }
+  </style>
 </Layout>
-
-<style>
-  /* Animations */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-fadeInUp {
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-
-  /* Délais d'animation pour chaque section */
-  .timeline-item {
-    opacity: 0;
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-
-  .team-member {
-    opacity: 0;
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-
-  .value-card {
-    opacity: 0;
-    animation: fadeInUp 0.6s ease-out forwards;
-  }
-
-  /* Délais d'animation */
-  .timeline-item:nth-child(1) { animation-delay: 0.1s; }
-  .timeline-item:nth-child(2) { animation-delay: 0.3s; }
-  .timeline-item:nth-child(3) { animation-delay: 0.5s; }
-  .timeline-item:nth-child(4) { animation-delay: 0.7s; }
-  .timeline-item:nth-child(5) { animation-delay: 0.9s; }
-
-  .team-member:nth-child(1) { animation-delay: 0.3s; }
-  .team-member:nth-child(2) { animation-delay: 0.5s; }
-  .team-member:nth-child(3) { animation-delay: 0.7s; }
-
-  .value-card:nth-child(1) { animation-delay: 0.2s; }
-  .value-card:nth-child(2) { animation-delay: 0.4s; }
-  .value-card:nth-child(3) { animation-delay: 0.6s; }
-</style>

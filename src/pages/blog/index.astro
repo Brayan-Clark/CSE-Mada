@@ -1,335 +1,190 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-import BlogList from '../../components/blog/BlogList.astro';
-import Pagination from '../../components/blog/Pagination.astro';
+import { withBase } from '../../utils/url';
 
-// Récupérer tous les articles du blog triés par date de publication
+// Articles triés par date (plus récent d'abord)
 const allPosts = (
   await getCollection('blog', ({ data }) => {
     return import.meta.env.PROD ? !data.draft : true;
   })
 ).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-// Pagination
-const pageSize = 6; // Nombre d'articles par page
-const currentPage = 1; // La première page est la page d'accueil du blog
-const totalPages = Math.ceil(allPosts.length / pageSize);
-const paginatedPosts = allPosts.slice(0, pageSize);
+const featured = allPosts[0];
+
+// Tags uniques pour les filtres
+const tags = [...new Set(allPosts.flatMap((p) => p.data.tags ?? []))].sort();
+
+const fmtDate = (d: Date) =>
+  new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
+const readTime = (post: (typeof allPosts)[number]) =>
+  Math.max(1, Math.round((post.body?.split(/\s+/).length ?? 200) / 200));
 ---
 
 <Layout
   title="Blog - Camping Store & Event Madagascar"
   description="Découvrez nos articles sur le camping, la randonnée et les aventures en pleine nature à Madagascar."
 >
-  <!-- Hero Section -->
-  <div class="relative bg-gray-900 overflow-hidden">
-    <div class="absolute inset-0">
-      <img
-        class="w-full h-full object-cover opacity-40"
-        src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-        alt="Blog CSEM"
-        loading="lazy"
-      />
-      <div
-        class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 mix-blend-multiply"
-      >
+  <section class="bg-white dark:bg-gray-950">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <!-- En-tête -->
+      <div class="max-w-2xl">
+        <span class="inline-flex items-center gap-1.5 text-green-700 dark:text-green-400 text-sm font-semibold uppercase tracking-wide">
+          <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span> Le carnet d'aventures
+        </span>
+        <h1 class="mt-2 text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">Notre Blog</h1>
+        <p class="mt-2 text-gray-500 dark:text-gray-400">Conseils, récits d'aventure et actualités sur le camping et la randonnée à Madagascar.</p>
       </div>
-    </div>
-    <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-      <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-        Notre Blog
-      </h1>
-      <p class="mt-6 text-xl text-gray-300 max-w-3xl">
-        Conseils, récits d'aventure et actualités sur le camping et la randonnée à Madagascar.
-      </p>
-    </div>
-  </div>
 
-  <!-- Main Content -->
-  <div class="bg-white dark:bg-gray-900 py-12 transition-colors duration-300">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Categories -->
-      <div class="mb-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Catégories</h2>
-        <div class="flex flex-wrap gap-3">
-          <a
-            href="/CSE-Mada/blog/category/tous"
-            class="px-4 py-2 rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-sm font-medium hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
-          >
-            Tous les articles
-          </a>
-          <a
-            href="/CSE-Mada/blog/category/conseils"
-            class="px-4 py-2 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-          >
-            Conseils
-          </a>
-          <a
-            href="/CSE-Mada/blog/category/randonnee"
-            class="px-4 py-2 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-sm font-medium hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors"
-          >
-            Randonnée
-          </a>
-          <a
-            href="/blog/category/equipement"
-            class="px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-sm font-medium hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
-          >
-            Équipement
-          </a>
-          <a
-            href="/blog/category/destinations"
-            class="px-4 py-2 rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-          >
-            Destinations
-          </a>
+      {allPosts.length === 0 && (
+        <div class="mt-12 text-center py-20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
+          <p class="text-4xl mb-3">📝</p>
+          <p class="text-gray-500 dark:text-gray-400 text-lg">Aucun article pour le moment. Revenez bientôt !</p>
         </div>
-      </div>
+      )}
 
-      <!-- Featured Post -->
-      {
-        allPosts.length > 0 && (
-          <div class="mb-16">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Article à la une</h2>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-              <div class="md:flex">
-                <div class="md:flex-shrink-0 md:w-1/2">
-                  <img
-                    class="max-h-72 w-full object-cover md:h-full"
-                    src={allPosts[0].data.image || '/images/placeholder-blog.jpg'}
-                    alt={allPosts[0].data.title}
-                    loading="lazy"
-                  />
-                </div>
-                <div class="p-8">
-                  {allPosts[0].data.tags && allPosts[0].data.tags.length > 0 && (
-                    <div class="uppercase tracking-wide text-sm text-blue-600 dark:text-blue-400 font-semibold">
-                      {allPosts[0].data.tags[0]}
-                    </div>
-                  )}
-                  <a
-                    href={`blog/${allPosts[0].slug}`}
-                    class="block mt-1 text-2xl font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    {allPosts[0].data.title}
-                  </a>
-                  <p class="mt-3 text-gray-500 dark:text-gray-300">
-                    {allPosts[0].data.description}
-                  </p>
-                  <div class="mt-6 flex items-center">
-                    <div class="flex-shrink-0">
-                      <span class="sr-only">{allPosts[0].data.author}</span>
-                      <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                        <span class="text-gray-600 dark:text-gray-300 font-medium">
-                          {allPosts[0].data.author.charAt(0)}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="ml-3">
-                      <p class="text-sm font-medium text-gray-900 dark:text-white">
-                        {allPosts[0].data.author}
-                      </p>
-                      <div class="flex space-x-1 text-sm text-gray-500 dark:text-gray-400">
-                        <time datetime={new Date(allPosts[0].data.pubDate).toISOString()}>
-                          {new Date(allPosts[0].data.pubDate).toLocaleDateString('fr-FR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </time>
-                        <span aria-hidden="true">&middot;</span>
-                        <span>3 min de lecture</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      <!-- Article à la une -->
+      {featured && (
+        <a
+          href={withBase(`/blog/${featured.slug}`)}
+          class="group grid lg:grid-cols-2 gap-6 lg:gap-10 mt-10 mb-14 items-center"
+        >
+          <div class="relative rounded-3xl overflow-hidden aspect-[16/10] bg-gray-100 dark:bg-gray-800">
+            {featured.data.image ? (
+              <img src={withBase(featured.data.image)} alt={featured.data.title} class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+            ) : (
+              <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-700"></div>
+            )}
+            <span class="absolute top-4 left-4 inline-flex rounded-full bg-green-600 text-white px-3 py-1 text-xs font-semibold">À la une</span>
+          </div>
+          <div>
+            {featured.data.tags?.[0] && (
+              <span class="text-sm font-semibold uppercase tracking-wide text-green-700 dark:text-green-400">{featured.data.tags[0]}</span>
+            )}
+            <h2 class="mt-2 text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition-colors">{featured.data.title}</h2>
+            <p class="mt-3 text-gray-600 dark:text-gray-300 line-clamp-3">{featured.data.description}</p>
+            <div class="mt-5 flex items-center gap-3">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 font-bold">{featured.data.author.charAt(0)}</span>
+              <div class="text-sm">
+                <p class="font-medium text-gray-900 dark:text-white">{featured.data.author}</p>
+                <p class="text-gray-500 dark:text-gray-400">{fmtDate(featured.data.pubDate)} · {readTime(featured)} min de lecture</p>
               </div>
             </div>
           </div>
-        )
-      }
+        </a>
+      )}
 
-      <!-- All Posts -->
-      <div class="mb-12">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Derniers articles</h2>
+      {allPosts.length > 0 && (
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Tous les articles</h2>
+            <!-- Filtres par tag -->
+            {tags.length > 0 && (
+              <div id="tag-filters" class="flex flex-wrap gap-2">
+                <button data-tag="all" class="tag-btn rounded-full px-3 py-1.5 text-sm font-medium bg-green-600 text-white">Tous</button>
+                {tags.map((tag) => (
+                  <button data-tag={tag.toLowerCase()} class="tag-btn rounded-full px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">{tag}</button>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {
-          paginatedPosts.length > 0 ? (
-            <div>
-              <BlogList
-                posts={paginatedPosts}
-                showDescription={true}
-                showImage={true}
-                showReadMore={true}
-              />
-
-              {totalPages > 1 && (
-                <div class="mt-12">
-                  <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl="/blog" />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div class="text-center py-12">
-              <svg
-                class="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <div id="posts-grid" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {allPosts.map((post) => (
+              <article
+                class="post-card group flex flex-col rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all"
+                data-tags={(post.data.tags ?? []).map((t) => t.toLowerCase()).join(',')}
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1"
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-white">
-                Aucun article pour le moment
-              </h3>
-              <p class="mt-1 text-gray-500 dark:text-gray-400">
-                Revenez bientôt pour découvrir nos prochains articles !
-              </p>
-            </div>
-          )
-        }
-      </div>
+                <a href={withBase(`/blog/${post.slug}`)} class="block aspect-[16/9] overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  {post.data.image ? (
+                    <img src={withBase(post.data.image)} alt={post.data.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                  ) : (
+                    <div class="w-full h-full bg-gradient-to-br from-green-500 to-emerald-600"></div>
+                  )}
+                </a>
+                <div class="p-5 flex flex-col flex-1">
+                  <div class="flex items-center gap-2 text-xs text-gray-400 mb-2">
+                    <time datetime={new Date(post.data.pubDate).toISOString()}>{fmtDate(post.data.pubDate)}</time>
+                    <span>·</span>
+                    <span>{readTime(post)} min</span>
+                  </div>
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                    <a href={withBase(`/blog/${post.slug}`)} class="hover:text-green-700 dark:hover:text-green-400 transition-colors">{post.data.title}</a>
+                  </h3>
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-1">{post.data.description}</p>
+                  {post.data.tags && post.data.tags.length > 0 && (
+                    <div class="mt-3 flex flex-wrap gap-1.5">
+                      {post.data.tags.slice(0, 3).map((tag) => (
+                        <span class="text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                  <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <span class="text-sm text-gray-500 dark:text-gray-400">Par {post.data.author}</span>
+                    <span class="inline-flex items-center gap-1 text-sm font-medium text-green-700 dark:text-green-400 group-hover:gap-2 transition-all">
+                      Lire
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          <p id="no-results" class="hidden text-center text-gray-500 dark:text-gray-400 py-12">Aucun article pour ce thème.</p>
+        </div>
+      )}
 
       <!-- Newsletter -->
-      <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 mb-12">
-        <div class="max-w-2xl mx-auto text-center">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Restez informés</h2>
-          <p class="text-gray-600 dark:text-gray-300 mb-6">
-            Inscrivez-vous à notre newsletter pour recevoir nos derniers articles et offres
-            spéciales directement dans votre boîte mail.
-          </p>
-          <form class="sm:flex">
-            <div class="flex-1 min-w-0">
-              <label for="email" class="sr-only">Adresse email</label>
-              <input
-                id="email"
-                type="email"
-                placeholder="Votre adresse email"
-                class="block w-full px-5 py-3 text-base text-gray-900 dark:text-white placeholder-gray-500 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-green-500 focus:border-green-500 dark:bg-gray-700"
-                required
-              />
-            </div>
-            <div class="mt-3 sm:mt-0 sm:ml-3">
-              <button
-                type="submit"
-                class="w-full flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-              >
-                S'inscrire
-              </button>
-            </div>
-          </form>
-          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-            Nous respectons votre vie privée. Désinscription à tout moment.
-          </p>
-        </div>
+      <div class="mt-16 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-700 p-8 sm:p-10 text-center">
+        <h2 class="text-2xl font-bold text-white">Restez informés</h2>
+        <p class="mt-2 text-green-50 max-w-xl mx-auto">Recevez nos derniers articles et offres spéciales directement dans votre boîte mail.</p>
+        <form id="newsletter-form" class="mt-6 sm:flex max-w-md mx-auto gap-3">
+          <label for="email" class="sr-only">Adresse email</label>
+          <input id="email" type="email" required placeholder="Votre adresse email" class="block w-full px-5 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white" />
+          <button type="submit" class="mt-3 sm:mt-0 w-full sm:w-auto px-6 py-3 rounded-lg bg-white text-green-700 font-semibold hover:bg-green-50 transition-colors whitespace-nowrap">S'inscrire</button>
+        </form>
+        <p class="mt-3 text-sm text-green-100">Nous respectons votre vie privée. Désinscription à tout moment.</p>
       </div>
     </div>
-  </div>
-</Layout>
+  </section>
 
-<script>
-  // Gestion du formulaire de newsletter
-  document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('form');
-    if (form) {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const emailInput = document.getElementById('email');
-        const email = emailInput.value.trim();
+  <script>
+    // Filtrage par tag (côté client)
+    const filters = document.getElementById('tag-filters');
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.post-card'));
+    const noResults = document.getElementById('no-results');
 
-        if (!email) return;
-
-        try {
-          // Ici, vous pourriez ajouter un appel à votre API ou service d'emails
-          console.log('Inscription à la newsletter :', email);
-
-          // Afficher un message de succès
-          alert('Merci pour votre inscription à notre newsletter !');
-          emailInput.value = '';
-        } catch (error) {
-          console.error("Erreur lors de l'inscription :", error);
-          alert('Une erreur est survenue. Veuillez réessayer plus tard.');
-        }
+    filters?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-tag]');
+      if (!btn) return;
+      const tag = btn.dataset.tag!;
+      document.querySelectorAll<HTMLButtonElement>('.tag-btn').forEach((b) => {
+        const on = b === btn;
+        b.classList.toggle('bg-green-600', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('bg-gray-100', !on);
+        b.classList.toggle('dark:bg-gray-800', !on);
+        b.classList.toggle('text-gray-700', !on);
+        b.classList.toggle('dark:text-gray-300', !on);
       });
-    }
-  });
-</script>
+      let visible = 0;
+      cards.forEach((card) => {
+        const tagList = (card.dataset.tags ?? '').split(',');
+        const show = tag === 'all' || tagList.includes(tag);
+        card.classList.toggle('hidden', !show);
+        if (show) visible++;
+      });
+      noResults?.classList.toggle('hidden', visible > 0);
+    });
 
-<style>
-  /* Animation pour les cartes d'articles */
-  .transition-transform {
-    transition-property: transform;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-  }
-
-  /* Style pour les liens de catégories */
-  a[class*='bg-'] {
-    transition: all 0.2s ease;
-  }
-
-  a[class*='bg-']:hover {
-    transform: translateY(-2px);
-  }
-
-  /* Style pour le formulaire de newsletter */
-  input[type='email'] {
-    transition: all 0.2s ease;
-  }
-
-  input[type='email']:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
-  }
-
-  /* Animation pour le bouton de soumission */
-  button[type='submit'] {
-    transition: all 0.2s ease;
-  }
-
-  button[type='submit']:hover {
-    transform: translateY(-1px);
-    box-shadow:
-      0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  }
-
-  /* Style pour les liens d'articles */
-  a[href*='/blog/'] {
-    transition: color 0.2s ease;
-  }
-
-  /* Style pour les images d'articles */
-  img[alt*='article'] {
-    transition: transform 0.5s ease;
-  }
-
-  /* Animation au survol des cartes d'articles */
-  .hover\:shadow-xl:hover {
-    box-shadow:
-      0 20px 25px -5px rgba(0, 0, 0, 0.1),
-      0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-
-  /* Animation pour les tags */
-  .bg-green-100,
-  .bg-blue-100,
-  .bg-purple-100,
-  .bg-yellow-100,
-  .bg-red-100 {
-    transition: all 0.2s ease;
-  }
-
-  .bg-green-100:hover,
-  .bg-blue-100:hover,
-  .bg-purple-100:hover,
-  .bg-yellow-100:hover,
-  .bg-red-100:hover {
-    transform: translateY(-1px);
-  }
-</style>
+    // Newsletter (démo)
+    document.getElementById('newsletter-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('email') as HTMLInputElement;
+      if (input.value.trim()) {
+        alert('Merci pour votre inscription à notre newsletter !');
+        input.value = '';
+      }
+    });
+  </script>
+</Layout>

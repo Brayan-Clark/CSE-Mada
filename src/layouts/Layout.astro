@@ -1,6 +1,7 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { withBase } from '../utils/url';
 import '../styles/theme.css';
 
 interface Props {
@@ -10,7 +11,6 @@ interface Props {
 
 const { title = 'Bienvenue', description = 'Un site moderne avec Astro et Tailwind CSS' } =
   Astro.props;
-const base = '/CSE-Mada';
 ---
 
 <!doctype html>
@@ -22,8 +22,8 @@ const base = '/CSE-Mada';
 
     <title>{title} | Camping Store & Event</title>
 
-    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.ico`} />
-    <link rel="manifest" href={`${base}/site.webmanifest`} />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.ico')} />
+    <link rel="manifest" href={withBase('/site.webmanifest')} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -35,11 +35,6 @@ const base = '/CSE-Mada';
   <body
     class="min-h-screen relative flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-white antialiased"
   >
-    <!-- Indicateur de débogage du thème -->
-    <!-- <div class="fixed bottom-4 right-4 p-2 bg-yellow-100 dark:bg-yellow-900 text-xs rounded">
-      Thème: <span id="theme-indicator">Chargement...</span>
-    </div> -->
-
     <div id="theme-provider">
       <Header />
       <main class="flex-1">
@@ -49,16 +44,6 @@ const base = '/CSE-Mada';
     </div>
 
     <script>
-      // Mettre à jour l'indicateur de thème
-      function updateThemeIndicator() {
-        const isDark = document.documentElement.classList.contains('dark');
-        const indicator = document.getElementById('theme-indicator');
-        if (indicator) {
-          indicator.textContent = isDark ? 'Sombre' : 'Clair';
-          console.log('Thème actuel:', isDark ? 'dark' : 'light');
-        }
-      }
-
       // Appliquer le thème au chargement
       if (typeof window !== 'undefined') {
         const savedTheme = localStorage.getItem('theme');
@@ -70,19 +55,10 @@ const base = '/CSE-Mada';
           document.documentElement.classList.remove('dark');
         }
 
-        // Mettre à jour l'indicateur
-        updateThemeIndicator();
-
-        // Écouter les changements de thème système
+        // Suivre les changements de thème système (si aucune préférence enregistrée)
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
           if (!localStorage.getItem('theme')) {
-            // Seulement si pas de préférence enregistrée
-            if (e.matches) {
-              document.documentElement.classList.add('dark');
-            } else {
-              document.documentElement.classList.remove('dark');
-            }
-            updateThemeIndicator();
+            document.documentElement.classList.toggle('dark', e.matches);
           }
         });
       }

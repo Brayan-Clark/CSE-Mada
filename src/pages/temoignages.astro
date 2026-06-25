@@ -1,68 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { withBase } from '../utils/url';
+import { DEFAULT_REVIEWS } from '../utils/store';
+import { publishedReviewsHTML } from '../utils/reviews-render';
 
-const testimonials = [
-  {
-    id: 1,
-    quote: "L'expérience la plus incroyable de ma vie ! L'équipe de CSEM a rendu notre aventure inoubliable. Les paysages de Madagascar sont à couper le souffle.",
-    author: 'Sophie Martin',
-    role: 'Voyageuse',
-    rating: 5,
-    date: '15 Juin 2023',
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    trip: 'Expédition Tsingy'
-  },
-  {
-    id: 2,
-    quote: "Un service exceptionnel du début à la fin. Les guides sont très compétents et attentionnés. Je recommande vivement CSEM pour une aventure authentique à Madagascar.",
-    author: 'Thomas Dubois',
-    role: 'Randonneur',
-    rating: 5,
-    date: '2 Mai 2023',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    trip: 'Randonnée Andringitra'
-  },
-  {
-    id: 3,
-    quote: "Notre voyage de noces a été parfaitement organisé par CSEM. Des moments magiques dans des endroits préservés. Merci pour cette expérience unique !",
-    author: 'Camille et Pierre',
-    role: 'Voyageurs',
-    rating: 5,
-    date: '22 Avril 2023',
-    image: 'https://images.unsplash.com/photo-1529333166437-7750a6dd5a70?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    trip: 'Voyage de noces sur mesure'
-  },
-  {
-    id: 4,
-    quote: "En tant que photographe, je cherchais des paysages uniques. CSEM a su me guider vers des endroits extraordinaires, loin des sentiers battus.",
-    author: 'Julien Leroy',
-    role: 'Photographe professionnel',
-    rating: 4,
-    date: '10 Mars 2023',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    trip: 'Voyage photo'
-  },
-  {
-    id: 5,
-    quote: "Notre famille a passé des vacances inoubliables grâce à CSEM. Les enfants étaient ravis des activités adaptées à leur âge.",
-    author: 'La famille Moreau',
-    role: 'Famille',
-    rating: 5,
-    date: '5 Février 2023',
-    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    trip: 'Aventure en famille'
-  },
-  {
-    id: 6,
-    quote: "Une organisation irréprochable pour notre voyage d'entreprise. Tous mes collègues ont été ravis de cette expérience de team building dans la nature.",
-    author: 'Marie Dupont',
-    role: 'Responsable RH',
-    rating: 5,
-    date: '15 Janvier 2023',
-    image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    trip: 'Séminaire entreprise'
-  }
-];
+// Placeholder rendu au build (mêmes données que la section avis de Services).
+// Hydraté côté client : données Supabase si connecté, sinon données locales.
+const placeholder = publishedReviewsHTML(DEFAULT_REVIEWS);
 
 const stats = [
   { id: 1, name: 'Voyageurs satisfaits', value: '98%' },
@@ -114,50 +58,8 @@ const stats = [
         </p>
       </div>
 
-      <div class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {testimonials.map((testimonial) => (
-          <div key={testimonial.id} class="bg-white dark:bg-gray-700 rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:-translate-y-1">
-            <div class="p-6">
-              <div class="flex items-center">
-                <img class="h-12 w-12 rounded-full object-cover" src={testimonial.image} alt={testimonial.author} loading="lazy">
-                <div class="ml-4">
-                  <h3 class="text-lg font-medium text-gray-900 dark:text-white">{testimonial.author}</h3>
-                  <p class="text-sm text-gray-600 dark:text-gray-300">{testimonial.role}</p>
-                </div>
-              </div>
-              
-              <div class="mt-4 flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <svg 
-                    key={i}
-                    class={`h-5 w-5 ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-500'}`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                  {testimonial.rating}/5
-                </span>
-              </div>
-              
-              <blockquote class="mt-4">
-                <p class="text-gray-700 dark:text-gray-300 italic">"{testimonial.quote}"</p>
-              </blockquote>
-              
-              <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  <span class="font-medium">Voyage :</span> {testimonial.trip}
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                  {testimonial.date}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <div id="testimonials-grid" class="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3" set:html={placeholder}></div>
+      <p id="testimonials-empty" class="hidden text-center text-gray-500 dark:text-gray-400 mt-12">Aucun témoignage publié pour le moment.</p>
     </div>
   </div>
 
@@ -228,13 +130,34 @@ const stats = [
       </h2>
       <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
         <div class="inline-flex rounded-md shadow">
-          <a href="/contact" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50">
+          <a href={withBase('/contact')} class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-green-600 bg-white hover:bg-green-50">
             Contactez-nous
           </a>
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+    import { reviewsData } from '../utils/db';
+    import { DEFAULT_REVIEWS } from '../utils/store';
+    import { reviewCardHTML } from '../utils/reviews-render';
+
+    const grid = document.getElementById('testimonials-grid');
+    const empty = document.getElementById('testimonials-empty');
+    (async () => {
+      reviewsData.seedIfEmpty(DEFAULT_REVIEWS);
+      const reviews = (await reviewsData.list()).filter((r) => r.status === 'published');
+      if (!grid) return;
+      if (reviews.length) {
+        grid.innerHTML = reviews.map(reviewCardHTML).join('');
+        empty?.classList.add('hidden');
+      } else {
+        grid.innerHTML = '';
+        empty?.classList.remove('hidden');
+      }
+    })();
+  </script>
 </Layout>
 
 <style>

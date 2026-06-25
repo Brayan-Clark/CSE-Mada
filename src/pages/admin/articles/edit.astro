@@ -1,0 +1,270 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { withBase } from '../../../utils/url';
+import { getArticleSeed } from '../../../utils/content';
+
+const articleSeed = await getArticleSeed();
+const listUrl = withBase('/admin/articles');
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+
+// Boutons de la barre d'outils de mise en forme
+const tools = [
+  { cmd: 'h2', label: 'Titre', title: 'Grand titre', icon: 'T' },
+  { cmd: 'h3', label: 'Sous-titre', title: 'Sous-titre', icon: 't' },
+  { cmd: 'bold', label: 'Gras', title: 'Texte en gras', icon: 'B' },
+  { cmd: 'italic', label: 'Italique', title: 'Texte en italique', icon: 'I' },
+  { cmd: 'ul', label: 'Liste', title: 'Liste à puces', icon: '•' },
+  { cmd: 'ol', label: 'Numéros', title: 'Liste numérotée', icon: '1.' },
+  { cmd: 'quote', label: 'Citation', title: 'Citation', icon: '“' },
+  { cmd: 'link', label: 'Lien', title: 'Insérer un lien', icon: '🔗' },
+  { cmd: 'image', label: 'Image', title: 'Insérer une image', icon: '🖼' },
+];
+---
+
+<AdminLayout title="Article" active="articles">
+  <script type="application/json" id="article-seed" set:html={JSON.stringify(articleSeed)} />
+
+  <div class="max-w-5xl mx-auto">
+    <!-- Barre d'en-tête : retour + titre + actions -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div class="flex items-center gap-3">
+        <a href={listUrl} class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" title="Revenir à la liste des articles">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          Retour
+        </a>
+        <h2 id="form-heading" class="text-xl font-bold">Nouvel article</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href={listUrl} class="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuler</a>
+        <button type="submit" form="article-form" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2 text-sm transition-colors">Enregistrer</button>
+      </div>
+    </div>
+
+    <form id="article-form" class="space-y-6">
+      <input type="hidden" id="article-id" />
+
+      <!-- Informations générales -->
+      <section class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 space-y-5">
+        <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Informations</h3>
+
+        <div>
+          <label for="title" class="block text-sm font-medium mb-1.5">Titre de l'article *</label>
+          <input id="title" name="title" type="text" required placeholder="Ex : 5 conseils pour bien préparer sa randonnée" class={`${inputClass} text-base`} />
+        </div>
+
+        <div>
+          <label for="description" class="block text-sm font-medium mb-1.5">
+            Résumé court
+            <span class="font-normal text-gray-400">— phrase d'accroche affichée dans la liste</span>
+          </label>
+          <input id="description" name="description" type="text" placeholder="En une phrase, de quoi parle l'article ?" class={inputClass} />
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="author" class="block text-sm font-medium mb-1.5">Auteur</label>
+            <input id="author" name="author" type="text" value="Équipe CSEM" class={inputClass} />
+          </div>
+          <div>
+            <label for="pubDate" class="block text-sm font-medium mb-1.5">Date de publication</label>
+            <input id="pubDate" name="pubDate" type="date" class={inputClass} />
+          </div>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="tags" class="block text-sm font-medium mb-1.5">Mots-clés <span class="font-normal text-gray-400">(séparés par des virgules)</span></label>
+            <input id="tags" name="tags" type="text" placeholder="randonnée, conseils" class={inputClass} />
+          </div>
+          <div>
+            <label for="image" class="block text-sm font-medium mb-1.5">Image de couverture <span class="font-normal text-gray-400">(lien)</span></label>
+            <input id="image" name="image" type="text" placeholder="https://…" class={inputClass} />
+          </div>
+        </div>
+      </section>
+
+      <!-- Contenu avec éditeur assisté -->
+      <section class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Contenu</h3>
+          <span class="text-xs text-gray-400">Sélectionnez du texte puis cliquez sur un bouton de mise en forme</span>
+        </div>
+
+        <!-- Barre d'outils -->
+        <div class="flex flex-wrap gap-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-2">
+          {tools.map((t) => (
+            <button
+              type="button"
+              data-cmd={t.cmd}
+              title={t.title}
+              class="toolbar-btn inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm transition-colors"
+            >
+              <span class={t.cmd === 'bold' ? 'font-bold' : t.cmd === 'italic' ? 'italic' : ''}>{t.icon}</span>
+              <span class="hidden sm:inline text-xs">{t.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <!-- Éditeur + aperçu -->
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div>
+            <label for="content" class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">✏️ Rédaction</label>
+            <textarea id="content" name="content" rows="16" placeholder="Écrivez votre article ici…" class={`${inputClass} font-mono leading-relaxed`}></textarea>
+          </div>
+          <div>
+            <span class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">👁 Aperçu en direct</span>
+            <div id="content-preview" class="prose prose-sm dark:prose-invert max-w-none rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 p-4 min-h-[16rem] overflow-auto">
+              <p class="text-gray-400 not-prose">L'aperçu de votre article s'affichera ici au fur et à mesure.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Publication -->
+      <section class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6">
+        <label class="flex items-start gap-3 text-sm">
+          <input id="draft" name="draft" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+          <span>
+            <span class="font-medium">Enregistrer comme brouillon</span>
+            <span class="block text-gray-400">Décoché, l'article est considéré comme publié.</span>
+          </span>
+        </label>
+      </section>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2.5 text-sm transition-colors">Enregistrer l'article</button>
+        <a href={listUrl} class="rounded-lg border border-gray-200 dark:border-gray-700 px-6 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuler</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    import { articlesData } from '../../../utils/db';
+    import type { Article } from '../../../utils/store';
+    import { withBase } from '../../../utils/url';
+    import { marked } from 'marked';
+
+    const seedEl = document.getElementById('article-seed');
+    const seed: Article[] = seedEl?.textContent ? JSON.parse(seedEl.textContent) : [];
+    articlesData.seedIfEmpty(seed);
+
+    const form = document.getElementById('article-form') as HTMLFormElement;
+    const heading = document.getElementById('form-heading')!;
+    const idField = document.getElementById('article-id') as HTMLInputElement;
+    const content = document.getElementById('content') as HTMLTextAreaElement;
+    const preview = document.getElementById('content-preview')!;
+    const val = (id: string) => document.getElementById(id) as HTMLInputElement;
+
+    // --- Aperçu en direct ---
+    function renderPreview() {
+      const text = content.value.trim();
+      if (!text) {
+        preview.innerHTML = '<p class="text-gray-400 not-prose">L\'aperçu de votre article s\'affichera ici au fur et à mesure.</p>';
+        return;
+      }
+      preview.innerHTML = marked.parse(text) as string;
+    }
+    content.addEventListener('input', renderPreview);
+
+    // --- Barre d'outils de mise en forme (Markdown) ---
+    function applyTool(cmd: string) {
+      const start = content.selectionStart;
+      const end = content.selectionEnd;
+      const value = content.value;
+      const selected = value.slice(start, end);
+
+      const wrap = (before: string, after: string, placeholder: string) => {
+        const text = selected || placeholder;
+        const insert = before + text + after;
+        content.value = value.slice(0, start) + insert + value.slice(end);
+        const cursor = start + before.length;
+        content.focus();
+        content.setSelectionRange(cursor, cursor + text.length);
+      };
+
+      const prefixLine = (prefix: string, placeholder: string) => {
+        // Trouve le début de la ligne courante
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const text = selected || placeholder;
+        const block = text
+          .split('\n')
+          .map((line, i) => (cmd === 'ol' ? `${i + 1}. ${line}` : `${prefix}${line}`))
+          .join('\n');
+        const needsBreak = lineStart > 0 && value[lineStart - 1] !== '\n';
+        const insert = (needsBreak ? '\n' : '') + block;
+        content.value = value.slice(0, lineStart) + insert + value.slice(end > lineStart ? end : start);
+        content.focus();
+      };
+
+      switch (cmd) {
+        case 'bold': wrap('**', '**', 'texte en gras'); break;
+        case 'italic': wrap('*', '*', 'texte en italique'); break;
+        case 'h2': prefixLine('## ', 'Titre de section'); break;
+        case 'h3': prefixLine('### ', 'Sous-titre'); break;
+        case 'ul': prefixLine('- ', 'élément de liste'); break;
+        case 'ol': prefixLine('1. ', 'élément de liste'); break;
+        case 'quote': prefixLine('> ', 'citation'); break;
+        case 'link': {
+          const url = prompt('Adresse du lien (https://…)', 'https://') || '';
+          if (url) wrap('[', `](${url})`, 'texte du lien');
+          break;
+        }
+        case 'image': {
+          const url = prompt("Adresse de l'image (https://…)", 'https://') || '';
+          if (url) wrap('![', `](${url})`, 'description de l\'image');
+          break;
+        }
+      }
+      renderPreview();
+    }
+
+    document.querySelectorAll<HTMLButtonElement>('.toolbar-btn').forEach((btn) => {
+      btn.addEventListener('click', () => applyTool(btn.dataset.cmd!));
+    });
+
+    // --- Chargement (création vs édition) ---
+    const params = new URLSearchParams(window.location.search);
+    const editingId = params.get('id');
+
+    async function loadForEdit() {
+      if (!editingId) return;
+      const article = await articlesData.get(editingId);
+      if (article) {
+        heading.textContent = 'Modifier l’article';
+        idField.value = article.id;
+        val('title').value = article.title;
+        val('description').value = article.description;
+        val('author').value = article.author;
+        val('pubDate').value = article.pubDate.slice(0, 10);
+        val('tags').value = article.tags.join(', ');
+        val('image').value = article.image ?? '';
+        content.value = article.content;
+      }
+      val('draft').checked = article?.draft ?? false;
+      renderPreview();
+    }
+    loadForEdit();
+    if (!val('pubDate').value) val('pubDate').value = new Date().toISOString().slice(0, 10);
+    renderPreview();
+
+    // --- Enregistrement ---
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        title: val('title').value.trim(),
+        description: val('description').value.trim(),
+        author: val('author').value.trim() || 'Équipe CSEM',
+        pubDate: new Date(val('pubDate').value || Date.now()).toISOString(),
+        tags: val('tags').value.split(',').map((t) => t.trim()).filter(Boolean),
+        image: val('image').value.trim() || undefined,
+        content: content.value,
+        draft: val('draft').checked,
+      };
+
+      if (idField.value) await articlesData.update(idField.value, data);
+      else await articlesData.create(data);
+      window.location.href = withBase('/admin/articles');
+    });
+  </script>
+</AdminLayout>

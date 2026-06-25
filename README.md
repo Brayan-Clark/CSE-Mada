@@ -36,7 +36,33 @@ Site web officiel de Camping Store & Event Madagascar, construit avec [Astro](ht
    ```
 
 4. **Ouvrir dans votre navigateur**
-   Le site sera disponible à l'adresse [http://localhost:3000](http://localhost:3000)
+   Le site sera disponible à l'adresse [http://localhost:3000/CSE-Mada/](http://localhost:3000/CSE-Mada/)
+
+## 🔗 Gestion du chemin de base (local = en ligne)
+
+Le site est publié sur GitHub Pages sous le préfixe `/CSE-Mada`. Ce préfixe est défini **à un seul endroit** : le champ `base` dans `astro.config.mjs`.
+
+➡️ **Ne jamais écrire `/CSE-Mada/...` en dur dans les liens ou les images.** Utilisez toujours le helper :
+
+```astro
+---
+import { withBase } from '../utils/url';
+---
+<a href={withBase('/contact')}>Contact</a>
+<img src={withBase('/images/logo.jpg')} />
+```
+
+`withBase()` s'appuie sur `import.meta.env.BASE_URL`, donc le site fonctionne **à l'identique en local et en ligne** sans rien changer. Pour tester sans préfixe en local, il suffirait de passer `base: '/'` dans `astro.config.mjs`.
+
+## 🔐 Espace d'administration
+
+Une interface d'administration (front uniquement, démo) est disponible sur `/admin` :
+
+- **Connexion** : `/admin/login` — identifiants par défaut `admin` / `cse-admin-2026`
+- Gestion des **articles** (ajout, édition, suppression)
+- Gestion des **utilisateurs** et des **permissions** par rôle
+
+⚠️ Cette phase est **front uniquement** : l'authentification est statique et les données sont stockées dans le `localStorage` du navigateur (amorcées avec les vrais articles au premier chargement). La sécurité réelle et la persistance serveur seront ajoutées en phase 2 (back-end). La couche de données (`src/utils/store.ts`) est conçue pour être branchée sur une API sans modifier les pages.
 
 ## 🏗 Structure du projet
 
@@ -65,11 +91,13 @@ Site web officiel de Camping Store & Event Madagascar, construit avec [Astro](ht
 │       ├── global.css   # Styles globaux
 │       └── theme.css    # Variables de thème
 │
-├── astro.config.mjs     # Configuration d'Astro
+├── astro.config.mjs     # Configuration d'Astro (chemin `base` unique)
 ├── package.json
-├── postcss.config.js    # Configuration de PostCSS
+├── postcss.config.cjs   # Configuration de PostCSS
 └── tailwind.config.mjs  # Configuration de Tailwind CSS
 ```
+
+> ℹ️ **En-têtes de sécurité** : GitHub Pages ne permet pas de définir des en-têtes HTTP personnalisés (le fichier `public/_headers` n'est pris en compte que par des hébergeurs comme Netlify/Cloudflare). Les vrais en-têtes de sécurité seront mis en place avec le back-end.
 
 ## 🌍 Déploiement
 

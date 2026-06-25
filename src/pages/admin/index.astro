@@ -1,0 +1,344 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { withBase } from '../../utils/url';
+import { getArticleSeed, getEventSeed } from '../../utils/content';
+
+const articleSeed = await getArticleSeed();
+const eventSeed = await getEventSeed();
+
+const card = 'rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5';
+---
+
+<AdminLayout title="Tableau de bord" active="dashboard">
+  <!-- Données de départ pour amorcer la démo (lues côté client) -->
+  <script type="application/json" id="article-seed" set:html={JSON.stringify(articleSeed)} />
+  <script type="application/json" id="event-seed" set:html={JSON.stringify(eventSeed)} />
+
+  <!-- Actions rapides (en haut) -->
+  <div class="flex flex-wrap items-center gap-3 mb-6">
+    <a href={withBase('/admin/articles/edit')} data-requires="articles.edit" class="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+      Nouvel article
+    </a>
+    <a href={withBase('/admin/products')} class="inline-flex items-center gap-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Gérer le matériel</a>
+    <a href={withBase('/admin/orders')} class="inline-flex items-center gap-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Voir les commandes</a>
+    <a href={withBase('/admin/stock')} data-requires="stock.manage" class="inline-flex items-center gap-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Entrée de stock</a>
+    <a href={withBase('/admin/events')} class="inline-flex items-center gap-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-4 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Gérer les événements</a>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid gap-4 grid-cols-2 lg:grid-cols-4">
+    <a href={withBase('/admin/orders')} class={`${card} hover:border-green-300 dark:hover:border-green-700 transition-colors`}>
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Chiffre d'affaires</p>
+        <span class="text-green-600">💰</span>
+      </div>
+      <p id="kpi-revenue" class="mt-1 text-2xl font-bold">—</p>
+      <p id="kpi-revenue-sub" class="mt-1 text-xs text-gray-400">—</p>
+    </a>
+    <a href={withBase('/admin/orders')} class={`${card} hover:border-green-300 dark:hover:border-green-700 transition-colors`}>
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Commandes</p>
+        <span>🧾</span>
+      </div>
+      <p id="kpi-orders" class="mt-1 text-2xl font-bold">—</p>
+      <p id="kpi-orders-sub" class="mt-1 text-xs text-gray-400">—</p>
+    </a>
+    <a href={withBase('/admin/products')} class={`${card} hover:border-green-300 dark:hover:border-green-700 transition-colors`}>
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Matériel</p>
+        <span>📦</span>
+      </div>
+      <p id="kpi-products" class="mt-1 text-2xl font-bold">—</p>
+      <p id="kpi-products-sub" class="mt-1 text-xs text-gray-400">—</p>
+    </a>
+    <a href={withBase('/admin/messages')} class={`${card} hover:border-green-300 dark:hover:border-green-700 transition-colors`}>
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Messages</p>
+        <span>✉️</span>
+      </div>
+      <p id="kpi-messages" class="mt-1 text-2xl font-bold">—</p>
+      <p id="kpi-messages-sub" class="mt-1 text-xs text-gray-400">—</p>
+    </a>
+  </div>
+
+  <!-- Rentabilité (ventes vs achats) -->
+  <div class={`${card} mt-4`}>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold">Rentabilité</h2>
+      <a href={withBase('/admin/stock')} class="text-sm text-green-700 dark:text-green-400 hover:underline">Stock & achats</a>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Chiffre d'affaires</p>
+        <p id="prof-revenue" class="mt-1 text-xl font-bold">—</p>
+        <p class="text-xs text-gray-400">commandes non annulées</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Coût des marchandises vendues</p>
+        <p id="prof-cogs" class="mt-1 text-xl font-bold text-amber-600 dark:text-amber-400">—</p>
+        <p class="text-xs text-gray-400">au prix d'achat</p>
+      </div>
+      <div>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Bénéfice estimé</p>
+        <p id="prof-profit" class="mt-1 text-xl font-bold text-green-600 dark:text-green-400">—</p>
+        <p id="prof-rate" class="text-xs text-gray-400">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphiques -->
+  <div class="grid gap-4 lg:grid-cols-3 mt-4">
+    <!-- CA des 6 derniers mois -->
+    <div class={`${card} lg:col-span-2`}>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold">Chiffre d'affaires — 6 derniers mois</h2>
+        <span class="text-xs text-gray-400">en Ariary</span>
+      </div>
+      <div id="chart-revenue" class="h-56"></div>
+    </div>
+    <!-- Commandes par statut -->
+    <div class={card}>
+      <h2 class="font-semibold mb-4">Commandes par statut</h2>
+      <div id="chart-status" class="flex flex-col items-center"></div>
+    </div>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2 mt-4">
+    <!-- Stock par catégorie -->
+    <div class={card}>
+      <h2 class="font-semibold mb-4">Stock par catégorie</h2>
+      <div id="chart-stock" class="space-y-3"></div>
+    </div>
+    <!-- Top produits commandés -->
+    <div class={card}>
+      <h2 class="font-semibold mb-4">Produits les plus commandés</h2>
+      <div id="top-products" class="space-y-3"></div>
+      <p id="top-products-empty" class="hidden text-sm text-gray-400 py-6 text-center">Aucune commande pour l'instant.</p>
+    </div>
+  </div>
+
+  <!-- Activité récente + autres stats -->
+  <div class="grid gap-4 lg:grid-cols-3 mt-4">
+    <div class={`${card} lg:col-span-2`}>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold">Dernières commandes</h2>
+        <a href={withBase('/admin/orders')} class="text-sm text-green-700 dark:text-green-400 hover:underline">Tout voir</a>
+      </div>
+      <div id="recent-orders" class="divide-y divide-gray-100 dark:divide-gray-800"></div>
+      <p id="recent-orders-empty" class="hidden text-sm text-gray-400 py-6 text-center">Aucune commande pour l'instant.</p>
+    </div>
+    <div class={card}>
+      <h2 class="font-semibold mb-4">Contenu & communauté</h2>
+      <div class="space-y-3 text-sm">
+        <a href={withBase('/admin/articles')} class="flex items-center justify-between hover:text-green-700 dark:hover:text-green-400">
+          <span class="text-gray-500 dark:text-gray-400">📝 Articles</span><span id="mini-articles" class="font-semibold">—</span>
+        </a>
+        <a href={withBase('/admin/events')} class="flex items-center justify-between hover:text-green-700 dark:hover:text-green-400">
+          <span class="text-gray-500 dark:text-gray-400">📅 Événements</span><span id="mini-events" class="font-semibold">—</span>
+        </a>
+        <a href={withBase('/admin/reviews')} class="flex items-center justify-between hover:text-green-700 dark:hover:text-green-400">
+          <span class="text-gray-500 dark:text-gray-400">⭐ Avis</span><span id="mini-reviews" class="font-semibold">—</span>
+        </a>
+        <a href={withBase('/admin/services')} class="flex items-center justify-between hover:text-green-700 dark:hover:text-green-400">
+          <span class="text-gray-500 dark:text-gray-400">🛠️ Services</span><span id="mini-services" class="font-semibold">—</span>
+        </a>
+        <a href={withBase('/admin/users')} class="flex items-center justify-between hover:text-green-700 dark:hover:text-green-400">
+          <span class="text-gray-500 dark:text-gray-400">👤 Utilisateurs</span><span id="mini-users" class="font-semibold">—</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import {
+      DEFAULT_USERS, DEFAULT_REVIEWS, DEFAULT_MESSAGES, DEFAULT_PRODUCTS, DEFAULT_SERVICES, PRODUCT_CATEGORIES,
+    } from '../../utils/store';
+    import type { Article, EventItem, OrderStatus } from '../../utils/store';
+    import {
+      articlesData, usersData, reviewsData, messagesData, eventsData, productsData, servicesData, ordersData,
+    } from '../../utils/db';
+    import { formatMGA } from '../../utils/format';
+
+    const readSeed = <T,>(id: string): T[] => {
+      const el = document.getElementById(id);
+      return el?.textContent ? JSON.parse(el.textContent) : [];
+    };
+
+    articlesData.seedIfEmpty(readSeed<Article>('article-seed'));
+    eventsData.seedIfEmpty(readSeed<EventItem>('event-seed'));
+    usersData.seedIfEmpty(DEFAULT_USERS);
+    reviewsData.seedIfEmpty(DEFAULT_REVIEWS);
+    messagesData.seedIfEmpty(DEFAULT_MESSAGES);
+    productsData.seedIfEmpty(DEFAULT_PRODUCTS);
+    servicesData.seedIfEmpty(DEFAULT_SERVICES);
+
+    const $ = (id: string) => document.getElementById(id)!;
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    const [articles, reviews, messages, events, products, services, users, orders] = await Promise.all([
+      articlesData.list(), reviewsData.list(), messagesData.list(), eventsData.list(),
+      productsData.list(), servicesData.list(), usersData.list(), ordersData.list(),
+    ]);
+
+    // --- KPIs ---
+    const revenue = orders.filter((o) => o.status !== 'cancelled').reduce((s, o) => s + (o.total || 0), 0);
+    const newOrders = orders.filter((o) => o.status === 'new').length;
+    const totalStock = products.reduce((s, p) => s + (p.stock || 0), 0);
+    const newMessages = messages.filter((m) => m.status === 'new').length;
+
+    $('kpi-revenue').textContent = formatMGA(revenue);
+    $('kpi-revenue-sub').textContent = `${orders.length} commande(s)`;
+    $('kpi-orders').textContent = String(orders.length);
+    $('kpi-orders-sub').textContent = `${newOrders} nouvelle(s)`;
+    $('kpi-products').textContent = String(products.length);
+    $('kpi-products-sub').textContent = `${totalStock} en stock`;
+    $('kpi-messages').textContent = String(messages.length);
+    $('kpi-messages-sub').textContent = `${newMessages} nouveau(x)`;
+
+    // --- Rentabilité : CA - coût des marchandises vendues (au prix d'achat) ---
+    const costById: Record<string, number> = {};
+    products.forEach((p) => { costById[p.id] = p.costPrice ?? 0; });
+    const cogs = orders.filter((o) => o.status !== 'cancelled')
+      .reduce((s, o) => s + o.items.reduce((n, it) => n + (costById[it.productId] ?? 0) * it.quantity, 0), 0);
+    const profit = revenue - cogs;
+    const marginRate = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
+    $('prof-revenue').textContent = formatMGA(revenue);
+    $('prof-cogs').textContent = formatMGA(cogs);
+    $('prof-profit').textContent = formatMGA(profit);
+    $('prof-rate').textContent = `taux de marge : ${marginRate}%`;
+
+    $('mini-articles').textContent = String(articles.length);
+    $('mini-events').textContent = String(events.length);
+    $('mini-reviews').textContent = String(reviews.length);
+    $('mini-services').textContent = String(services.length);
+    $('mini-users').textContent = String(users.length);
+
+    // --- CA des 6 derniers mois (barres) ---
+    const monthsLabels: string[] = [];
+    const monthKeys: string[] = [];
+    const monthRevenue: number[] = [];
+    const ref = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(ref.getFullYear(), ref.getMonth() - i, 1);
+      monthKeys.push(`${d.getFullYear()}-${d.getMonth()}`);
+      monthsLabels.push(d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''));
+      monthRevenue.push(0);
+    }
+    orders.filter((o) => o.status !== 'cancelled').forEach((o) => {
+      const d = new Date(o.date);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const idx = monthKeys.indexOf(key);
+      if (idx >= 0) monthRevenue[idx] += o.total || 0;
+    });
+    const maxRev = Math.max(1, ...monthRevenue);
+    $('chart-revenue').innerHTML = `
+      <div class="flex items-end justify-between gap-2 h-full pt-6">
+        ${monthRevenue.map((v, i) => {
+          const pct = Math.round((v / maxRev) * 100);
+          const label = v > 0 ? formatMGA(v) : '';
+          return `
+            <div class="flex-1 flex flex-col items-center justify-end h-full group">
+              <span class="text-[10px] text-gray-500 dark:text-gray-400 mb-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">${label}</span>
+              <div class="w-full rounded-t-md bg-gradient-to-t from-green-600 to-emerald-400 min-h-[2px]" style="height:${Math.max(pct, v > 0 ? 4 : 0)}%"></div>
+              <span class="mt-1.5 text-xs text-gray-400 capitalize">${monthsLabels[i]}</span>
+            </div>`;
+        }).join('')}
+      </div>`;
+
+    // --- Commandes par statut (donut SVG) ---
+    const statusMeta: Record<OrderStatus, { label: string; color: string }> = {
+      new: { label: 'Nouvelles', color: '#f59e0b' },
+      confirmed: { label: 'Confirmées', color: '#3b82f6' },
+      delivered: { label: 'Livrées', color: '#22c55e' },
+      cancelled: { label: 'Annulées', color: '#9ca3af' },
+    };
+    const statusOrder: OrderStatus[] = ['new', 'confirmed', 'delivered', 'cancelled'];
+    const statusCounts = statusOrder.map((s) => ({ s, n: orders.filter((o) => o.status === s).length }));
+    const totalOrders = orders.length;
+    const R = 56, C = 2 * Math.PI * R;
+    let offset = 0;
+    const segments = totalOrders === 0
+      ? `<circle cx="70" cy="70" r="${R}" fill="none" stroke="#e5e7eb" stroke-width="16" />`
+      : statusCounts.filter((x) => x.n > 0).map(({ s, n }) => {
+          const frac = n / totalOrders;
+          const dash = `${frac * C} ${C - frac * C}`;
+          const seg = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${statusMeta[s].color}" stroke-width="16" stroke-dasharray="${dash}" stroke-dashoffset="${-offset * C}" transform="rotate(-90 70 70)" />`;
+          offset += frac;
+          return seg;
+        }).join('');
+    $('chart-status').innerHTML = `
+      <div class="relative">
+        <svg viewBox="0 0 140 140" class="w-36 h-36">${segments}</svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-2xl font-bold">${totalOrders}</span>
+          <span class="text-xs text-gray-400">commandes</span>
+        </div>
+      </div>
+      <div class="mt-4 w-full space-y-1.5">
+        ${statusOrder.map((s) => {
+          const n = statusCounts.find((x) => x.s === s)!.n;
+          return `<div class="flex items-center justify-between text-sm">
+            <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background:${statusMeta[s].color}"></span>${statusMeta[s].label}</span>
+            <span class="font-medium">${n}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    // --- Stock par catégorie (barres horizontales) ---
+    const catStock = PRODUCT_CATEGORIES.map((c) => ({
+      name: c.name,
+      stock: products.filter((p) => p.category === c.id).reduce((s, p) => s + (p.stock || 0), 0),
+    })).filter((c) => c.stock > 0).sort((a, b) => b.stock - a.stock);
+    const maxStock = Math.max(1, ...catStock.map((c) => c.stock));
+    $('chart-stock').innerHTML = catStock.length === 0
+      ? '<p class="text-sm text-gray-400 py-6 text-center">Aucun stock renseigné.</p>'
+      : catStock.map((c) => `
+          <div>
+            <div class="flex justify-between text-sm mb-1"><span>${escape(c.name)}</span><span class="text-gray-400">${c.stock}</span></div>
+            <div class="h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-400" style="width:${Math.round((c.stock / maxStock) * 100)}%"></div>
+            </div>
+          </div>`).join('');
+
+    // --- Top produits commandés ---
+    type ProdQty = { name: string; qty: number };
+    const qtyByProduct: Record<string, ProdQty> = {};
+    orders.forEach((o) => o.items.forEach((it) => {
+      const cur = qtyByProduct[it.productId] ?? { name: it.name, qty: 0 };
+      cur.qty += it.quantity;
+      qtyByProduct[it.productId] = cur;
+    }));
+    const top = Object.values(qtyByProduct).sort((a, b) => b.qty - a.qty).slice(0, 5);
+    $('top-products-empty').classList.toggle('hidden', top.length > 0);
+    const maxQty = Math.max(1, ...top.map((t) => t.qty));
+    $('top-products').innerHTML = top.map((t, i) => `
+      <div>
+        <div class="flex justify-between text-sm mb-1"><span>${i + 1}. ${escape(t.name)}</span><span class="text-gray-400">${t.qty} vendu(s)</span></div>
+        <div class="h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+          <div class="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-400" style="width:${Math.round((t.qty / maxQty) * 100)}%"></div>
+        </div>
+      </div>`).join('');
+
+    // --- Dernières commandes ---
+    const recent = [...orders].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+    $('recent-orders-empty').classList.toggle('hidden', recent.length > 0);
+    $('recent-orders').innerHTML = recent.map((o) => {
+      const m = statusMeta[o.status];
+      const date = new Date(o.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+      return `
+        <div class="flex items-center justify-between py-2.5 text-sm">
+          <div class="min-w-0">
+            <span class="font-medium">${escape(o.reference)}</span>
+            <span class="text-gray-400"> · ${escape(o.customer.name)}</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="hidden sm:inline text-xs text-gray-400">${date}</span>
+            <span class="inline-flex items-center gap-1.5 text-xs"><span class="h-2 w-2 rounded-full" style="background:${m.color}"></span>${m.label}</span>
+            <span class="font-semibold text-green-700 dark:text-green-400 whitespace-nowrap">${formatMGA(o.total)}</span>
+          </div>
+        </div>`;
+    }).join('');
+  </script>
+</AdminLayout>

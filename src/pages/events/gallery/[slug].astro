@@ -4,90 +4,6 @@ import Layout from '../../../layouts/Layout.astro';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-// Styles pour la modale
-// const modalStyles = `
-//   /* Style pour le conteneur parent de la modale */
-//   .modal-container {
-//     position: absolute;
-//     display: none;
-//     background-color: #0003;
-//     top: 0;
-//     left: 0;
-//     width: 100%;
-//     height: 100%;
-//     z-index: 10000;
-//   }
-
-//   .modal-container.show {
-//     display: block;
-//   }
-
-//   .modal {
-//     position: fixed;
-//     top: 0;
-//     left: 0;
-//     width: 100%;
-//     height: 100%;
-//     background: rgba(0, 0, 0, 0.95);
-//     display: flex;
-//     justify-content: center;
-//     align-items: center;
-//     z-index: 10001;
-//     overflow: hidden;
-//   }
-  
-  
-//   .modal-content {
-//     position: relative;
-//     max-width: 90%;
-//     max-height: 90%;
-//     padding: 20px;
-//   }
-  
-//   .modal-img {
-//     max-width: 90vw;
-//     max-height: 90vh;
-//     width: auto;
-//     height: auto;
-//     display: block;
-//     margin: 0 auto;
-//     object-fit: contain;
-//   }
-  
-//   .close {
-//     position: absolute;
-//     top: -40px;
-//     right: 0;
-//     color: white;
-//     font-size: 35px;
-//     font-weight: bold;
-//     cursor: pointer;
-//   }
-  
-//   .prev, .next {
-//     cursor: pointer;
-//     position: absolute;
-//     top: 50%;
-//     width: auto;
-//     padding: 16px;
-//     margin-top: -22px;
-//     color: white;
-//     font-weight: bold;
-//     font-size: 20px;
-//     background: rgba(0, 0, 0, 0.5);
-//     border: none;
-//     outline: none;
-//   }
-  
-//   .next {
-//     right: 0;
-//     border-radius: 3px 0 0 3px;
-//   }
-  
-//   .prev:hover, .next:hover {
-//     background: rgba(0, 0, 0, 0.8);
-//   }`;
-
 export async function getStaticPaths() {
   const events = await getCollection('events');
   return events.map((event) => ({
@@ -137,10 +53,6 @@ try {
 
       {galleryExists ? (
         <div>
-          <style is:inline>
-            {modalStyles}
-          </style>
-
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="galleryContainer">
             {galleryImages.map((img, index) => (
               <div 

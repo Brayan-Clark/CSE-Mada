@@ -1,0 +1,277 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ViewToggle from '../../../components/admin/ViewToggle.astro';
+import { PRODUCT_CATEGORIES } from '../../../utils/store';
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<AdminLayout title="Matériel" active="products">
+  <div class="flex items-center justify-between gap-4 mb-6">
+    <p class="text-sm text-gray-500 dark:text-gray-400"><span id="product-count">0</span> article(s)</p>
+    <div class="flex items-center gap-3">
+      <ViewToggle />
+      <button id="add-product" data-requires="products.manage" class="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        Nouveau matériel
+      </button>
+    </div>
+  </div>
+
+  <div id="products-grid"></div>
+  <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400">Aucun matériel pour le moment.</p>
+
+  <!-- Modale -->
+  <div id="product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <h3 id="modal-title" class="text-lg font-bold mb-5">Nouveau matériel</h3>
+      <form id="product-form" class="space-y-4">
+        <input type="hidden" id="product-id" />
+        <div>
+          <label for="name" class="block text-sm font-medium mb-1.5">Nom *</label>
+          <input id="name" type="text" required class={inputClass} />
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="category" class="block text-sm font-medium mb-1.5">Catégorie</label>
+            <select id="category" class={inputClass}>
+              {PRODUCT_CATEGORIES.map((c) => <option value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label for="price" class="block text-sm font-medium mb-1.5">Prix de vente (Ar)</label>
+            <input id="price" type="number" min="0" step="1" class={inputClass} />
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="cost-price" class="block text-sm font-medium mb-1.5">Prix d'achat (Ar)</label>
+            <input id="cost-price" type="number" min="0" step="1" class={inputClass} />
+          </div>
+          <div class="flex items-end">
+            <p class="text-sm text-gray-500 dark:text-gray-400 pb-2.5">Marge : <span id="margin-preview" class="font-semibold text-green-700 dark:text-green-400">—</span></p>
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="stock" class="block text-sm font-medium mb-1.5">Stock</label>
+            <input id="stock" type="number" min="0" step="1" class={inputClass} />
+          </div>
+          <div class="flex items-end">
+            <label class="flex items-center gap-2 text-sm pb-2.5">
+              <input id="featured" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+              Mis en avant
+            </label>
+          </div>
+        </div>
+        <div>
+          <label for="description" class="block text-sm font-medium mb-1.5">Description</label>
+          <textarea id="description" rows="3" placeholder="Présentation du produit affichée dans la boutique…" class={inputClass}></textarea>
+        </div>
+        <div>
+          <label for="tags" class="block text-sm font-medium mb-1.5">Étiquettes <span class="font-normal text-gray-400">(séparées par des virgules)</span></label>
+          <input id="tags" type="text" placeholder="Nouveauté, Populaire" class={inputClass} />
+        </div>
+        <div>
+          <label for="image" class="block text-sm font-medium mb-1.5">Image (URL)</label>
+          <input id="image" type="text" placeholder="https://…" class={inputClass} />
+        </div>
+        <div class="flex items-center gap-3 pt-2">
+          <button type="submit" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Enregistrer</button>
+          <button type="button" id="modal-cancel" class="rounded-lg border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { DEFAULT_PRODUCTS, PRODUCT_CATEGORIES } from '../../../utils/store';
+    import type { Product } from '../../../utils/store';
+    import { productsData } from '../../../utils/db';
+    import { can } from '../../../utils/auth';
+    import { formatMGA } from '../../../utils/format';
+    import { getViewMode, setViewMode } from '../../../utils/view-pref';
+
+    productsData.seedIfEmpty(DEFAULT_PRODUCTS);
+
+    const canManage = can('products.manage');
+    let viewMode = getViewMode('products');
+    const grid = document.getElementById('products-grid')!;
+    const empty = document.getElementById('empty-state')!;
+    const count = document.getElementById('product-count')!;
+    const modal = document.getElementById('product-modal')!;
+    const form = document.getElementById('product-form') as HTMLFormElement;
+    const title = document.getElementById('modal-title')!;
+    const f = (id: string) => document.getElementById(id) as HTMLInputElement;
+
+    const catLabel = (id: string) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.name ?? id;
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    function updateMarginPreview() {
+      const price = Number(f('price').value) || 0;
+      const cost = Number(f('cost-price').value) || 0;
+      const el = document.getElementById('margin-preview')!;
+      if (!cost) { el.textContent = '—'; return; }
+      const margin = price - cost;
+      const rate = price > 0 ? Math.round((margin / price) * 100) : 0;
+      el.textContent = `${formatMGA(margin)} (${rate}%)`;
+      el.classList.toggle('text-green-700', margin >= 0);
+      el.classList.toggle('dark:text-green-400', margin >= 0);
+      el.classList.toggle('text-red-600', margin < 0);
+      el.classList.toggle('dark:text-red-400', margin < 0);
+    }
+    f('price').addEventListener('input', updateMarginPreview);
+    f('cost-price').addEventListener('input', updateMarginPreview);
+
+    function marginLine(p: { price: number; costPrice?: number }) {
+      if (!p.costPrice) return '';
+      const margin = p.price - p.costPrice;
+      const rate = p.price > 0 ? Math.round((margin / p.price) * 100) : 0;
+      const color = margin >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+      return `<p class="mt-1 text-xs text-gray-400">Achat : ${formatMGA(p.costPrice)} · Marge : <span class="${color} font-medium">${formatMGA(margin)} (${rate}%)</span></p>`;
+    }
+
+    function cardActions(p: { id: string; name: string }) {
+      return canManage
+        ? `<button data-edit="${escape(p.id)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30">Éditer</button>
+           <button data-delete="${escape(p.id)}" data-name="${escape(p.name)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">Supprimer</button>`
+        : '';
+    }
+
+    async function render() {
+      const products = await productsData.list();
+      count.textContent = String(products.length);
+      empty.classList.toggle('hidden', products.length > 0);
+
+      grid.className = viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-2';
+
+      grid.innerHTML = products
+        .map((p) => {
+          if (viewMode === 'list') {
+            const thumb = p.image
+              ? `<img src="${escape(p.image)}" alt="${escape(p.name)}" class="h-14 w-14 rounded-lg object-cover shrink-0" loading="lazy" />`
+              : '<div class="h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 shrink-0"></div>';
+            return `
+              <article class="flex items-center gap-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3">
+                ${thumb}
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold truncate">${escape(p.name)}${p.featured ? ' <span class="ml-1 inline-flex rounded-full bg-green-600 text-white px-1.5 py-0.5 text-[10px] align-middle">En avant</span>' : ''}</p>
+                  <p class="text-xs text-gray-400">${catLabel(p.category)} · Stock : ${p.stock}</p>
+                </div>
+                <span class="font-bold text-green-700 dark:text-green-400 whitespace-nowrap">${formatMGA(p.price)}</span>
+                <div class="flex gap-1 shrink-0">${cardActions(p)}</div>
+              </article>`;
+          }
+          const img = p.image
+            ? `<img src="${escape(p.image)}" alt="${escape(p.name)}" class="h-40 w-full object-cover" loading="lazy" />`
+            : '<div class="h-40 w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">Pas d\'image</div>';
+          const featured = p.featured
+            ? '<span class="absolute top-2 left-2 inline-flex rounded-full bg-green-600 text-white px-2 py-0.5 text-xs">En avant</span>'
+            : '';
+          const actions = canManage
+            ? `<div class="flex gap-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3">${cardActions(p)}</div>`
+            : '';
+          return `
+            <article class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col">
+              <div class="relative">${img}${featured}</div>
+              <div class="p-4 flex-1">
+                <p class="text-xs text-gray-400">${catLabel(p.category)}</p>
+                <h3 class="font-semibold mt-0.5">${escape(p.name)}</h3>
+                <div class="mt-2 flex items-center justify-between text-sm">
+                  <span class="font-bold text-green-700 dark:text-green-400">${formatMGA(p.price)}</span>
+                  <span class="text-gray-500 dark:text-gray-400">Stock : ${p.stock}</span>
+                </div>
+                ${marginLine(p)}
+              </div>
+              ${actions}
+            </article>`;
+        })
+        .join('');
+    }
+
+    function syncToggle() {
+      document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => {
+        const on = b.dataset.viewBtn === viewMode;
+        b.classList.toggle('bg-green-600', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('text-gray-500', !on);
+        b.classList.toggle('dark:text-gray-400', !on);
+      });
+    }
+    document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => {
+      b.addEventListener('click', () => {
+        viewMode = b.dataset.viewBtn as 'grid' | 'list';
+        setViewMode('products', viewMode);
+        syncToggle();
+        render();
+      });
+    });
+    syncToggle();
+
+    function openModal(product?: Product) {
+      title.textContent = product ? 'Modifier le matériel' : 'Nouveau matériel';
+      f('product-id').value = product?.id ?? '';
+      f('name').value = product?.name ?? '';
+      (document.getElementById('category') as HTMLSelectElement).value = product?.category ?? PRODUCT_CATEGORIES[0].id;
+      f('price').value = product ? String(product.price) : '';
+      f('cost-price').value = product?.costPrice ? String(product.costPrice) : '';
+      updateMarginPreview();
+      f('stock').value = product ? String(product.stock) : '';
+      f('featured').checked = product?.featured ?? false;
+      (document.getElementById('description') as HTMLTextAreaElement).value = product?.description ?? '';
+      f('tags').value = product?.tags.join(', ') ?? '';
+      f('image').value = product?.image ?? '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('add-product')?.addEventListener('click', () => openModal());
+    document.getElementById('modal-cancel')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    grid.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      const edit = target.closest<HTMLButtonElement>('[data-edit]');
+      if (edit) {
+        const p = await productsData.get(edit.dataset.edit!);
+        if (p) openModal(p);
+        return;
+      }
+      const del = target.closest<HTMLButtonElement>('[data-delete]');
+      if (del && confirm(`Supprimer « ${del.dataset.name} » ?`)) {
+        await productsData.remove(del.dataset.delete!);
+        await render();
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        name: f('name').value.trim(),
+        category: (document.getElementById('category') as HTMLSelectElement).value,
+        price: Number(f('price').value) || 0,
+        costPrice: Number(f('cost-price').value) || 0,
+        stock: Number(f('stock').value) || 0,
+        featured: f('featured').checked,
+        description: (document.getElementById('description') as HTMLTextAreaElement).value.trim() || undefined,
+        tags: f('tags').value.split(',').map((t) => t.trim()).filter(Boolean),
+        image: f('image').value.trim() || undefined,
+      };
+      const id = f('product-id').value;
+      if (id) await productsData.update(id, data);
+      else await productsData.create(data);
+      closeModal();
+      await render();
+    });
+
+    render();
+  </script>
+</AdminLayout>

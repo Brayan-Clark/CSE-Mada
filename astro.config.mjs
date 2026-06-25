@@ -20,45 +20,9 @@ export default defineConfig({
       theme: 'github-dark',
     },
   },
-  vite: {
-    css: {
-      devSourcemap: true,
-    },
-    ssr: {
-      noExternal: true,
-      external: ['cssesc']
-    },
-    optimizeDeps: {
-      include: ['cssesc'],
-      exclude: ['@rollup/rollup-linux-x64-gnu', 'rollup']
-    },
-    build: {
-      rollupOptions: {
-        external: ['@rollup/rollup-linux-x64-gnu'],
-        output: {
-          manualChunks: {
-            'rollup': ['rollup']
-          }
-        }
-      }
-    }
-  },
   server: {
     port: 3000,
     host: true,
-    headers: {
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Resource-Policy': 'same-site',
-      'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
-      'X-Permitted-Cross-Domain-Policies': 'none',
-      'X-DNS-Prefetch-Control': 'off'
-    }
   },
   scopedStyleStrategy: 'class',
 });

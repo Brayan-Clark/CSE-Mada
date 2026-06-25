@@ -1,5 +1,7 @@
 module.exports = {
   root: true,
+  // Fichiers générés / build : non concernés par le lint.
+  ignorePatterns: ['dist/', '.astro/', 'node_modules/', 'src/env.d.ts'],
   parser: '@typescript-eslint/parser',
   extends: [
     'eslint:recommended',

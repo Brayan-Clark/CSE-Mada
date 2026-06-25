@@ -1,0 +1,334 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { PRODUCT_CATEGORIES } from '../../../utils/store';
+
+const card = 'rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5';
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<AdminLayout title="Stock & achats" active="stock">
+  <!-- KPIs -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+    <div class={card}>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Valeur du stock (achat)</p>
+      <p id="kpi-stock-cost" class="mt-1 text-2xl font-bold">—</p>
+      <p id="kpi-stock-units" class="mt-1 text-xs text-gray-400">—</p>
+    </div>
+    <div class={card}>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Valeur du stock (vente)</p>
+      <p id="kpi-stock-sell" class="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">—</p>
+      <p class="mt-1 text-xs text-gray-400">si tout est vendu au prix affiché</p>
+    </div>
+    <div class={card}>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Marge potentielle</p>
+      <p id="kpi-margin" class="mt-1 text-2xl font-bold">—</p>
+      <p id="kpi-margin-rate" class="mt-1 text-xs text-gray-400">—</p>
+    </div>
+    <div class={card}>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Total investi (achats)</p>
+      <p id="kpi-invested" class="mt-1 text-2xl font-bold">—</p>
+      <p id="kpi-entries" class="mt-1 text-xs text-gray-400">—</p>
+    </div>
+  </div>
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+    <p class="text-sm text-gray-500 dark:text-gray-400"><span id="entry-count">0</span> entrée(s) de stock</p>
+    <button id="add-entry" data-requires="stock.manage" class="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+      Nouvelle entrée
+    </button>
+  </div>
+
+  <!-- Tableau des entrées -->
+  <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800/50 text-left text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="px-4 py-3 font-medium">Date</th>
+            <th class="px-4 py-3 font-medium">Produit</th>
+            <th class="px-4 py-3 font-medium text-right">Quantité</th>
+            <th class="px-4 py-3 font-medium text-right">Prix d'achat unit.</th>
+            <th class="px-4 py-3 font-medium text-right">Total</th>
+            <th class="px-4 py-3 font-medium">Note</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="entries-body" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
+      </table>
+    </div>
+    <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400">Aucune entrée de stock pour le moment.</p>
+  </div>
+
+  <!-- Modale -->
+  <div id="entry-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <h3 class="text-lg font-bold mb-5">Nouvelle entrée de stock</h3>
+
+      <!-- Choix : produit existant / nouveau produit -->
+      <div class="flex gap-2 mb-5 text-sm">
+        <button type="button" id="mode-existing" class="mode-btn flex-1 rounded-lg px-3 py-2 font-medium bg-green-600 text-white">Produit existant</button>
+        <button type="button" id="mode-new" class="mode-btn flex-1 rounded-lg px-3 py-2 font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Nouveau produit</button>
+      </div>
+
+      <form id="entry-form" class="space-y-4">
+        <!-- Produit existant -->
+        <div id="block-existing" class="space-y-4">
+          <div>
+            <label for="product" class="block text-sm font-medium mb-1.5">Produit *</label>
+            <select id="product" class={inputClass}></select>
+            <p id="product-current" class="mt-1.5 text-xs text-gray-400"></p>
+          </div>
+          <div>
+            <label for="sell-price" class="block text-sm font-medium mb-1.5">Prix de vente (Ar)</label>
+            <input id="sell-price" type="number" min="0" step="1" class={inputClass} />
+            <p class="mt-1.5 text-xs text-gray-400">Ajustez-le si le prix d'achat a changé (laissez tel quel pour conserver le prix actuel).</p>
+          </div>
+        </div>
+
+        <!-- Nouveau produit -->
+        <div id="block-new" class="hidden space-y-4">
+          <div>
+            <label for="new-name" class="block text-sm font-medium mb-1.5">Nom du produit *</label>
+            <input id="new-name" type="text" class={inputClass} />
+          </div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="new-category" class="block text-sm font-medium mb-1.5">Catégorie</label>
+              <select id="new-category" class={inputClass}>
+                {PRODUCT_CATEGORIES.map((c) => <option value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label for="new-price" class="block text-sm font-medium mb-1.5">Prix de vente (Ar) *</label>
+              <input id="new-price" type="number" min="0" step="1" class={inputClass} />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="quantity" class="block text-sm font-medium mb-1.5">Quantité *</label>
+            <input id="quantity" type="number" min="1" step="1" value="1" class={inputClass} />
+          </div>
+          <div>
+            <label for="unit-cost" class="block text-sm font-medium mb-1.5">Prix d'achat unit. (Ar) *</label>
+            <input id="unit-cost" type="number" min="0" step="1" class={inputClass} />
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="date" class="block text-sm font-medium mb-1.5">Date</label>
+            <input id="date" type="date" class={inputClass} />
+          </div>
+          <div class="flex items-end">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total : <span id="entry-total" class="font-semibold text-gray-900 dark:text-white">0 Ar</span></p>
+          </div>
+        </div>
+
+        <div>
+          <label for="note" class="block text-sm font-medium mb-1.5">Note</label>
+          <input id="note" type="text" placeholder="Fournisseur, facture…" class={inputClass} />
+        </div>
+
+        <p class="text-xs text-gray-400">💡 L'entrée incrémente le stock du produit et met à jour son prix d'achat (pour le calcul des marges).</p>
+
+        <div class="flex items-center gap-3 pt-2">
+          <button type="submit" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Enregistrer l'entrée</button>
+          <button type="button" id="modal-cancel" class="rounded-lg border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { DEFAULT_PRODUCTS, DEFAULT_STOCK_ENTRIES } from '../../../utils/store';
+    import type { Product } from '../../../utils/store';
+    import { productsData, stockEntriesData } from '../../../utils/db';
+    import { can } from '../../../utils/auth';
+    import { formatMGA } from '../../../utils/format';
+
+    productsData.seedIfEmpty(DEFAULT_PRODUCTS);
+    stockEntriesData.seedIfEmpty(DEFAULT_STOCK_ENTRIES);
+
+    const canManage = can('stock.manage');
+    const $ = (id: string) => document.getElementById(id)!;
+    const f = (id: string) => document.getElementById(id) as HTMLInputElement;
+    const body = $('entries-body');
+    const empty = $('empty-state');
+    const modal = $('entry-modal');
+    const form = $('entry-form') as HTMLFormElement;
+    const productSelect = $('product') as HTMLSelectElement;
+
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const fmtDate = (iso: string) =>
+      new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    let products: Product[] = [];
+    type EntryMode = 'existing' | 'new';
+    let mode: EntryMode = 'existing';
+
+    async function loadProducts() {
+      products = await productsData.list();
+      productSelect.innerHTML = products
+        .map((p) => `<option value="${escape(p.id)}">${escape(p.name)} (stock : ${p.stock})</option>`)
+        .join('');
+    }
+
+    // Affiche les prix actuels du produit sélectionné et pré-remplit le prix de vente.
+    function syncSelectedProduct() {
+      const p = products.find((x) => x.id === productSelect.value);
+      if (!p) { $('product-current').textContent = ''; return; }
+      f('sell-price').value = String(p.price);
+      const cost = p.costPrice ?? 0;
+      const parts = [`Prix de vente actuel : ${formatMGA(p.price)}`];
+      if (cost) parts.push(`achat : ${formatMGA(cost)}`);
+      $('product-current').textContent = parts.join(' · ');
+    }
+
+    function renderKpis() {
+      const stockCost = products.reduce((s, p) => s + (p.costPrice ?? 0) * p.stock, 0);
+      const stockSell = products.reduce((s, p) => s + p.price * p.stock, 0);
+      const units = products.reduce((s, p) => s + p.stock, 0);
+      const margin = stockSell - stockCost;
+      const rate = stockSell > 0 ? Math.round((margin / stockSell) * 100) : 0;
+      $('kpi-stock-cost').textContent = formatMGA(stockCost);
+      $('kpi-stock-units').textContent = `${units} article(s) en stock`;
+      $('kpi-stock-sell').textContent = formatMGA(stockSell);
+      $('kpi-margin').textContent = formatMGA(margin);
+      $('kpi-margin-rate').textContent = `${rate}% du chiffre potentiel`;
+    }
+
+    async function render() {
+      const entries = (await stockEntriesData.list()).sort((a, b) => b.date.localeCompare(a.date));
+      renderKpis();
+      const invested = entries.reduce((s, e) => s + e.unitCost * e.quantity, 0);
+      $('kpi-invested').textContent = formatMGA(invested);
+      $('kpi-entries').textContent = `${entries.length} entrée(s)`;
+      $('entry-count').textContent = String(entries.length);
+      empty.classList.toggle('hidden', entries.length > 0);
+
+      body.innerHTML = entries
+        .map((e) => {
+          const total = e.unitCost * e.quantity;
+          const actions = canManage
+            ? `<button data-delete="${escape(e.id)}" data-name="${escape(e.productName)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">Supprimer</button>`
+            : '<span class="text-xs text-gray-400">—</span>';
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">${fmtDate(e.date)}</td>
+              <td class="px-4 py-3 font-medium">${escape(e.productName)}</td>
+              <td class="px-4 py-3 text-right">+${e.quantity}</td>
+              <td class="px-4 py-3 text-right whitespace-nowrap">${formatMGA(e.unitCost)}</td>
+              <td class="px-4 py-3 text-right font-semibold whitespace-nowrap">${formatMGA(total)}</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${escape(e.note ?? '')}</td>
+              <td class="px-4 py-3"><div class="flex items-center justify-end gap-2">${actions}</div></td>
+            </tr>`;
+        })
+        .join('');
+    }
+
+    // --- Modale ---
+    function setMode(m: 'existing' | 'new') {
+      mode = m;
+      $('block-existing').classList.toggle('hidden', m !== 'existing');
+      $('block-new').classList.toggle('hidden', m !== 'new');
+      $('mode-existing').classList.toggle('bg-green-600', m === 'existing');
+      $('mode-existing').classList.toggle('text-white', m === 'existing');
+      $('mode-existing').classList.toggle('bg-gray-100', m !== 'existing');
+      $('mode-existing').classList.toggle('dark:bg-gray-800', m !== 'existing');
+      $('mode-new').classList.toggle('bg-green-600', m === 'new');
+      $('mode-new').classList.toggle('text-white', m === 'new');
+      $('mode-new').classList.toggle('bg-gray-100', m !== 'new');
+      $('mode-new').classList.toggle('dark:bg-gray-800', m !== 'new');
+    }
+
+    function updateTotal() {
+      const qty = Number(f('quantity').value) || 0;
+      const cost = Number(f('unit-cost').value) || 0;
+      $('entry-total').textContent = formatMGA(qty * cost);
+    }
+
+    function openModal() {
+      form.reset();
+      setMode('existing');
+      f('quantity').value = '1';
+      f('date').value = new Date().toISOString().slice(0, 10);
+      syncSelectedProduct();
+      updateTotal();
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    $('add-entry')?.addEventListener('click', openModal);
+    $('modal-cancel').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    $('mode-existing').addEventListener('click', () => setMode('existing'));
+    $('mode-new').addEventListener('click', () => setMode('new'));
+    f('quantity').addEventListener('input', updateTotal);
+    f('unit-cost').addEventListener('input', updateTotal);
+    productSelect.addEventListener('change', syncSelectedProduct);
+
+    body.addEventListener('click', async (e) => {
+      const del = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-delete]');
+      if (del && confirm(`Supprimer cette entrée de « ${del.dataset.name} » ? Le stock sera décrémenté.`)) {
+        const entry = await stockEntriesData.get(del.dataset.delete!);
+        if (entry) {
+          const p = products.find((x) => x.id === entry.productId);
+          if (p) await productsData.update(p.id, { stock: Math.max(0, p.stock - entry.quantity) });
+          await stockEntriesData.remove(entry.id);
+        }
+        await loadProducts();
+        await render();
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const quantity = Number(f('quantity').value) || 0;
+      const unitCost = Number(f('unit-cost').value) || 0;
+      if (quantity < 1 || unitCost < 0) return;
+      const date = new Date(f('date').value || Date.now()).toISOString();
+      const note = f('note').value.trim() || undefined;
+
+      let productId: string;
+      let productName: string;
+
+      if (mode === 'new') {
+        const name = f('new-name').value.trim();
+        const price = Number(f('new-price').value) || 0;
+        if (!name || price <= 0) { alert('Renseignez le nom et le prix de vente du nouveau produit.'); return; }
+        const category = (document.getElementById('new-category') as HTMLSelectElement).value;
+        const created = await productsData.create({
+          name, category, price, costPrice: unitCost, stock: quantity, featured: false, tags: [],
+        });
+        productId = created.id;
+        productName = created.name;
+      } else {
+        productId = productSelect.value;
+        const p = products.find((x) => x.id === productId);
+        if (!p) { alert('Sélectionnez un produit.'); return; }
+        productName = p.name;
+        // Incrémente le stock, met à jour le prix d'achat de référence et,
+        // si modifié, le prix de vente (le prix d'achat ayant pu changer).
+        const sellPrice = Number(f('sell-price').value) || p.price;
+        await productsData.update(productId, { stock: p.stock + quantity, costPrice: unitCost, price: sellPrice });
+      }
+
+      await stockEntriesData.create({ productId, productName, quantity, unitCost, note, date });
+      closeModal();
+      await loadProducts();
+      await render();
+    });
+
+    await loadProducts();
+    await render();
+  </script>
+</AdminLayout>

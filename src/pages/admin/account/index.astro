@@ -1,0 +1,97 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { isSupabaseEnabled } from '../../../utils/supabase';
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<AdminLayout title="Mon compte" active="account">
+  <div class="max-w-2xl space-y-6">
+    <!-- Infos du compte -->
+    <section class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6">
+      <h2 class="font-semibold mb-4">Informations du compte</h2>
+      <dl class="space-y-3 text-sm">
+        <div class="flex justify-between">
+          <dt class="text-gray-500 dark:text-gray-400">Identifiant</dt>
+          <dd id="acc-name" class="font-medium">—</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-gray-500 dark:text-gray-400">Rôle</dt>
+          <dd id="acc-role" class="font-medium">—</dd>
+        </div>
+        <div class="flex justify-between">
+          <dt class="text-gray-500 dark:text-gray-400">Mode</dt>
+          <dd class="font-medium">{isSupabaseEnabled ? 'Connecté (Supabase)' : 'Démo (local)'}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- Changer le mot de passe -->
+    <section class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6">
+      <h2 class="font-semibold mb-1">Changer mon mot de passe</h2>
+      {!isSupabaseEnabled && (
+        <p class="text-sm text-amber-600 dark:text-amber-400 mb-4">
+          En mode démo (sans base de données), le mot de passe est statique et ne peut pas être modifié ici.
+          Le changement de mot de passe sera disponible une fois Supabase connecté.
+        </p>
+      )}
+
+      <div id="account-success" class="hidden mb-4 rounded-lg bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-800 dark:text-green-300">
+        ✅ Mot de passe mis à jour.
+      </div>
+      <div id="account-error" class="hidden mb-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400"></div>
+
+      <form id="password-form" class="space-y-4">
+        <div>
+          <label for="new-password" class="block text-sm font-medium mb-1.5">Nouveau mot de passe</label>
+          <input id="new-password" type="password" minlength="8" autocomplete="new-password" required disabled={!isSupabaseEnabled} class={inputClass} placeholder="8 caractères minimum" />
+        </div>
+        <div>
+          <label for="confirm-password" class="block text-sm font-medium mb-1.5">Confirmer le mot de passe</label>
+          <input id="confirm-password" type="password" minlength="8" autocomplete="new-password" required disabled={!isSupabaseEnabled} class={inputClass} />
+        </div>
+        <button type="submit" disabled={!isSupabaseEnabled} class="rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium px-5 py-2.5 text-sm transition-colors">
+          Mettre à jour
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    import { getSession } from '../../../utils/auth';
+    import { seedRoles } from '../../../utils/store';
+    import { rolesData } from '../../../utils/db';
+    import { getSupabase } from '../../../utils/supabase';
+
+    seedRoles();
+    const session = getSession();
+    const $ = (id: string) => document.getElementById(id)!;
+    if (session) {
+      $('acc-name').textContent = session.username;
+      $('acc-role').textContent = session.role;
+      rolesData.get(session.role).then((r) => { if (r) $('acc-role').textContent = r.label; });
+    }
+
+    const form = document.getElementById('password-form') as HTMLFormElement;
+    const ok = $('account-success');
+    const err = $('account-error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      ok.classList.add('hidden');
+      err.classList.add('hidden');
+      const pwd = ($('new-password') as HTMLInputElement).value;
+      const confirm = ($('confirm-password') as HTMLInputElement).value;
+      if (pwd.length < 8) { err.textContent = 'Le mot de passe doit faire au moins 8 caractères.'; err.classList.remove('hidden'); return; }
+      if (pwd !== confirm) { err.textContent = 'Les deux mots de passe ne correspondent pas.'; err.classList.remove('hidden'); return; }
+
+      const sb = getSupabase();
+      if (!sb) { err.textContent = 'Indisponible en mode démo.'; err.classList.remove('hidden'); return; }
+      const { error } = await sb.auth.updateUser({ password: pwd });
+      if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+      form.reset();
+      ok.classList.remove('hidden');
+    });
+  </script>
+</AdminLayout>

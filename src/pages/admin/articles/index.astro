@@ -1,0 +1,123 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { withBase } from '../../../utils/url';
+import { getArticleSeed } from '../../../utils/content';
+
+const articleSeed = await getArticleSeed();
+const editUrl = withBase('/admin/articles/edit');
+---
+
+<AdminLayout title="Articles" active="articles">
+  <script type="application/json" id="article-seed" set:html={JSON.stringify(articleSeed)} />
+
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <p class="text-sm text-gray-500 dark:text-gray-400"><span id="article-count">0</span> article(s)</p>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
+        <input id="article-search" type="search" placeholder="Rechercher…" class="w-full sm:w-56 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+      </div>
+      <select id="article-filter" class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+        <option value="all">Tous</option>
+        <option value="published">Publiés</option>
+        <option value="draft">Brouillons</option>
+      </select>
+      <a href={editUrl} data-requires="articles.edit" class="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        Nouvel article
+      </a>
+    </div>
+  </div>
+
+  <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800/50 text-left text-gray-500 dark:text-gray-400">
+          <tr>
+            <th class="px-4 py-3 font-medium">Titre</th>
+            <th class="px-4 py-3 font-medium">Auteur</th>
+            <th class="px-4 py-3 font-medium">Date</th>
+            <th class="px-4 py-3 font-medium">Statut</th>
+            <th class="px-4 py-3 font-medium text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="articles-body" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
+      </table>
+    </div>
+    <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400">Aucun article. Créez-en un avec « Nouvel article ».</p>
+  </div>
+
+  <script>
+    import { articlesData } from '../../../utils/db';
+    import type { Article } from '../../../utils/store';
+    import { can } from '../../../utils/auth';
+    import { withBase } from '../../../utils/url';
+
+    const seedEl = document.getElementById('article-seed');
+    const seed: Article[] = seedEl?.textContent ? JSON.parse(seedEl.textContent) : [];
+    articlesData.seedIfEmpty(seed);
+
+    const canEdit = can('articles.edit');
+    const canDelete = can('articles.delete');
+
+    const body = document.getElementById('articles-body')!;
+    const empty = document.getElementById('empty-state')!;
+    const count = document.getElementById('article-count')!;
+    const searchInput = document.getElementById('article-search') as HTMLInputElement;
+    const filterSelect = document.getElementById('article-filter') as HTMLSelectElement;
+
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    async function render() {
+      const search = searchInput.value.trim().toLowerCase();
+      const filter = filterSelect.value;
+      const articles = (await articlesData.list())
+        .filter((a) => {
+          if (filter === 'published' && a.draft) return false;
+          if (filter === 'draft' && !a.draft) return false;
+          if (search && !a.title.toLowerCase().includes(search) && !a.author.toLowerCase().includes(search)) return false;
+          return true;
+        });
+      count.textContent = String(articles.length);
+      empty.classList.toggle('hidden', articles.length > 0);
+
+      body.innerHTML = articles
+        .map((a) => {
+          const date = new Date(a.pubDate).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' });
+          const badge = a.draft
+            ? '<span class="inline-flex rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-2 py-0.5 text-xs">Brouillon</span>'
+            : '<span class="inline-flex rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 text-xs">Publié</span>';
+          return `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/40">
+              <td class="px-4 py-3 font-medium">${escape(a.title)}</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">${escape(a.author)}</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">${date}</td>
+              <td class="px-4 py-3">${badge}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-2">
+                  ${canEdit ? `<a href="${withBase('/admin/articles/edit')}?id=${encodeURIComponent(a.id)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30">Éditer</a>` : ''}
+                  ${canDelete ? `<button data-delete="${escape(a.id)}" data-title="${escape(a.title)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">Supprimer</button>` : ''}
+                  ${!canEdit && !canDelete ? '<span class="text-xs text-gray-400">—</span>' : ''}
+                </div>
+              </td>
+            </tr>`;
+        })
+        .join('');
+    }
+
+    body.addEventListener('click', async (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-delete]');
+      if (!btn) return;
+      if (confirm(`Supprimer l'article « ${btn.dataset.title} » ?`)) {
+        await articlesData.remove(btn.dataset.delete!);
+        render();
+      }
+    });
+
+    searchInput.addEventListener('input', render);
+    filterSelect.addEventListener('change', render);
+
+    render();
+  </script>
+</AdminLayout>

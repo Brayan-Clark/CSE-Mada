@@ -1,0 +1,267 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ViewToggle from '../../../components/admin/ViewToggle.astro';
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<AdminLayout title="Avis" active="reviews">
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <div class="flex gap-2 text-sm">
+      <button data-filter="all" class="filter-btn rounded-full px-3 py-1.5 bg-green-600 text-white">Tous (<span id="c-all">0</span>)</button>
+      <button data-filter="published" class="filter-btn rounded-full px-3 py-1.5 bg-gray-100 dark:bg-gray-800">Publiés (<span id="c-pub">0</span>)</button>
+      <button data-filter="pending" class="filter-btn rounded-full px-3 py-1.5 bg-gray-100 dark:bg-gray-800">En attente (<span id="c-pend">0</span>)</button>
+    </div>
+    <div class="flex items-center gap-3">
+      <ViewToggle />
+      <button id="add-review" data-requires="reviews.moderate" class="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        Nouvel avis
+      </button>
+    </div>
+  </div>
+
+  <div id="reviews-grid"></div>
+  <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400">Aucun avis dans cette catégorie.</p>
+
+  <!-- Modale -->
+  <div id="review-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <h3 id="modal-title" class="text-lg font-bold mb-5">Nouvel avis</h3>
+      <form id="review-form" class="space-y-4">
+        <input type="hidden" id="review-id" />
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="author" class="block text-sm font-medium mb-1.5">Auteur *</label>
+            <input id="author" type="text" required class={inputClass} />
+          </div>
+          <div>
+            <label for="role" class="block text-sm font-medium mb-1.5">Profil</label>
+            <input id="role" type="text" placeholder="Randonneur…" class={inputClass} />
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="trip" class="block text-sm font-medium mb-1.5">Voyage / activité</label>
+            <input id="trip" type="text" class={inputClass} />
+          </div>
+          <div>
+            <label for="rating" class="block text-sm font-medium mb-1.5">Note</label>
+            <select id="rating" class={inputClass}>
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★ (4)</option>
+              <option value="3">★★★ (3)</option>
+              <option value="2">★★ (2)</option>
+              <option value="1">★ (1)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label for="quote" class="block text-sm font-medium mb-1.5">Avis *</label>
+          <textarea id="quote" rows="4" required class={inputClass}></textarea>
+        </div>
+        <div>
+          <label for="image" class="block text-sm font-medium mb-1.5">Photo (URL)</label>
+          <input id="image" type="text" placeholder="https://…" class={inputClass} />
+        </div>
+        <label class="flex items-center gap-2 text-sm">
+          <input id="published" type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+          Publié sur le site
+        </label>
+        <div class="flex items-center gap-3 pt-2">
+          <button type="submit" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Enregistrer</button>
+          <button type="button" id="modal-cancel" class="rounded-lg border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { DEFAULT_REVIEWS } from '../../../utils/store';
+    import type { Review } from '../../../utils/store';
+    import { reviewsData } from '../../../utils/db';
+    import { can } from '../../../utils/auth';
+    import { getViewMode, setViewMode } from '../../../utils/view-pref';
+
+    reviewsData.seedIfEmpty(DEFAULT_REVIEWS);
+
+    const canModerate = can('reviews.moderate');
+    let viewMode = getViewMode('reviews');
+    const grid = document.getElementById('reviews-grid')!;
+    const empty = document.getElementById('empty-state')!;
+    const modal = document.getElementById('review-modal')!;
+    const form = document.getElementById('review-form') as HTMLFormElement;
+    const title = document.getElementById('modal-title')!;
+    const f = (id: string) => document.getElementById(id) as HTMLInputElement;
+
+    let filter: 'all' | 'published' | 'pending' = 'all';
+
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const stars = (n: number) =>
+      '★★★★★☆☆☆☆☆'.slice(5 - n, 10 - n);
+
+    function refreshCounts(all: Review[]) {
+      document.getElementById('c-all')!.textContent = String(all.length);
+      document.getElementById('c-pub')!.textContent = String(all.filter((r) => r.status === 'published').length);
+      document.getElementById('c-pend')!.textContent = String(all.filter((r) => r.status === 'pending').length);
+    }
+
+    async function render() {
+      const all = await reviewsData.list();
+      refreshCounts(all);
+      const reviews = all
+        .filter((r) => filter === 'all' || r.status === filter)
+        .sort((a, b) => b.date.localeCompare(a.date));
+      empty.classList.toggle('hidden', reviews.length > 0);
+
+      grid.className = viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-2';
+
+      grid.innerHTML = reviews
+        .map((r) => {
+          const badge = r.status === 'published'
+            ? '<span class="inline-flex rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-0.5 text-xs">Publié</span>'
+            : '<span class="inline-flex rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-2 py-0.5 text-xs">En attente</span>';
+          const btns = canModerate
+            ? `<button data-toggle="${escape(r.id)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30">${r.status === 'published' ? 'Dépublier' : 'Publier'}</button>
+               <button data-edit="${escape(r.id)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Éditer</button>
+               <button data-delete="${escape(r.id)}" data-name="${escape(r.author)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">Supprimer</button>`
+            : '';
+
+          if (viewMode === 'list') {
+            return `
+              <article class="flex items-start gap-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-sm font-semibold">${escape(r.author)}</span>
+                    <span class="text-yellow-400 text-sm" title="${r.rating}/5">${stars(r.rating)}</span>
+                    ${badge}
+                  </div>
+                  <p class="mt-1 text-sm text-gray-600 dark:text-gray-300 italic line-clamp-2">“${escape(r.quote)}”</p>
+                  <p class="mt-1 text-xs text-gray-400">${escape(r.role)}${r.trip ? ` · ${escape(r.trip)}` : ''}</p>
+                </div>
+                ${canModerate ? `<div class="flex flex-col items-end gap-1 shrink-0">${btns}</div>` : ''}
+              </article>`;
+          }
+
+          const actions = canModerate
+            ? `<div class="mt-4 flex flex-wrap gap-2 border-t border-gray-100 dark:border-gray-800 pt-3">${btns}</div>`
+            : '';
+          return `
+            <article class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 flex flex-col">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-yellow-400 text-sm" title="${r.rating}/5">${stars(r.rating)}</span>
+                ${badge}
+              </div>
+              <p class="mt-3 text-sm text-gray-700 dark:text-gray-300 italic flex-1">“${escape(r.quote)}”</p>
+              <div class="mt-3">
+                <p class="text-sm font-semibold">${escape(r.author)}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">${escape(r.role)}${r.trip ? ` · ${escape(r.trip)}` : ''}</p>
+              </div>
+              ${actions}
+            </article>`;
+        })
+        .join('');
+    }
+
+    function syncToggle() {
+      document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => {
+        const on = b.dataset.viewBtn === viewMode;
+        b.classList.toggle('bg-green-600', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('text-gray-500', !on);
+        b.classList.toggle('dark:text-gray-400', !on);
+      });
+    }
+    document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => {
+      b.addEventListener('click', () => {
+        viewMode = b.dataset.viewBtn as 'grid' | 'list';
+        setViewMode('reviews', viewMode);
+        syncToggle();
+        render();
+      });
+    });
+    syncToggle();
+
+    function openModal(review?: Review) {
+      title.textContent = review ? 'Modifier l’avis' : 'Nouvel avis';
+      f('review-id').value = review?.id ?? '';
+      f('author').value = review?.author ?? '';
+      f('role').value = review?.role ?? '';
+      f('trip').value = review?.trip ?? '';
+      (document.getElementById('rating') as HTMLSelectElement).value = String(review?.rating ?? 5);
+      (document.getElementById('quote') as HTMLTextAreaElement).value = review?.quote ?? '';
+      f('image').value = review?.image ?? '';
+      f('published').checked = review ? review.status === 'published' : true;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('add-review')?.addEventListener('click', () => openModal());
+    document.getElementById('modal-cancel')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        filter = btn.dataset.filter as typeof filter;
+        document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach((b) => {
+          const activeBtn = b === btn;
+          b.classList.toggle('bg-green-600', activeBtn);
+          b.classList.toggle('text-white', activeBtn);
+          b.classList.toggle('bg-gray-100', !activeBtn);
+          b.classList.toggle('dark:bg-gray-800', !activeBtn);
+        });
+        render();
+      });
+    });
+
+    grid.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      const toggle = target.closest<HTMLButtonElement>('[data-toggle]');
+      if (toggle) {
+        const r = await reviewsData.get(toggle.dataset.toggle!);
+        if (r) await reviewsData.update(r.id, { status: r.status === 'published' ? 'pending' : 'published' });
+        await render();
+        return;
+      }
+      const edit = target.closest<HTMLButtonElement>('[data-edit]');
+      if (edit) {
+        const r = await reviewsData.get(edit.dataset.edit!);
+        if (r) openModal(r);
+        return;
+      }
+      const del = target.closest<HTMLButtonElement>('[data-delete]');
+      if (del && confirm(`Supprimer l'avis de « ${del.dataset.name} » ?`)) {
+        await reviewsData.remove(del.dataset.delete!);
+        await render();
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = {
+        author: f('author').value.trim(),
+        role: f('role').value.trim(),
+        trip: f('trip').value.trim(),
+        rating: Number((document.getElementById('rating') as HTMLSelectElement).value),
+        quote: (document.getElementById('quote') as HTMLTextAreaElement).value.trim(),
+        image: f('image').value.trim() || undefined,
+        status: (f('published').checked ? 'published' : 'pending') as Review['status'],
+      };
+      const id = f('review-id').value;
+      if (id) await reviewsData.update(id, data);
+      else await reviewsData.create({ ...data, date: new Date().toISOString() });
+      closeModal();
+      await render();
+    });
+
+    render();
+  </script>
+</AdminLayout>
