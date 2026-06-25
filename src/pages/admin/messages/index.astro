@@ -24,6 +24,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
     import type { MessageStatus } from '../../../utils/store';
     import { messagesData } from '../../../utils/db';
     import { can } from '../../../utils/auth';
+    import { toast } from '../../../utils/toast';
 
     messagesData.seedIfEmpty(DEFAULT_MESSAGES);
 
@@ -112,12 +113,14 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
       if (statusBtn) {
         await messagesData.update(statusBtn.dataset.id!, { status: statusBtn.dataset.status as MessageStatus });
         await render();
+        toast.success(statusBtn.dataset.status === 'handled' ? 'Message marqué traité.' : 'Message marqué lu.');
         return;
       }
       const del = target.closest<HTMLButtonElement>('[data-delete]');
       if (del && confirm(`Supprimer le message de « ${del.dataset.name} » ?`)) {
         await messagesData.remove(del.dataset.delete!);
         await render();
+        toast.success('Message supprimé.');
       }
     });
 

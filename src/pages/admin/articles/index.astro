@@ -52,6 +52,7 @@ const editUrl = withBase('/admin/articles/edit');
     import type { Article } from '../../../utils/store';
     import { can } from '../../../utils/auth';
     import { withBase } from '../../../utils/url';
+    import { toast } from '../../../utils/toast';
 
     const seedEl = document.getElementById('article-seed');
     const seed: Article[] = seedEl?.textContent ? JSON.parse(seedEl.textContent) : [];
@@ -112,6 +113,7 @@ const editUrl = withBase('/admin/articles/edit');
       if (confirm(`Supprimer l'article « ${btn.dataset.title} » ?`)) {
         await articlesData.remove(btn.dataset.delete!);
         render();
+        toast.success('Article supprimé.');
       }
     });
 

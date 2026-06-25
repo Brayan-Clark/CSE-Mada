@@ -46,6 +46,17 @@ async function resolveSupabaseProfile(userId: string): Promise<{ role: Role; per
   return { role, permissions: (roleRow?.permissions as string[]) ?? [], name: (profile?.name as string) ?? '' };
 }
 
+/** Traduit en français les messages d'erreur d'authentification Supabase. */
+function translateAuthError(message: string): string {
+  const m = message.toLowerCase();
+  if (m.includes('invalid login credentials')) return 'Email ou mot de passe incorrect.';
+  if (m.includes('email not confirmed')) return "Cet email n'est pas confirmé. Dans Supabase → Authentication → Users, confirmez l'utilisateur (ou désactivez « Confirm email » dans Auth → Providers).";
+  if (m.includes('email logins are disabled') || m.includes('signups not allowed')) return 'La connexion par email est désactivée dans Supabase (Auth → Providers → Email).';
+  if (m.includes('rate limit') || m.includes('too many')) return 'Trop de tentatives. Réessayez dans quelques minutes.';
+  if (m.includes('failed to fetch') || m.includes('network')) return 'Connexion au serveur impossible. Vérifiez votre réseau et l\'URL Supabase.';
+  return message;
+}
+
 /**
  * Tente une connexion.
  * En mode Supabase : `identifier` = email. En mode démo : nom d'utilisateur.
@@ -57,7 +68,7 @@ export async function login(identifier: string, password: string): Promise<{ ok:
   if (sb) {
     const { data, error } = await sb.auth.signInWithPassword({ email: id, password });
     if (error || !data.session || !data.user) {
-      return { ok: false, error: error?.message ?? 'Identifiants invalides.' };
+      return { ok: false, error: error ? translateAuthError(error.message) : 'Identifiants invalides.' };
     }
     const { role, permissions, name } = await resolveSupabaseProfile(data.user.id);
     persist({

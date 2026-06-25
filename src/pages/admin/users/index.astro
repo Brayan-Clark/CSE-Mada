@@ -94,6 +94,7 @@ const inputClass =
     import type { Role, RoleDef, User } from '../../../utils/store';
     import { can } from '../../../utils/auth';
     import { getSupabase, isSupabaseEnabled } from '../../../utils/supabase';
+    import { toast } from '../../../utils/toast';
 
     usersData.seedIfEmpty(DEFAULT_USERS);
     rolesData.seedIfEmpty(DEFAULT_ROLES);
@@ -200,6 +201,7 @@ const inputClass =
       if (delBtn && confirm(`Supprimer l'utilisateur « ${delBtn.dataset.name} » ?`)) {
         await usersData.remove(delBtn.dataset.delete!);
         render();
+        toast.success('Utilisateur supprimé.');
       }
     });
 
@@ -216,6 +218,7 @@ const inputClass =
         await usersData.update(id, { name, role, active: f('active').checked });
         closeModal();
         render();
+        toast.success('Utilisateur mis à jour.');
         return;
       }
 
@@ -227,19 +230,23 @@ const inputClass =
         const { data, error } = await sb.functions.invoke('invite-user', { body: { email, name, roleId: role } });
         submit.disabled = false; submit.textContent = 'Inviter';
         if (error || (data && data.error)) {
-          userError.textContent = (data && data.error) || error?.message || "Échec de l'invitation.";
+          const msg = (data && data.error) || error?.message || "Échec de l'invitation.";
+          userError.textContent = msg;
           userError.classList.remove('hidden');
+          toast.error(msg);
           return;
         }
         invitePassword.textContent = data.password;
         inviteResult.classList.remove('hidden');
         render();
+        toast.success('Utilisateur invité.');
       } else {
         // Mode démo : création locale + mot de passe généré (illustratif).
         await usersData.create({ name, email, role, active: true });
         invitePassword.textContent = randomPassword();
         inviteResult.classList.remove('hidden');
         render();
+        toast.success('Utilisateur créé (démo).');
       }
     });
 

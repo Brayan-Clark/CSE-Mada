@@ -149,6 +149,7 @@ const inputClass =
     import { productsData, stockEntriesData } from '../../../utils/db';
     import { can } from '../../../utils/auth';
     import { formatMGA } from '../../../utils/format';
+    import { toast } from '../../../utils/toast';
 
     productsData.seedIfEmpty(DEFAULT_PRODUCTS);
     stockEntriesData.seedIfEmpty(DEFAULT_STOCK_ENTRIES);
@@ -287,6 +288,7 @@ const inputClass =
         }
         await loadProducts();
         await render();
+        toast.success('Entrée supprimée, stock mis à jour.');
       }
     });
 
@@ -326,6 +328,7 @@ const inputClass =
       closeModal();
       await loadProducts();
       await render();
+      toast.success(mode === 'new' ? 'Produit créé et stock ajouté.' : 'Entrée de stock enregistrée.');
     });
 
     await loadProducts();

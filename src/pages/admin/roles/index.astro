@@ -64,6 +64,7 @@ const inputClass =
     } from '../../../utils/store';
     import type { RoleDef, User } from '../../../utils/store';
     import { rolesData, usersData } from '../../../utils/db';
+    import { toast } from '../../../utils/toast';
 
     seedRoles();
     rolesData.seedIfEmpty(DEFAULT_ROLES);
@@ -169,6 +170,7 @@ const inputClass =
           await rolesData.remove(id);
           removeRoleFromMatrix(id);
           await render();
+          toast.success('Rôle supprimé.');
         }
       }
     });
@@ -196,6 +198,7 @@ const inputClass =
       }
       closeModal();
       await render();
+      toast.success(editingId ? 'Rôle mis à jour.' : 'Rôle créé.');
     });
 
     render();

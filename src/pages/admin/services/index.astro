@@ -63,8 +63,11 @@ const inputClass =
     import { servicesData } from '../../../utils/db';
     import { can } from '../../../utils/auth';
     import { getViewMode, setViewMode } from '../../../utils/view-pref';
+    import { toast } from '../../../utils/toast';
+    import { setupImageUpload } from '../../../utils/storage';
 
     servicesData.seedIfEmpty(DEFAULT_SERVICES);
+    setupImageUpload('image', 'services');
 
     const canManage = can('services.manage');
     let viewMode = getViewMode('services');
@@ -177,6 +180,7 @@ const inputClass =
       if (del && confirm(`Supprimer le service « ${del.dataset.name} » ?`)) {
         await servicesData.remove(del.dataset.delete!);
         await render();
+        toast.success('Service supprimé.');
       }
     });
 
@@ -195,6 +199,7 @@ const inputClass =
       else await servicesData.create(data);
       closeModal();
       await render();
+      toast.success(id ? 'Service mis à jour.' : 'Service créé.');
     });
 
     render();

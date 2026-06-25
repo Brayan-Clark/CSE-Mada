@@ -144,10 +144,13 @@ const tools = [
     import type { Article } from '../../../utils/store';
     import { withBase } from '../../../utils/url';
     import { marked } from 'marked';
+    import { toast } from '../../../utils/toast';
+    import { setupImageUpload } from '../../../utils/storage';
 
     const seedEl = document.getElementById('article-seed');
     const seed: Article[] = seedEl?.textContent ? JSON.parse(seedEl.textContent) : [];
     articlesData.seedIfEmpty(seed);
+    setupImageUpload('image', 'articles');
 
     const form = document.getElementById('article-form') as HTMLFormElement;
     const heading = document.getElementById('form-heading')!;
@@ -262,9 +265,11 @@ const tools = [
         draft: val('draft').checked,
       };
 
-      if (idField.value) await articlesData.update(idField.value, data);
+      const editing = Boolean(idField.value);
+      if (editing) await articlesData.update(idField.value, data);
       else await articlesData.create(data);
-      window.location.href = withBase('/admin/articles');
+      toast.success(editing ? 'Article mis à jour.' : 'Article publié.');
+      setTimeout(() => { window.location.href = withBase('/admin/articles'); }, 700);
     });
   </script>
 </AdminLayout>

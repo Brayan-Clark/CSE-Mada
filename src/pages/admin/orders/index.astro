@@ -86,6 +86,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
     import { ordersData } from '../../../utils/db';
     import { can } from '../../../utils/auth';
     import { formatMGA } from '../../../utils/format';
+    import { toast } from '../../../utils/toast';
 
     const canManage = can('orders.manage');
     const $ = (id: string) => document.getElementById(id)!;
@@ -205,6 +206,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
         await ordersData.update(currentId, { status: ($('om-status') as HTMLSelectElement).value as OrderStatus });
         closeOrder();
         await render();
+        toast.success('Commande mise à jour.');
       });
       $('om-delete').addEventListener('click', async () => {
         if (!currentId) return;
@@ -212,6 +214,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
           await ordersData.remove(currentId);
           closeOrder();
           await render();
+          toast.success('Commande supprimée.');
         }
       });
     }

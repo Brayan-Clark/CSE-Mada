@@ -125,7 +125,8 @@ export interface EventItem {
   location?: string;
   activity?: string;
   image?: string;
-  description?: string;
+  description?: string; // résumé court (cartes / listes)
+  content?: string; // contenu détaillé (Markdown) affiché sur la page de l'événement
   draft: boolean;
 }
 

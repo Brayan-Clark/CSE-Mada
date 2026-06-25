@@ -74,8 +74,12 @@ const inputClass =
           <input id="activity" type="text" placeholder="Randonnée, Camping…" class={inputClass} />
         </div>
         <div>
-          <label for="description" class="block text-sm font-medium mb-1.5">Description</label>
-          <textarea id="description" rows="3" class={inputClass}></textarea>
+          <label for="description" class="block text-sm font-medium mb-1.5">Description <span class="font-normal text-gray-400">(résumé court affiché dans les listes)</span></label>
+          <textarea id="description" rows="2" class={inputClass}></textarea>
+        </div>
+        <div>
+          <label for="content" class="block text-sm font-medium mb-1.5">Contenu détaillé <span class="font-normal text-gray-400">(Markdown — page de l'événement)</span></label>
+          <textarea id="content" rows="6" placeholder="Programme, déroulé, informations pratiques…&#10;&#10;## Au programme&#10;- Départ 7h&#10;- ..." class={inputClass}></textarea>
         </div>
         <div>
           <label for="image" class="block text-sm font-medium mb-1.5">Image (URL)</label>
@@ -97,10 +101,13 @@ const inputClass =
     import type { EventItem } from '../../../utils/store';
     import { eventsData } from '../../../utils/db';
     import { can } from '../../../utils/auth';
+    import { toast } from '../../../utils/toast';
+    import { setupImageUpload } from '../../../utils/storage';
 
     const seedEl = document.getElementById('event-seed');
     const seed: EventItem[] = seedEl?.textContent ? JSON.parse(seedEl.textContent) : [];
     eventsData.seedIfEmpty(seed);
+    setupImageUpload('image', 'events');
 
     const canManage = can('events.manage');
     const body = document.getElementById('events-body')!;
@@ -165,6 +172,7 @@ const inputClass =
       f('location').value = ev?.location ?? '';
       f('activity').value = ev?.activity ?? '';
       (document.getElementById('description') as HTMLTextAreaElement).value = ev?.description ?? '';
+      (document.getElementById('content') as HTMLTextAreaElement).value = ev?.content ?? '';
       f('image').value = ev?.image ?? '';
       f('draft').checked = ev?.draft ?? false;
       modal.classList.remove('hidden');
@@ -196,6 +204,7 @@ const inputClass =
       if (del && confirm(`Supprimer l'événement « ${del.dataset.name} » ?`)) {
         await eventsData.remove(del.dataset.delete!);
         await render();
+        toast.success('Événement supprimé.');
       }
     });
 
@@ -207,6 +216,7 @@ const inputClass =
         location: f('location').value.trim() || undefined,
         activity: f('activity').value.trim() || undefined,
         description: (document.getElementById('description') as HTMLTextAreaElement).value.trim() || undefined,
+        content: (document.getElementById('content') as HTMLTextAreaElement).value.trim() || undefined,
         image: f('image').value.trim() || undefined,
         draft: f('draft').checked,
       };
@@ -215,6 +225,7 @@ const inputClass =
       else await eventsData.create(data);
       closeModal();
       await render();
+      toast.success(id ? 'Événement mis à jour.' : 'Événement créé.');
     });
 
     render();

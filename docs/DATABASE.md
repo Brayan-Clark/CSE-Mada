@@ -69,6 +69,13 @@ workflow GitHub Actions :
    (voir la section `env:`). Aucune autre action n'est nécessaire : au prochain
    push sur `main`, le site déployé sera connecté.
 
+> ⚠️ **Piège fréquent** : ajoutez-les bien en **Repository secrets**, PAS en
+> **Environment secrets**. Le job `build` (qui exécute `npm run build` et intègre
+> les variables `PUBLIC_*` dans le site) ne tourne **pas** dans l'environnement
+> `github-pages` ; il ne voit donc pas les secrets d'environnement, et le site
+> serait construit en **mode démo**. Les `PUBLIC_*` n'étant pas sensibles (elles
+> finissent dans le bundle client), un *repository secret* convient parfaitement.
+
 > ⚠️ Ne jamais committer le fichier `.env` (il est déjà ignoré par `.gitignore`).
 
 ---
@@ -193,14 +200,21 @@ de passe illustratif.
 
 ---
 
-## 6. Images (optionnel mais recommandé)
+## 6. Images — Supabase Storage ✅ (fait)
 
-Pour ne plus saisir des URLs d'images à la main :
+L'app gère **beaucoup d'images** (produits, événements, articles, avis). On les
+stocke dans **Supabase Storage** (bucket public `media`) et on n'enregistre que
+l'**URL publique** dans la table (pas de base64 en base — trop lourd).
 
-1. Créer un **bucket Storage** public (ex. `media`) dans Supabase.
-2. Ajouter un champ d'upload dans les formulaires admin
-   (`supabase.storage.from('media').upload(...)`).
-3. Stocker l'URL publique retournée dans le champ `image` de l'entité.
+- Helper : `src/utils/storage.ts` (`uploadImage`, `setupImageUpload`). Un bouton
+  « Téléverser une image » est greffé sous chaque champ « Image (URL) » des
+  formulaires admin (produits, événements, articles, services, avis). Au choix
+  d'un fichier (≤ 5 Mo), l'image part vers Storage et l'URL remplit le champ.
+- **Setup côté Supabase** : le bucket `media` et ses politiques sont créés par
+  `schema.sql` (lecture publique ; upload/maj/suppression réservés aux membres
+  connectés). Si le bucket existe déjà, le script ne le recrée pas.
+- En **mode démo** (sans Supabase), le téléversement est désactivé : on colle
+  une URL d'image manuellement.
 
 ---
 

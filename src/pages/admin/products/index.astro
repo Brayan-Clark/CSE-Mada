@@ -92,8 +92,11 @@ const inputClass =
     import { can } from '../../../utils/auth';
     import { formatMGA } from '../../../utils/format';
     import { getViewMode, setViewMode } from '../../../utils/view-pref';
+    import { toast } from '../../../utils/toast';
+    import { setupImageUpload } from '../../../utils/storage';
 
     productsData.seedIfEmpty(DEFAULT_PRODUCTS);
+    setupImageUpload('image', 'products');
 
     const canManage = can('products.manage');
     let viewMode = getViewMode('products');
@@ -249,6 +252,7 @@ const inputClass =
       if (del && confirm(`Supprimer « ${del.dataset.name} » ?`)) {
         await productsData.remove(del.dataset.delete!);
         await render();
+        toast.success('Matériel supprimé.');
       }
     });
 
@@ -270,6 +274,7 @@ const inputClass =
       else await productsData.create(data);
       closeModal();
       await render();
+      toast.success(id ? 'Matériel mis à jour.' : 'Matériel ajouté.');
     });
 
     render();

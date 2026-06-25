@@ -219,6 +219,7 @@ const inputClass =
     import { productsData, ordersData } from '../utils/db';
     import { getCart, addToCart, setQuantity, clearCart, cartCount, cartTotal } from '../utils/cart';
     import { formatMGA } from '../utils/format';
+    import { toast } from '../utils/toast';
 
     productsData.seedIfEmpty(DEFAULT_PRODUCTS);
     // Cache produits (Supabase si connecté, sinon localStorage) chargé une fois.
@@ -506,23 +507,29 @@ const inputClass =
       if (lines.length === 0) return;
       const items: OrderItem[] = lines.map((l) => ({ productId: l.productId, name: l.name, price: l.price, quantity: l.quantity }));
       const reference = 'CMD-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-      await ordersData.create({
-        reference,
-        customer: {
-          name: ($('c-name') as HTMLInputElement).value.trim(),
-          email: ($('c-email') as HTMLInputElement).value.trim(),
-          phone: ($('c-phone') as HTMLInputElement).value.trim() || undefined,
-        },
-        items,
-        total: cartTotal(),
-        note: ($('c-note') as HTMLTextAreaElement).value.trim() || undefined,
-        status: 'new',
-        date: new Date().toISOString(),
-      });
+      try {
+        await ordersData.create({
+          reference,
+          customer: {
+            name: ($('c-name') as HTMLInputElement).value.trim(),
+            email: ($('c-email') as HTMLInputElement).value.trim(),
+            phone: ($('c-phone') as HTMLInputElement).value.trim() || undefined,
+          },
+          items,
+          total: cartTotal(),
+          note: ($('c-note') as HTMLTextAreaElement).value.trim() || undefined,
+          status: 'new',
+          date: new Date().toISOString(),
+        });
+      } catch {
+        toast.error("Échec de l'envoi de la commande. Réessayez.");
+        return;
+      }
       clearCart();
       ($('checkout-form') as HTMLFormElement).reset();
       $('order-ref').textContent = reference;
       showCartView('success');
+      toast.success(`Commande ${reference} envoyée !`);
     });
     $('success-close').addEventListener('click', closeCart);
 

@@ -172,6 +172,7 @@ const labelClass =
 
   <script>
     import { messagesData } from '../utils/db';
+    import { toast } from '../utils/toast';
 
     const form = document.getElementById('contact-form') as HTMLFormElement | null;
     const success = document.getElementById('contact-success');
@@ -184,21 +185,27 @@ const labelClass =
       const email = value('email');
       const message = value('message');
       if (!name || !email || !message) {
-        alert('Merci de renseigner au moins votre nom, votre email et votre message.');
+        toast.warning('Renseignez au moins votre nom, votre email et votre message.');
         return;
       }
-      await messagesData.create({
-        name,
-        email,
-        phone: value('phone') || undefined,
-        service: value('service') || 'Autre demande',
-        message,
-        status: 'new',
-        date: new Date().toISOString(),
-      });
+      try {
+        await messagesData.create({
+          name,
+          email,
+          phone: value('phone') || undefined,
+          service: value('service') || 'Autre demande',
+          message,
+          status: 'new',
+          date: new Date().toISOString(),
+        });
+      } catch {
+        toast.error("Échec de l'envoi. Réessayez plus tard.");
+        return;
+      }
       form.reset();
       success?.classList.remove('hidden');
       success?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      toast.success('Message envoyé. Merci, nous vous recontactons vite !');
     });
   </script>
 </Layout>

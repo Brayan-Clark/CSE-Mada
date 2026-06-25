@@ -28,6 +28,16 @@ import '../../styles/theme.css';
         <p class="text-sm text-gray-500 dark:text-gray-400">Camping Store & Event</p>
       </div>
 
+      <div class:list={[
+        'mb-4 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium',
+        isSupabaseEnabled
+          ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400'
+          : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+      ]}>
+        <span class:list={['h-1.5 w-1.5 rounded-full', isSupabaseEnabled ? 'bg-green-500' : 'bg-amber-500']}></span>
+        {isSupabaseEnabled ? 'Connecté à Supabase — utilisez votre email' : 'Mode démo (local) — Supabase non configuré'}
+      </div>
+
       <form id="login-form" class="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8 space-y-5">
         <div
           id="login-error"
@@ -85,6 +95,7 @@ import '../../styles/theme.css';
     <script>
       import { login, isAuthenticated } from '../../utils/auth';
       import { withBase } from '../../utils/url';
+      import { toast } from '../../utils/toast';
 
       // Déjà connecté → aller directement au tableau de bord.
       if (isAuthenticated()) {
@@ -105,12 +116,15 @@ import '../../styles/theme.css';
         if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Connexion…'; }
         const result = await login(username, password);
         if (result.ok) {
+          toast.success('Connexion réussie. Redirection…');
           window.location.replace(withBase('/admin'));
         } else {
+          const msg = result.error ?? 'Identifiant ou mot de passe incorrect.';
           if (error) {
-            error.textContent = result.error ?? 'Identifiant ou mot de passe incorrect.';
+            error.textContent = msg;
             error.classList.remove('hidden');
           }
+          toast.error(msg);
           if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Se connecter'; }
         }
       });

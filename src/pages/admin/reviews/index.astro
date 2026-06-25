@@ -83,8 +83,11 @@ const inputClass =
     import { reviewsData } from '../../../utils/db';
     import { can } from '../../../utils/auth';
     import { getViewMode, setViewMode } from '../../../utils/view-pref';
+    import { toast } from '../../../utils/toast';
+    import { setupImageUpload } from '../../../utils/storage';
 
     reviewsData.seedIfEmpty(DEFAULT_REVIEWS);
+    setupImageUpload('image', 'reviews');
 
     const canModerate = can('reviews.moderate');
     let viewMode = getViewMode('reviews');
@@ -227,7 +230,7 @@ const inputClass =
       const toggle = target.closest<HTMLButtonElement>('[data-toggle]');
       if (toggle) {
         const r = await reviewsData.get(toggle.dataset.toggle!);
-        if (r) await reviewsData.update(r.id, { status: r.status === 'published' ? 'pending' : 'published' });
+        if (r) { await reviewsData.update(r.id, { status: r.status === 'published' ? 'pending' : 'published' }); toast.success(r.status === 'published' ? 'Avis dépublié.' : 'Avis publié.'); }
         await render();
         return;
       }
@@ -241,6 +244,7 @@ const inputClass =
       if (del && confirm(`Supprimer l'avis de « ${del.dataset.name} » ?`)) {
         await reviewsData.remove(del.dataset.delete!);
         await render();
+        toast.success('Avis supprimé.');
       }
     });
 
@@ -260,6 +264,7 @@ const inputClass =
       else await reviewsData.create({ ...data, date: new Date().toISOString() });
       closeModal();
       await render();
+      toast.success(id ? 'Avis mis à jour.' : 'Avis ajouté.');
     });
 
     render();

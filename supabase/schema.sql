@@ -80,10 +80,13 @@ create table if not exists public.events (
   location    text,
   activity    text,
   image       text,
-  description text,
+  description text, -- résumé court
+  content     text default '', -- contenu détaillé (Markdown)
   draft       boolean not null default false,
   created_at  timestamptz not null default now()
 );
+-- Ajout de la colonne si la table existe déjà (migration)
+alter table public.events add column if not exists content text default '';
 
 -- -----------------------------------------------------------------------------
 -- MATÉRIEL (produits)
@@ -299,3 +302,32 @@ create policy "profiles_self_read" on public.profiles
   for select using (auth.uid() = user_id);
 create policy "profiles_self_update" on public.profiles
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- =============================================================================
+-- STOCKAGE D'IMAGES (Supabase Storage)
+-- Bucket public « media » : lecture publique (via CDN), upload/màj/suppression
+-- réservés aux membres connectés. Voir src/utils/storage.ts.
+-- =============================================================================
+insert into storage.buckets (id, name, public)
+  values ('media', 'media', true)
+  on conflict (id) do nothing;
+
+-- Lecture publique des fichiers du bucket media.
+do $$ begin
+  create policy "media_public_read" on storage.objects
+    for select using (bucket_id = 'media');
+exception when duplicate_object then null; end $$;
+
+-- Écriture (upload/maj/suppression) réservée aux utilisateurs authentifiés.
+do $$ begin
+  create policy "media_auth_insert" on storage.objects
+    for insert with check (bucket_id = 'media' and auth.role() = 'authenticated');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create policy "media_auth_update" on storage.objects
+    for update using (bucket_id = 'media' and auth.role() = 'authenticated');
+exception when duplicate_object then null; end $$;
+do $$ begin
+  create policy "media_auth_delete" on storage.objects
+    for delete using (bucket_id = 'media' and auth.role() = 'authenticated');
+exception when duplicate_object then null; end $$;
