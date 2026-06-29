@@ -10,9 +10,11 @@ import { getSupabase } from './supabase';
 import {
   articlesRepo, eventsRepo, productsRepo, servicesRepo, reviewsRepo,
   messagesRepo, usersRepo, rolesRepo, ordersRepo, stockEntriesRepo,
+  rentalItemsRepo, rentalsRepo,
 } from './store';
 import type {
   Article, EventItem, Product, Service, Review, ContactMessage, User, RoleDef, Order, StockEntry,
+  RentalItem, Rental,
 } from './store';
 
 type Row = Record<string, unknown>;
@@ -244,6 +246,96 @@ export const stockEntriesData = createData<StockEntry>(
       quantity: Number(r.quantity ?? 0),
       unitCost: Number(r.unit_cost ?? 0),
       note: (r.note as string) ?? undefined,
+      date: (r.created_at as string) ?? new Date().toISOString(),
+    }),
+  },
+);
+
+// LOCATION — catalogue (`pricePerDay ↔ price_per_day`, etc.).
+export const rentalItemsData = createData<RentalItem>(
+  rentalItemsRepo,
+  'rental_items',
+  { column: 'created_at', ascending: false },
+  {
+    toRow: (i) => {
+      const row: Row = {};
+      if (i.id !== undefined) row.id = i.id;
+      if (i.name !== undefined) row.name = i.name;
+      if (i.category !== undefined) row.category = i.category;
+      if (i.pricePerDay !== undefined) row.price_per_day = i.pricePerDay;
+      if (i.pricePerWeek !== undefined) row.price_per_week = i.pricePerWeek ?? null;
+      if (i.deposit !== undefined) row.deposit = i.deposit ?? null;
+      if (i.stock !== undefined) row.stock = i.stock;
+      if (i.image !== undefined) row.image = i.image ?? null;
+      if (i.description !== undefined) row.description = i.description ?? null;
+      if (i.featured !== undefined) row.featured = i.featured;
+      if (i.tags !== undefined) row.tags = i.tags;
+      return row;
+    },
+    fromRow: (r) => ({
+      id: String(r.id),
+      name: (r.name as string) ?? '',
+      category: (r.category as string) ?? 'accessoires',
+      pricePerDay: Number(r.price_per_day ?? 0),
+      pricePerWeek: r.price_per_week != null ? Number(r.price_per_week) : undefined,
+      deposit: r.deposit != null ? Number(r.deposit) : undefined,
+      stock: Number(r.stock ?? 0),
+      image: (r.image as string) ?? undefined,
+      description: (r.description as string) ?? undefined,
+      featured: Boolean(r.featured),
+      tags: (r.tags as string[]) ?? [],
+    }),
+  },
+);
+
+// RÉSERVATIONS DE LOCATION — `customer` plat ; dates ; `date ↔ created_at`.
+export const rentalsData = createData<Rental>(
+  rentalsRepo,
+  'rentals',
+  { column: 'created_at', ascending: false },
+  {
+    toRow: (b) => {
+      const row: Row = {};
+      if (b.id !== undefined) row.id = b.id;
+      if (b.reference !== undefined) row.reference = b.reference;
+      if (b.customer !== undefined) {
+        row.customer_name = b.customer.name;
+        row.customer_email = b.customer.email;
+        row.customer_phone = b.customer.phone ?? null;
+      }
+      if (b.itemId !== undefined) row.item_id = b.itemId;
+      if (b.itemName !== undefined) row.item_name = b.itemName;
+      if (b.quantity !== undefined) row.quantity = b.quantity;
+      if (b.startDate !== undefined) row.start_date = b.startDate;
+      if (b.endDate !== undefined) row.end_date = b.endDate;
+      if (b.days !== undefined) row.days = b.days;
+      if (b.unitPrice !== undefined) row.unit_price = b.unitPrice;
+      if (b.total !== undefined) row.total = b.total;
+      if (b.deposit !== undefined) row.deposit = b.deposit ?? null;
+      if (b.note !== undefined) row.note = b.note ?? null;
+      if (b.status !== undefined) row.status = b.status;
+      if (b.date !== undefined) row.created_at = b.date;
+      return row;
+    },
+    fromRow: (r) => ({
+      id: String(r.id),
+      reference: (r.reference as string) ?? '',
+      customer: {
+        name: (r.customer_name as string) ?? '',
+        email: (r.customer_email as string) ?? '',
+        phone: (r.customer_phone as string) ?? undefined,
+      },
+      itemId: (r.item_id as string) ?? '',
+      itemName: (r.item_name as string) ?? '',
+      quantity: Number(r.quantity ?? 1),
+      startDate: (r.start_date as string) ?? '',
+      endDate: (r.end_date as string) ?? '',
+      days: Number(r.days ?? 1),
+      unitPrice: Number(r.unit_price ?? 0),
+      total: Number(r.total ?? 0),
+      deposit: r.deposit != null ? Number(r.deposit) : undefined,
+      note: (r.note as string) ?? undefined,
+      status: (r.status as Rental['status']) ?? 'new',
       date: (r.created_at as string) ?? new Date().toISOString(),
     }),
   },

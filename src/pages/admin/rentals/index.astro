@@ -1,0 +1,266 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ViewToggle from '../../../components/admin/ViewToggle.astro';
+import { PRODUCT_CATEGORIES } from '../../../utils/store';
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<AdminLayout title="Location — catalogue" active="rentals">
+  <div class="flex items-center justify-between gap-4 mb-6">
+    <p class="text-sm text-gray-500 dark:text-gray-400"><span id="item-count">0</span> article(s) de location</p>
+    <div class="flex items-center gap-3">
+      <ViewToggle />
+      <button id="add-item" data-requires="rentals.manage" class="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 text-sm font-medium transition-colors">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        Nouvel article
+      </button>
+    </div>
+  </div>
+
+  <div id="items-grid"></div>
+  <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400">Aucun article de location pour le moment.</p>
+
+  <!-- Modale -->
+  <div id="item-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <h3 id="modal-title" class="text-lg font-bold mb-5">Nouvel article</h3>
+      <form id="item-form" class="space-y-4">
+        <input type="hidden" id="item-id" />
+        <div>
+          <label for="name" class="block text-sm font-medium mb-1.5">Nom *</label>
+          <input id="name" type="text" required class={inputClass} />
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="category" class="block text-sm font-medium mb-1.5">Catégorie</label>
+            <select id="category" class={inputClass}>
+              {PRODUCT_CATEGORIES.map((c) => <option value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label for="stock" class="block text-sm font-medium mb-1.5">Quantité dispo.</label>
+            <input id="stock" type="number" min="0" step="1" class={inputClass} />
+          </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label for="price-day" class="block text-sm font-medium mb-1.5">Prix / jour (Ar) *</label>
+            <input id="price-day" type="number" min="0" step="1" required class={inputClass} />
+          </div>
+          <div>
+            <label for="price-week" class="block text-sm font-medium mb-1.5">Prix / semaine (Ar)</label>
+            <input id="price-week" type="number" min="0" step="1" class={inputClass} />
+          </div>
+          <div>
+            <label for="deposit" class="block text-sm font-medium mb-1.5">Caution (Ar)</label>
+            <input id="deposit" type="number" min="0" step="1" class={inputClass} />
+          </div>
+        </div>
+        <div class="flex items-center">
+          <label class="flex items-center gap-2 text-sm">
+            <input id="featured" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+            Mis en avant
+          </label>
+        </div>
+        <div>
+          <label for="description" class="block text-sm font-medium mb-1.5">Description</label>
+          <textarea id="description" rows="3" placeholder="Présentation de l'article affichée sur la page Location…" class={inputClass}></textarea>
+        </div>
+        <div>
+          <label for="tags" class="block text-sm font-medium mb-1.5">Étiquettes <span class="font-normal text-gray-400">(séparées par des virgules)</span></label>
+          <input id="tags" type="text" placeholder="Famille, Trek" class={inputClass} />
+        </div>
+        <div>
+          <label for="image" class="block text-sm font-medium mb-1.5">Image (URL)</label>
+          <input id="image" type="text" placeholder="https://…" class={inputClass} />
+        </div>
+        <div class="flex items-center gap-3 pt-2">
+          <button type="submit" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Enregistrer</button>
+          <button type="button" id="modal-cancel" class="rounded-lg border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { DEFAULT_RENTAL_ITEMS, PRODUCT_CATEGORIES } from '../../../utils/store';
+    import type { RentalItem } from '../../../utils/store';
+    import { rentalItemsData } from '../../../utils/db';
+    import { can } from '../../../utils/auth';
+    import { formatMGA } from '../../../utils/format';
+    import { getViewMode, setViewMode } from '../../../utils/view-pref';
+    import { toast } from '../../../utils/toast';
+    import { setupImageUpload } from '../../../utils/storage';
+
+    rentalItemsData.seedIfEmpty(DEFAULT_RENTAL_ITEMS);
+    setupImageUpload('image', 'rentals');
+
+    const canManage = can('rentals.manage');
+    let viewMode = getViewMode('rentals');
+    const grid = document.getElementById('items-grid')!;
+    const empty = document.getElementById('empty-state')!;
+    const count = document.getElementById('item-count')!;
+    const modal = document.getElementById('item-modal')!;
+    const form = document.getElementById('item-form') as HTMLFormElement;
+    const title = document.getElementById('modal-title')!;
+    const f = (id: string) => document.getElementById(id) as HTMLInputElement;
+
+    const catLabel = (id: string) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.name ?? id;
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    function priceLine(i: RentalItem) {
+      const week = i.pricePerWeek ? ` · ${formatMGA(i.pricePerWeek)}/sem.` : '';
+      const dep = i.deposit ? ` · Caution ${formatMGA(i.deposit)}` : '';
+      return `<p class="mt-1 text-xs text-gray-400">${formatMGA(i.pricePerDay)}/jour${week}${dep}</p>`;
+    }
+
+    function cardActions(i: { id: string; name: string }) {
+      return canManage
+        ? `<button data-edit="${escape(i.id)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30">Éditer</button>
+           <button data-delete="${escape(i.id)}" data-name="${escape(i.name)}" class="rounded-md px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">Supprimer</button>`
+        : '';
+    }
+
+    async function render() {
+      const items = await rentalItemsData.list();
+      count.textContent = String(items.length);
+      empty.classList.toggle('hidden', items.length > 0);
+
+      grid.className = viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-2';
+
+      grid.innerHTML = items
+        .map((i) => {
+          if (viewMode === 'list') {
+            const thumb = i.image
+              ? `<img src="${escape(i.image)}" alt="${escape(i.name)}" class="h-14 w-14 rounded-lg object-cover shrink-0" loading="lazy" />`
+              : '<div class="h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 shrink-0"></div>';
+            return `
+              <article class="flex items-center gap-4 rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3">
+                ${thumb}
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold truncate">${escape(i.name)}${i.featured ? ' <span class="ml-1 inline-flex rounded-full bg-green-600 text-white px-1.5 py-0.5 text-[10px] align-middle">En avant</span>' : ''}</p>
+                  <p class="text-xs text-gray-400">${catLabel(i.category)} · Dispo : ${i.stock}</p>
+                </div>
+                <span class="font-bold text-green-700 dark:text-green-400 whitespace-nowrap">${formatMGA(i.pricePerDay)}/j</span>
+                <div class="flex gap-1 shrink-0">${cardActions(i)}</div>
+              </article>`;
+          }
+          const img = i.image
+            ? `<img src="${escape(i.image)}" alt="${escape(i.name)}" class="h-40 w-full object-cover" loading="lazy" />`
+            : '<div class="h-40 w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">Pas d\'image</div>';
+          const featured = i.featured
+            ? '<span class="absolute top-2 left-2 inline-flex rounded-full bg-green-600 text-white px-2 py-0.5 text-xs">En avant</span>'
+            : '';
+          const actions = canManage
+            ? `<div class="flex gap-2 border-t border-gray-100 dark:border-gray-800 px-4 py-3">${cardActions(i)}</div>`
+            : '';
+          return `
+            <article class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 overflow-hidden flex flex-col">
+              <div class="relative">${img}${featured}</div>
+              <div class="p-4 flex-1">
+                <p class="text-xs text-gray-400">${catLabel(i.category)}</p>
+                <h3 class="font-semibold mt-0.5">${escape(i.name)}</h3>
+                <div class="mt-2 flex items-center justify-between text-sm">
+                  <span class="font-bold text-green-700 dark:text-green-400">${formatMGA(i.pricePerDay)}<span class="text-xs font-normal text-gray-400">/jour</span></span>
+                  <span class="text-gray-500 dark:text-gray-400">Dispo : ${i.stock}</span>
+                </div>
+                ${priceLine(i)}
+              </div>
+              ${actions}
+            </article>`;
+        })
+        .join('');
+    }
+
+    function syncToggle() {
+      document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => {
+        const on = b.dataset.viewBtn === viewMode;
+        b.classList.toggle('bg-green-600', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('text-gray-500', !on);
+        b.classList.toggle('dark:text-gray-400', !on);
+      });
+    }
+    document.querySelectorAll<HTMLButtonElement>('[data-view-btn]').forEach((b) => {
+      b.addEventListener('click', () => {
+        viewMode = b.dataset.viewBtn as 'grid' | 'list';
+        setViewMode('rentals', viewMode);
+        syncToggle();
+        render();
+      });
+    });
+    syncToggle();
+
+    function openModal(item?: RentalItem) {
+      title.textContent = item ? "Modifier l'article" : 'Nouvel article';
+      f('item-id').value = item?.id ?? '';
+      f('name').value = item?.name ?? '';
+      (document.getElementById('category') as HTMLSelectElement).value = item?.category ?? PRODUCT_CATEGORIES[0].id;
+      f('stock').value = item ? String(item.stock) : '';
+      f('price-day').value = item ? String(item.pricePerDay) : '';
+      f('price-week').value = item?.pricePerWeek ? String(item.pricePerWeek) : '';
+      f('deposit').value = item?.deposit ? String(item.deposit) : '';
+      f('featured').checked = item?.featured ?? false;
+      (document.getElementById('description') as HTMLTextAreaElement).value = item?.description ?? '';
+      f('tags').value = item?.tags.join(', ') ?? '';
+      f('image').value = item?.image ?? '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.getElementById('add-item')?.addEventListener('click', () => openModal());
+    document.getElementById('modal-cancel')?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    grid.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      const edit = target.closest<HTMLButtonElement>('[data-edit]');
+      if (edit) {
+        const i = await rentalItemsData.get(edit.dataset.edit!);
+        if (i) openModal(i);
+        return;
+      }
+      const del = target.closest<HTMLButtonElement>('[data-delete]');
+      if (del && confirm(`Supprimer « ${del.dataset.name} » ?`)) {
+        await rentalItemsData.remove(del.dataset.delete!);
+        await render();
+        toast.success('Article supprimé.');
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const week = Number(f('price-week').value) || 0;
+      const dep = Number(f('deposit').value) || 0;
+      const data = {
+        name: f('name').value.trim(),
+        category: (document.getElementById('category') as HTMLSelectElement).value,
+        pricePerDay: Number(f('price-day').value) || 0,
+        pricePerWeek: week > 0 ? week : undefined,
+        deposit: dep > 0 ? dep : undefined,
+        stock: Number(f('stock').value) || 0,
+        featured: f('featured').checked,
+        description: (document.getElementById('description') as HTMLTextAreaElement).value.trim() || undefined,
+        tags: f('tags').value.split(',').map((t) => t.trim()).filter(Boolean),
+        image: f('image').value.trim() || undefined,
+      };
+      const id = f('item-id').value;
+      if (id) await rentalItemsData.update(id, data);
+      else await rentalItemsData.create(data);
+      closeModal();
+      await render();
+      toast.success(id ? 'Article mis à jour.' : 'Article ajouté.');
+    });
+
+    render();
+  </script>
+</AdminLayout>

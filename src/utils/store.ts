@@ -109,6 +109,73 @@ export interface Order {
   date: string; // ISO 8601
 }
 
+// --- Location de matériel ---------------------------------------------------
+// Catalogue de location, distinct du matériel de vente (`Product`).
+export interface RentalItem {
+  id: string;
+  name: string;
+  category: string;
+  pricePerDay: number; // tarif journalier en Ariary (MGA)
+  pricePerWeek?: number; // tarif hebdomadaire (optionnel, plus avantageux)
+  deposit?: number; // caution / dépôt de garantie (MGA), optionnel
+  stock: number; // quantité disponible à la location
+  image?: string;
+  description?: string;
+  featured: boolean;
+  tags: string[];
+}
+
+export type RentalStatus = 'new' | 'confirmed' | 'returned' | 'cancelled';
+
+// Réservation de location (demande client, sans paiement en ligne).
+export interface Rental {
+  id: string;
+  reference: string; // référence lisible, ex: LOC-1A2B
+  customer: { name: string; email: string; phone?: string };
+  itemId: string;
+  itemName: string; // figé au moment de la réservation
+  quantity: number;
+  startDate: string; // date de début (YYYY-MM-DD)
+  endDate: string; // date de fin (YYYY-MM-DD)
+  days: number; // nombre de jours facturés
+  unitPrice: number; // tarif journalier figé (MGA)
+  total: number; // montant total estimé (MGA)
+  deposit?: number; // caution totale figée (MGA)
+  note?: string;
+  status: RentalStatus;
+  date: string; // date de création (ISO 8601)
+}
+
+/** Nombre de jours facturés (bornes incluses) entre deux dates AAAA-MM-JJ. */
+export function rentalDays(start: string, end: string): number {
+  const s = new Date(start).getTime();
+  const e = new Date(end).getTime();
+  if (Number.isNaN(s) || Number.isNaN(e)) return 1;
+  const diff = Math.round((e - s) / 86_400_000);
+  return Math.max(1, diff + 1);
+}
+
+/**
+ * Calcule le total d'une location selon la durée et la quantité.
+ * Si un tarif hebdomadaire existe, on facture les semaines pleines au tarif
+ * semaine puis le reste au tarif jour (jamais plus cher que tout au tarif jour).
+ */
+export function rentalPrice(
+  item: { pricePerDay: number; pricePerWeek?: number },
+  days: number,
+  qty = 1,
+): number {
+  let unit: number;
+  if (item.pricePerWeek && item.pricePerWeek > 0) {
+    const weeks = Math.floor(days / 7);
+    const rem = days % 7;
+    unit = Math.min(weeks * item.pricePerWeek + rem * item.pricePerDay, days * item.pricePerDay);
+  } else {
+    unit = days * item.pricePerDay;
+  }
+  return unit * Math.max(1, qty);
+}
+
 export interface Service {
   id: string;
   title: string;
@@ -214,6 +281,8 @@ export const servicesRepo = createRepository<Service>('cse_admin_services');
 export const eventsRepo = createRepository<EventItem>('cse_admin_events');
 export const ordersRepo = createRepository<Order>('cse_admin_orders');
 export const stockEntriesRepo = createRepository<StockEntry>('cse_admin_stock_entries');
+export const rentalItemsRepo = createRepository<RentalItem>('cse_admin_rental_items');
+export const rentalsRepo = createRepository<Rental>('cse_admin_rentals');
 
 // ---------------------------------------------------------------------------
 // Permissions (matrice rôle → permissions)
@@ -234,6 +303,8 @@ export const PERMISSIONS: Record<string, string> = {
   'events.manage': 'Gérer les événements',
   'orders.view': 'Consulter les commandes',
   'orders.manage': 'Gérer les commandes (statut / suppression)',
+  'rentals.view': 'Consulter la location (catalogue / réservations)',
+  'rentals.manage': 'Gérer la location (catalogue / réservations)',
   'stock.view': 'Consulter le stock et les achats',
   'stock.manage': 'Gérer les achats / entrées de stock',
   'users.manage': 'Gérer les utilisateurs',
@@ -263,9 +334,9 @@ const DEFAULT_PERMISSION_MATRIX: Record<string, string[]> = {
   editor: [
     'articles.view', 'articles.edit', 'reviews.view', 'reviews.moderate', 'messages.view',
     'products.view', 'products.manage', 'services.view', 'services.manage', 'events.view', 'events.manage',
-    'orders.view', 'orders.manage', 'stock.view', 'stock.manage',
+    'orders.view', 'orders.manage', 'stock.view', 'stock.manage', 'rentals.view', 'rentals.manage',
   ],
-  viewer: ['articles.view', 'reviews.view', 'messages.view', 'products.view', 'services.view', 'events.view', 'orders.view', 'stock.view'],
+  viewer: ['articles.view', 'reviews.view', 'messages.view', 'products.view', 'services.view', 'events.view', 'orders.view', 'stock.view', 'rentals.view'],
 };
 
 export function getPermissionMatrix(): Record<string, string[]> {
@@ -333,6 +404,15 @@ export const DEFAULT_PRODUCTS: Product[] = [
   { id: 'p-6', name: 'Matelas gonflable de trek', category: 'randonnee', price: 220000, costPrice: 140000, stock: 10, featured: false, tags: ['Léger'], description: 'Matelas isolant ultraléger, gonflage rapide et faible encombrement. Pour un sommeil réparateur.', image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=800&auto=format&fit=crop' },
   { id: 'p-7', name: 'Popote de camping inox', category: 'cuisine', price: 120000, costPrice: 75000, stock: 15, featured: false, tags: ['Inox'], description: 'Kit de popote en inox (casseroles + poêle), poignées repliables et sac de transport.', image: 'https://images.unsplash.com/photo-1571687949921-1306bfb24b72?q=80&w=800&auto=format&fit=crop' },
   { id: 'p-8', name: 'Glacière rigide 25L', category: 'camping-car', price: 380000, costPrice: 250000, stock: 4, featured: false, tags: ['Camping-car'], description: 'Glacière isotherme 25L, garde au frais plusieurs jours. Idéale pour les sorties en camping-car.', image: 'https://images.unsplash.com/photo-1537905569824-f89f14cceb68?q=80&w=800&auto=format&fit=crop' },
+];
+
+// Catalogue de location de départ (démo) — tarifs en Ariary (MGA).
+export const DEFAULT_RENTAL_ITEMS: RentalItem[] = [
+  { id: 'l-1', name: 'Tente familiale 6 places', category: 'tentes', pricePerDay: 35000, pricePerWeek: 180000, deposit: 200000, stock: 4, featured: true, tags: ['Famille', 'Populaire'], description: 'Grande tente spacieuse pour 6 personnes, montage facile et double-toit imperméable. Parfaite pour un week-end en famille.', image: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=800&auto=format&fit=crop' },
+  { id: 'l-2', name: 'Kit randonnée complet', category: 'randonnee', pricePerDay: 25000, pricePerWeek: 130000, deposit: 150000, stock: 6, featured: true, tags: ['Trek'], description: 'Sac à dos 60L + matelas + réchaud + popote. Tout le nécessaire pour partir léger sur les sentiers.', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1000&auto=format&fit=crop' },
+  { id: 'l-3', name: 'Sac de couchage grand froid', category: 'sac-couchage', pricePerDay: 12000, pricePerWeek: 60000, deposit: 60000, stock: 10, featured: true, tags: ['Confort'], description: 'Sac de couchage confort -5°C, idéal pour les nuits fraîches en altitude.', image: 'https://images.unsplash.com/photo-1558477280-1bfed08ea5db?q=80&w=388&auto=format&fit=crop' },
+  { id: 'l-4', name: 'Glacière 25L', category: 'camping-car', pricePerDay: 15000, pricePerWeek: 75000, deposit: 80000, stock: 5, featured: false, tags: ['Pratique'], description: 'Glacière isotherme 25L pour garder vos provisions au frais pendant le séjour.', image: 'https://images.unsplash.com/photo-1537905569824-f89f14cceb68?q=80&w=800&auto=format&fit=crop' },
+  { id: 'l-5', name: 'Réchaud + bouteille gaz', category: 'cuisine', pricePerDay: 10000, pricePerWeek: 50000, deposit: 40000, stock: 8, featured: false, tags: ['Cuisine'], description: 'Réchaud de camping avec bouteille de gaz, pour cuisiner partout.', image: 'https://images.unsplash.com/photo-1738220543088-aa5b0f83733b?q=80&w=870&auto=format&fit=crop' },
 ];
 
 // Entrées de stock de départ (démo) — approvisionnements initiaux.
