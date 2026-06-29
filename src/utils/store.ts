@@ -219,6 +219,7 @@ export interface EventItem {
   image?: string;
   description?: string; // résumé court (cartes / listes)
   content?: string; // contenu détaillé (Markdown) affiché sur la page de l'événement
+  galleryFolder?: string; // ID/lien du dossier Drive contenant les photos de la galerie
   draft: boolean;
 }
 

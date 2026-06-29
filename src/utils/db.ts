@@ -159,7 +159,40 @@ export const articlesData = createData<Article>(
 // (ex. orders : customer_name/email/phone ; messages : created_at ↔ date),
 // sur le modèle de `articlesData` ci-dessus. Voir docs/DATABASE.md.
 // ---------------------------------------------------------------------------
-export const eventsData = createData<EventItem>(eventsRepo, 'events', { column: 'date', ascending: false });
+// ÉVÉNEMENTS — `galleryFolder ↔ gallery_folder` (le reste est identité).
+export const eventsData = createData<EventItem>(
+  eventsRepo,
+  'events',
+  { column: 'date', ascending: false },
+  {
+    toRow: (e) => {
+      const row: Row = {};
+      if (e.id !== undefined) row.id = e.id;
+      if (e.title !== undefined) row.title = e.title;
+      if (e.date !== undefined) row.date = e.date;
+      if (e.location !== undefined) row.location = e.location ?? null;
+      if (e.activity !== undefined) row.activity = e.activity ?? null;
+      if (e.image !== undefined) row.image = e.image ?? null;
+      if (e.description !== undefined) row.description = e.description ?? null;
+      if (e.content !== undefined) row.content = e.content ?? null;
+      if (e.galleryFolder !== undefined) row.gallery_folder = e.galleryFolder ?? null;
+      if (e.draft !== undefined) row.draft = e.draft;
+      return row;
+    },
+    fromRow: (r) => ({
+      id: String(r.id),
+      title: (r.title as string) ?? '',
+      date: (r.date as string) ?? new Date().toISOString(),
+      location: (r.location as string) ?? undefined,
+      activity: (r.activity as string) ?? undefined,
+      image: (r.image as string) ?? undefined,
+      description: (r.description as string) ?? undefined,
+      content: (r.content as string) ?? undefined,
+      galleryFolder: (r.gallery_folder as string) ?? undefined,
+      draft: Boolean(r.draft),
+    }),
+  },
+);
 export const productsData = createData<Product>(productsRepo, 'products', { column: 'created_at', ascending: false });
 export const servicesData = createData<Service>(servicesRepo, 'services', { column: 'created_at', ascending: true });
 export const reviewsData = createData<Review>(reviewsRepo, 'reviews', { column: 'date', ascending: false });

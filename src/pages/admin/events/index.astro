@@ -85,6 +85,11 @@ const inputClass =
           <label for="image" class="block text-sm font-medium mb-1.5">Image (URL)</label>
           <input id="image" type="text" placeholder="https://…" class={inputClass} />
         </div>
+        <div>
+          <label for="gallery-folder" class="block text-sm font-medium mb-1.5">Galerie photo <span class="font-normal text-gray-400">(lien du dossier Google Drive partagé)</span></label>
+          <input id="gallery-folder" type="text" placeholder="https://drive.google.com/drive/folders/…" class={inputClass} />
+          <p class="mt-1 text-xs text-gray-400">Partagez le dossier en « Tout le monde avec le lien », puis collez son lien ici. Les photos s'afficheront dans la galerie de l'événement.</p>
+        </div>
         <label class="flex items-center gap-2 text-sm">
           <input id="draft" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
           Brouillon (non publié)
@@ -103,6 +108,7 @@ const inputClass =
     import { can } from '../../../utils/auth';
     import { toast } from '../../../utils/toast';
     import { setupImageUpload } from '../../../utils/storage';
+    import { extractFolderId } from '../../../utils/drive';
 
     const seedEl = document.getElementById('event-seed');
     const seed: EventItem[] = seedEl?.textContent ? JSON.parse(seedEl.textContent) : [];
@@ -174,6 +180,7 @@ const inputClass =
       (document.getElementById('description') as HTMLTextAreaElement).value = ev?.description ?? '';
       (document.getElementById('content') as HTMLTextAreaElement).value = ev?.content ?? '';
       f('image').value = ev?.image ?? '';
+      f('gallery-folder').value = ev?.galleryFolder ?? '';
       f('draft').checked = ev?.draft ?? false;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -218,6 +225,7 @@ const inputClass =
         description: (document.getElementById('description') as HTMLTextAreaElement).value.trim() || undefined,
         content: (document.getElementById('content') as HTMLTextAreaElement).value.trim() || undefined,
         image: f('image').value.trim() || undefined,
+        galleryFolder: extractFolderId(f('gallery-folder').value.trim()) || undefined,
         draft: f('draft').checked,
       };
       const id = f('event-id').value;

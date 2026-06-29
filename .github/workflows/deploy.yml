@@ -37,6 +37,9 @@ jobs:
           # connecte à Supabase ; sinon il reste en mode démo (voir docs/DATABASE.md).
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+          # Clé API Google (lecture seule, restreinte au domaine) pour la galerie
+          # photo Drive. Si absente, la galerie reste vide (pas de plantage).
+          PUBLIC_GOOGLE_API_KEY: ${{ secrets.PUBLIC_GOOGLE_API_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

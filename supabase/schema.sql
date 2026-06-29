@@ -87,6 +87,8 @@ create table if not exists public.events (
 );
 -- Ajout de la colonne si la table existe déjà (migration)
 alter table public.events add column if not exists content text default '';
+-- Dossier Drive de la galerie photo de l'événement.
+alter table public.events add column if not exists gallery_folder text;
 
 -- -----------------------------------------------------------------------------
 -- MATÉRIEL (produits)

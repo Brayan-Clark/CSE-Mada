@@ -1,0 +1,111 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { withBase } from '../../utils/url';
+---
+
+<Layout title="Galerie d'événement" description="Photos de l'événement">
+  <div class="min-h-screen bg-white dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <a href={withBase('/galerie')} class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400 mb-6">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        Toutes les galeries
+      </a>
+
+      <div class="text-center mb-10">
+        <h1 id="g-title" class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">Galerie</h1>
+        <p id="g-sub" class="mt-3 max-w-2xl mx-auto text-gray-600 dark:text-gray-300">Chargement des photos…</p>
+      </div>
+
+      <div id="g-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"></div>
+
+      <p id="g-empty" class="hidden text-center text-gray-500 dark:text-gray-400 py-16">Aucune photo pour cet événement pour le moment.</p>
+    </div>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-4">
+    <button id="lb-close" class="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white" aria-label="Fermer">
+      <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+    </button>
+    <button id="lb-prev" class="absolute left-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white" aria-label="Précédent">
+      <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+    </button>
+    <img id="lb-img" src="" alt="" class="max-h-[85vh] max-w-[90vw] object-contain rounded-lg" />
+    <button id="lb-next" class="absolute right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white" aria-label="Suivant">
+      <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+    </button>
+  </div>
+
+  <script>
+    import { eventsData } from '../../utils/db';
+    import { listDriveImages, driveThumb, isDriveEnabled } from '../../utils/drive';
+
+    const $ = (id: string) => document.getElementById(id)!;
+    const id = new URLSearchParams(window.location.search).get('id');
+    let images: { id: string; name: string }[] = [];
+    let currentIndex = 0;
+
+    function showEmpty(msg: string) {
+      $('g-grid').innerHTML = '';
+      const e = $('g-empty');
+      e.textContent = msg;
+      e.classList.remove('hidden');
+    }
+
+    const ev = id ? await eventsData.get(id) : undefined;
+    if (!ev) {
+      $('g-title').textContent = 'Galerie introuvable';
+      $('g-sub').textContent = '';
+      showEmpty('Cet événement est introuvable.');
+    } else {
+      document.title = `Galerie — ${ev.title}`;
+      $('g-title').textContent = `Galerie — ${ev.title}`;
+      if (!ev.galleryFolder) {
+        $('g-sub').textContent = '';
+        showEmpty("Aucune galerie n'a encore été associée à cet événement.");
+      } else if (!isDriveEnabled) {
+        $('g-sub').textContent = '';
+        showEmpty('La galerie photo n’est pas configurée pour le moment.');
+      } else {
+        images = await listDriveImages(ev.galleryFolder);
+        if (images.length === 0) {
+          $('g-sub').textContent = '';
+          showEmpty('Aucune photo pour cet événement pour le moment.');
+        } else {
+          $('g-sub').textContent = `${images.length} photo${images.length > 1 ? 's' : ''}`;
+          $('g-grid').innerHTML = images.map((img, i) => `
+            <button data-i="${i}" class="group relative aspect-square overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+              <img src="${driveThumb(img.id, 600)}" alt="${img.name.replace(/"/g, '&quot;')}" loading="lazy" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            </button>`).join('');
+        }
+      }
+    }
+
+    // --- Lightbox ---
+    const lb = $('lightbox');
+    const lbImg = $('lb-img') as HTMLImageElement;
+    function openLb(i: number) {
+      currentIndex = (i + images.length) % images.length;
+      lbImg.src = driveThumb(images[currentIndex].id, 1600);
+      lbImg.alt = images[currentIndex].name;
+      lb.classList.remove('hidden');
+      lb.classList.add('flex');
+    }
+    function closeLb() { lb.classList.add('hidden'); lb.classList.remove('flex'); }
+
+    $('g-grid').addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-i]');
+      if (btn) openLb(Number(btn.dataset.i));
+    });
+    $('lb-close').addEventListener('click', closeLb);
+    $('lb-prev').addEventListener('click', () => openLb(currentIndex - 1));
+    $('lb-next').addEventListener('click', () => openLb(currentIndex + 1));
+    lb.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
+    document.addEventListener('keydown', (e) => {
+      if (lb.classList.contains('hidden')) return;
+      if (e.key === 'Escape') closeLb();
+      else if (e.key === 'ArrowLeft') openLb(currentIndex - 1);
+      else if (e.key === 'ArrowRight') openLb(currentIndex + 1);
+    });
+  </script>
+</Layout>
