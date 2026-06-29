@@ -9,6 +9,7 @@ interface Props {
 }
 
 const { title = 'Administration', active } = Astro.props;
+const loginUrl = withBase('/admin/login');
 
 const navItems = [
   { id: 'dashboard', label: 'Tableau de bord', href: withBase('/admin'), perm: null, icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -34,15 +35,77 @@ const navItems = [
     <meta name="robots" content="noindex, nofollow" />
     <title>{title} | Admin CSE</title>
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.ico')} />
-    <script is:inline>
-      // Évite le flash de thème
+    <script is:inline define:vars={{ loginUrl }}>
+      // Évite le flash de thème : applique le thème AVANT le premier rendu.
       const t = localStorage.getItem('theme');
       if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
       }
+      // Garde d'accès anticipée : si pas de session locale, on redirige tout de
+      // suite (avant de peindre le contenu protégé) pour éviter le flash.
+      try {
+        const raw = localStorage.getItem('cse_admin_session');
+        const sess = raw ? JSON.parse(raw) : null;
+        const valid = sess && (!sess.expiresAt || Date.now() < sess.expiresAt);
+        if (!valid) window.location.replace(loginUrl);
+      } catch (_e) { /* en cas de souci, la garde du module prend le relais */ }
     </script>
+    <style is:inline>
+      /* Écran de chargement admin — visible tant que la page n'est pas prête. */
+      #admin-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+        background: #f3f4f6;
+        transition: opacity .4s ease, visibility .4s ease;
+      }
+      :root.dark #admin-loader { background: #030712; }
+      #admin-loader.is-hidden { opacity: 0; visibility: hidden; }
+      .admin-loader-logo {
+        display: inline-flex;
+        height: 3.5rem; width: 3.5rem;
+        align-items: center; justify-content: center;
+        border-radius: 1rem;
+        background: #16a34a; color: #fff;
+        font-weight: 800; font-size: 1.5rem;
+        box-shadow: 0 10px 30px -8px rgba(22,163,74,.6);
+        animation: admin-pulse 1.6s ease-in-out infinite;
+      }
+      .admin-loader-spinner {
+        height: 2rem; width: 2rem;
+        border: 3px solid rgba(22,163,74,.25);
+        border-top-color: #16a34a;
+        border-radius: 9999px;
+        animation: admin-spin .8s linear infinite;
+      }
+      .admin-loader-text {
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: .9rem; font-weight: 500;
+        color: #6b7280; letter-spacing: .01em;
+      }
+      :root.dark .admin-loader-text { color: #9ca3af; }
+      @keyframes admin-spin { to { transform: rotate(360deg); } }
+      @keyframes admin-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .admin-loader-logo, .admin-loader-spinner { animation: none; }
+      }
+    </style>
   </head>
   <body class="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+    <!-- Écran de chargement (masqué une fois l'accès vérifié et le contenu prêt) -->
+    <div id="admin-loader" role="status" aria-live="polite">
+      <span class="admin-loader-logo">C</span>
+      <span class="admin-loader-spinner" aria-hidden="true"></span>
+      <span class="admin-loader-text">Préparation de votre espace…</span>
+    </div>
     <div class="flex min-h-screen">
       <!-- Sidebar -->
       <aside
@@ -141,6 +204,12 @@ const navItems = [
       import { rolesRepo, seedRoles } from '../utils/store';
       import { withBase } from '../utils/url';
 
+      const loader = document.getElementById('admin-loader');
+      const reveal = () => {
+        loader?.classList.add('is-hidden');
+        window.setTimeout(() => loader?.remove(), 450);
+      };
+
       // Garde d'accès : redirige vers le login si non authentifié (cache local).
       const session = getSession();
       if (!session) {
@@ -178,6 +247,9 @@ const navItems = [
           if (!s) { window.location.replace(withBase('/admin/login')); return; }
           if (s.role !== prevRole) window.location.reload();
         });
+
+        // Accès validé en local : on révèle la page (l'écran de chargement disparaît).
+        reveal();
       }
 
       // Déconnexion

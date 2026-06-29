@@ -30,6 +30,13 @@ const { title = 'Bienvenue', description = 'Un site moderne avec Astro et Tailwi
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script is:inline>
+      // Applique le thème AVANT le premier rendu pour éviter le flash clair→sombre.
+      const t = localStorage.getItem('theme');
+      if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
   </head>
 
   <body
