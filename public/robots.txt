@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# Espace d'administration : ne pas indexer
+Disallow: /CSE-Mada/admin/
+
+Sitemap: https://brayan-clark.github.io/CSE-Mada/sitemap.xml

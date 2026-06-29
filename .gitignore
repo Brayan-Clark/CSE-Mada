@@ -22,3 +22,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Supabase CLI (fichiers locaux : ref du projet lié, etc. — ne pas committer)
+supabase/.temp/
+supabase/.branches/
