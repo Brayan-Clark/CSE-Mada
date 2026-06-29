@@ -187,12 +187,14 @@ export interface BlockedDate {
 export type EventBookingStatus = 'new' | 'confirmed' | 'cancelled';
 
 // Demande de réservation d'événement envoyée par un visiteur.
+// Une réservation peut couvrir un seul jour (startDate = endDate) ou plusieurs.
 export interface EventBooking {
   id: string;
   reference: string; // référence lisible, ex: RSV-1A2B
   customer: { name: string; email: string; phone?: string };
-  date: string; // date souhaitée (YYYY-MM-DD)
-  eventType?: string; // type d'événement (anniversaire, séminaire…)
+  startDate: string; // date de début souhaitée (YYYY-MM-DD)
+  endDate: string; // date de fin (YYYY-MM-DD), = startDate si un seul jour
+  eventType?: string; // type d'activité (team building, randonnée…)
   guests?: number; // nombre de participants
   message?: string;
   status: EventBookingStatus;

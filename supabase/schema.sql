@@ -203,13 +203,24 @@ create table if not exists public.event_bookings (
   customer_name  text not null,
   customer_email text not null,
   customer_phone text,
-  date           date not null,
+  start_date     date not null,
+  end_date       date not null,
   event_type     text,
   guests         integer,
   message        text,
   status         text not null default 'new' check (status in ('new','confirmed','cancelled')),
   created_at     timestamptz not null default now()
 );
+-- Migration : si une version antérieure avec une seule colonne `date` existe.
+alter table public.event_bookings add column if not exists start_date date;
+alter table public.event_bookings add column if not exists end_date date;
+do $$ begin
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'event_bookings' and column_name = 'date') then
+    update public.event_bookings set start_date = coalesce(start_date, date), end_date = coalesce(end_date, date);
+    alter table public.event_bookings drop column date;
+  end if;
+end $$;
 
 -- -----------------------------------------------------------------------------
 -- SERVICES

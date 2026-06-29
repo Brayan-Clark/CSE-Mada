@@ -75,9 +75,15 @@ const inputClass =
     <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl">
       <h3 class="text-lg font-bold mb-4">Bloquer une date</h3>
       <form id="block-form" class="space-y-4">
-        <div>
-          <label for="block-date" class="block text-sm font-medium mb-1.5">Date</label>
-          <input id="block-date" type="date" required class={inputClass} />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="block-date" class="block text-sm font-medium mb-1.5">Du</label>
+            <input id="block-date" type="date" required class={inputClass} />
+          </div>
+          <div>
+            <label for="block-end" class="block text-sm font-medium mb-1.5">Au <span class="font-normal text-gray-400">(optionnel)</span></label>
+            <input id="block-end" type="date" class={inputClass} />
+          </div>
         </div>
         <div>
           <label for="block-reason" class="block text-sm font-medium mb-1.5">Motif <span class="font-normal text-gray-400">(optionnel)</span></label>
@@ -129,7 +135,7 @@ const inputClass =
   <script>
     import type { EventBooking, EventBookingStatus, BlockedDate } from '../../../utils/store';
     import { eventsData, blockedDatesData, eventBookingsData } from '../../../utils/db';
-    import { monthCells, MONTH_NAMES, WEEKDAY_NAMES, longDate } from '../../../utils/calendar';
+    import { monthCells, MONTH_NAMES, WEEKDAY_NAMES, longDate, datesInRange } from '../../../utils/calendar';
     import { can } from '../../../utils/auth';
     import { toast } from '../../../utils/toast';
 
@@ -199,9 +205,16 @@ const inputClass =
       }).join('');
     }
 
+    function periodLabel(b: EventBooking): string {
+      if (b.endDate && b.endDate !== b.startDate) {
+        return `Du ${longDate(b.startDate)} au ${longDate(b.endDate)}`;
+      }
+      return longDate(b.startDate);
+    }
+
     function renderBookings() {
       const list = filter === 'all' ? bookings : bookings.filter((b) => b.status === filter);
-      const sorted = [...list].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+      const sorted = [...list].sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
       $('empty-state').classList.toggle('hidden', sorted.length > 0);
       $('bookings-list').innerHTML = sorted.map((b) => {
         const s = STATUS[b.status];
@@ -211,7 +224,7 @@ const inputClass =
               <span class="font-semibold text-sm">${escape(b.reference)}</span>
               <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}">${s.label}</span>
             </div>
-            <p class="mt-1 text-sm capitalize text-green-700 dark:text-green-400">${escape(longDate(b.date))}</p>
+            <p class="mt-1 text-sm capitalize text-green-700 dark:text-green-400">${escape(periodLabel(b))}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">${escape(b.customer.name)}${b.eventType ? ' · ' + escape(b.eventType) : ''}${b.guests ? ' · ' + b.guests + ' pers.' : ''}</p>
           </button>`;
       }).join('');
@@ -257,13 +270,17 @@ const inputClass =
 
       ($('block-form') as HTMLFormElement).addEventListener('submit', async (e) => {
         e.preventDefault();
-        const date = ($('block-date') as HTMLInputElement).value;
-        if (!date) return;
-        if (occupied[date]) { toast.error('Cette date est déjà occupée.'); return; }
-        await blockedDatesData.create({ date, reason: ($('block-reason') as HTMLInputElement).value.trim() || undefined });
+        const start = ($('block-date') as HTMLInputElement).value;
+        const end = ($('block-end') as HTMLInputElement).value || start;
+        if (!start) return;
+        if (end < start) { toast.error('La date de fin doit être après la date de début.'); return; }
+        const reason = ($('block-reason') as HTMLInputElement).value.trim() || undefined;
+        const days = datesInRange(start, end).filter((d) => !occupied[d]);
+        if (days.length === 0) { toast.error('Ces dates sont déjà occupées.'); return; }
+        for (const d of days) await blockedDatesData.create({ date: d, reason });
         closeBlockModal();
         await refresh();
-        toast.success('Date bloquée.');
+        toast.success(days.length > 1 ? `${days.length} dates bloquées.` : 'Date bloquée.');
       });
     }
 
@@ -274,7 +291,7 @@ const inputClass =
       if (!b) return;
       currentId = id;
       $('bm-ref').textContent = b.reference;
-      $('bm-date').textContent = longDate(b.date);
+      $('bm-date').textContent = periodLabel(b);
       $('bm-name').textContent = b.customer.name;
       const emailEl = $('bm-email') as HTMLAnchorElement;
       emailEl.textContent = b.customer.email;
@@ -310,9 +327,12 @@ const inputClass =
         if (!b) return;
         const status = ($('bm-status') as HTMLSelectElement).value as EventBookingStatus;
         await eventBookingsData.update(currentId, { status });
-        // Confirmer une demande bloque automatiquement la date (si libre).
-        if (status === 'confirmed' && b.date && !occupied[b.date]) {
-          await blockedDatesData.create({ date: b.date, reason: `Réservation ${b.reference} — ${b.customer.name}` });
+        // Confirmer une demande bloque automatiquement toute la période (jours libres).
+        if (status === 'confirmed' && b.startDate) {
+          const reason = `Réservation ${b.reference} — ${b.customer.name}`;
+          for (const d of datesInRange(b.startDate, b.endDate || b.startDate)) {
+            if (!occupied[d]) await blockedDatesData.create({ date: d, reason });
+          }
         }
         closeBooking();
         await refresh();

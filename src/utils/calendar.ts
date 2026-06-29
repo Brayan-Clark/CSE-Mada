@@ -40,6 +40,21 @@ export const MONTH_NAMES = [
 
 export const WEEKDAY_NAMES = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
+/** Liste des dates "AAAA-MM-JJ" entre `start` et `end` (bornes incluses). */
+export function datesInRange(start: string, end: string): string[] {
+  if (!start || !end) return [];
+  const [sy, sm, sd] = start.split('-').map(Number);
+  const [ey, em, ed] = end.split('-').map(Number);
+  const out: string[] = [];
+  const cur = new Date(sy, sm - 1, sd);
+  const last = new Date(ey, em - 1, ed);
+  while (cur <= last) {
+    out.push(ymd(cur));
+    cur.setDate(cur.getDate() + 1);
+  }
+  return out;
+}
+
 /** Libellé long d'une date "AAAA-MM-JJ" (ex. "lundi 6 juillet 2026"). */
 export function longDate(ymdStr: string): string {
   if (!ymdStr) return '';

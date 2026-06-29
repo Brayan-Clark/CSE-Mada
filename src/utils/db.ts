@@ -364,7 +364,8 @@ export const eventBookingsData = createData<EventBooking>(
         row.customer_email = b.customer.email;
         row.customer_phone = b.customer.phone ?? null;
       }
-      if (b.date !== undefined) row.date = b.date;
+      if (b.startDate !== undefined) row.start_date = b.startDate;
+      if (b.endDate !== undefined) row.end_date = b.endDate;
       if (b.eventType !== undefined) row.event_type = b.eventType ?? null;
       if (b.guests !== undefined) row.guests = b.guests ?? null;
       if (b.message !== undefined) row.message = b.message ?? null;
@@ -380,7 +381,8 @@ export const eventBookingsData = createData<EventBooking>(
         email: (r.customer_email as string) ?? '',
         phone: (r.customer_phone as string) ?? undefined,
       },
-      date: (r.date as string) ?? '',
+      startDate: (r.start_date as string) ?? '',
+      endDate: (r.end_date as string) ?? (r.start_date as string) ?? '',
       eventType: (r.event_type as string) ?? undefined,
       guests: r.guests != null ? Number(r.guests) : undefined,
       message: (r.message as string) ?? undefined,

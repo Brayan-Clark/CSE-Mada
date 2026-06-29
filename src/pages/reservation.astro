@@ -60,9 +60,19 @@ const inputClass =
       <!-- Formulaire -->
       <form id="rsv-form">
         <h3 class="text-lg font-bold">Demande de réservation</h3>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Date souhaitée : <strong id="rsv-date-label" class="text-green-700 dark:text-green-400 capitalize"></strong></p>
         <p class="mt-2 text-xs text-gray-400">Aucun paiement en ligne : nous confirmons la disponibilité et les détails par email/téléphone.</p>
         <div class="mt-4 space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="r-start" class="block text-sm font-medium mb-1">Du *</label>
+              <input id="r-start" type="date" required class={inputClass} />
+            </div>
+            <div>
+              <label for="r-end" class="block text-sm font-medium mb-1">Au *</label>
+              <input id="r-end" type="date" required class={inputClass} />
+            </div>
+          </div>
+          <p id="rsv-range-info" class="text-xs text-gray-500 dark:text-gray-400"></p>
           <div>
             <label for="r-name" class="block text-sm font-medium mb-1">Nom complet *</label>
             <input id="r-name" type="text" required class={inputClass} />
@@ -77,12 +87,13 @@ const inputClass =
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label for="r-type" class="block text-sm font-medium mb-1">Type</label>
+              <label for="r-type" class="block text-sm font-medium mb-1">Type d'activité</label>
               <select id="r-type" class={inputClass}>
-                <option value="Anniversaire">Anniversaire</option>
-                <option value="Mariage">Mariage</option>
-                <option value="Séminaire / entreprise">Séminaire / entreprise</option>
                 <option value="Team building">Team building</option>
+                <option value="Randonnée / trek">Randonnée / trek</option>
+                <option value="Sortie en groupe">Sortie en groupe</option>
+                <option value="Camping / bivouac">Camping / bivouac</option>
+                <option value="Séminaire / entreprise">Séminaire / entreprise</option>
                 <option value="Autre">Autre</option>
               </select>
             </div>
@@ -96,7 +107,8 @@ const inputClass =
             <textarea id="r-message" rows="3" placeholder="Précisez votre projet…" class={inputClass}></textarea>
           </div>
         </div>
-        <button type="submit" class="mt-5 w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 transition-colors">Envoyer la demande</button>
+        <p id="rsv-error" class="hidden mt-3 text-sm text-red-600 dark:text-red-400"></p>
+        <button type="submit" class="mt-4 w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 transition-colors">Envoyer la demande</button>
       </form>
 
       <!-- Confirmation -->
@@ -122,7 +134,7 @@ const inputClass =
 
   <script>
     import { eventsData, blockedDatesData, eventBookingsData } from '../utils/db';
-    import { monthCells, MONTH_NAMES, WEEKDAY_NAMES, todayYmd, longDate } from '../utils/calendar';
+    import { monthCells, MONTH_NAMES, WEEKDAY_NAMES, todayYmd, longDate, datesInRange } from '../utils/calendar';
     import { toast } from '../utils/toast';
 
     const $ = (id: string) => document.getElementById(id)!;
@@ -171,11 +183,41 @@ const inputClass =
 
     // --- Modale ---
     const modal = $('rsv-modal');
-    let selectedDate = '';
+    const startEl = $('r-start') as HTMLInputElement;
+    const endEl = $('r-end') as HTMLInputElement;
+
+    // Vérifie qu'une période ne contient ni date passée ni date occupée.
+    function rangeIssue(start: string, end: string): string | null {
+      if (!start || !end) return 'Choisissez vos dates de début et de fin.';
+      if (end < start) return 'La date de fin doit être après la date de début.';
+      for (const d of datesInRange(start, end)) {
+        if (d < today) return 'La période contient une date passée.';
+        if (d in occupied) return `Le ${longDate(d)} est déjà occupé : choisissez une autre période.`;
+      }
+      return null;
+    }
+
+    function refreshRangeInfo() {
+      const start = startEl.value;
+      const end = endEl.value;
+      const issue = rangeIssue(start, end);
+      const info = $('rsv-range-info');
+      const err = $('rsv-error');
+      if (start && end && !issue) {
+        const n = datesInRange(start, end).length;
+        info.textContent = n > 1 ? `Période de ${n} jours, du ${longDate(start)} au ${longDate(end)}.` : longDate(start);
+        err.classList.add('hidden');
+      } else {
+        info.textContent = '';
+        if (issue && start && end) { err.textContent = issue; err.classList.remove('hidden'); }
+        else err.classList.add('hidden');
+      }
+    }
 
     function openModal(date: string) {
-      selectedDate = date;
-      $('rsv-date-label').textContent = longDate(date);
+      startEl.min = today; endEl.min = today;
+      startEl.value = date; endEl.value = date;
+      refreshRangeInfo();
       $('rsv-form').classList.remove('hidden');
       $('rsv-success').classList.add('hidden');
       $('rsv-success').classList.remove('flex');
@@ -187,6 +229,9 @@ const inputClass =
       modal.classList.remove('flex');
     }
 
+    startEl.addEventListener('change', () => { if (startEl.value) endEl.min = startEl.value; refreshRangeInfo(); });
+    endEl.addEventListener('change', refreshRangeInfo);
+
     $('cal-grid').addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-date]');
       if (btn) openModal(btn.dataset.date!);
@@ -197,7 +242,10 @@ const inputClass =
 
     ($('rsv-form') as HTMLFormElement).addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!selectedDate) return;
+      const start = startEl.value;
+      const end = endEl.value;
+      const issue = rangeIssue(start, end);
+      if (issue) { toast.error(issue); $('rsv-error').textContent = issue; $('rsv-error').classList.remove('hidden'); return; }
       const reference = 'RSV-' + Math.random().toString(36).slice(2, 6).toUpperCase();
       const guests = Number(($('r-guests') as HTMLInputElement).value) || undefined;
       try {
@@ -208,7 +256,8 @@ const inputClass =
             email: ($('r-email') as HTMLInputElement).value.trim(),
             phone: ($('r-phone') as HTMLInputElement).value.trim() || undefined,
           },
-          date: selectedDate,
+          startDate: start,
+          endDate: end,
           eventType: ($('r-type') as HTMLSelectElement).value,
           guests,
           message: ($('r-message') as HTMLTextAreaElement).value.trim() || undefined,
