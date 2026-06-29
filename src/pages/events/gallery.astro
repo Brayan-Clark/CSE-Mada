@@ -62,7 +62,7 @@ import { withBase } from '../../utils/url';
       $('g-title').textContent = `Galerie — ${ev.title}`;
       if (!ev.galleryFolder) {
         $('g-sub').textContent = '';
-        showEmpty("Aucune galerie n'a encore été associée à cet événement.");
+        showEmpty('La galerie photo de cet événement arrive bientôt. Revenez après l’événement !');
       } else if (!isDriveEnabled) {
         $('g-sub').textContent = '';
         showEmpty('La galerie photo n’est pas configurée pour le moment.');
