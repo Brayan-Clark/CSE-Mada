@@ -245,3 +245,5 @@ régression. (Événements/blog : pilotés par les content collections, cf. §4.
 - [ ] **Créer votre compte en premier** (→ devient `superadmin`)
 - [ ] Edge Function déployée : `supabase functions deploy invite-user`
 - [ ] (Option) Storage pour les images
+- [ ] (Option) Galerie photo Drive : clé `PUBLIC_GOOGLE_API_KEY` — voir
+      [GALERIE-DRIVE.md](GALERIE-DRIVE.md)
