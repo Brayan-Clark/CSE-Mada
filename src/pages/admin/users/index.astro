@@ -258,10 +258,15 @@ const inputClass =
         const { data, error } = await sb.functions.invoke('invite-user', { body: { email, name, roleId: role } });
         submit.disabled = false; submit.textContent = 'Inviter';
         if (error || (data && data.error)) {
-          const msg = (data && data.error) || error?.message || "Échec de l'invitation.";
+          let msg = (data && data.error) || error?.message || "Échec de l'invitation.";
+          // Cas fréquent : la fonction n'est pas déployée / injoignable.
+          if (/edge function|failed to send|not found|fetch/i.test(msg)) {
+            msg = "La fonction « invite-user » est indisponible (probablement non déployée). "
+              + "Déployez-la : supabase functions deploy invite-user (voir docs/UTILISATEURS.md).";
+          }
           userError.textContent = msg;
           userError.classList.remove('hidden');
-          toast.error(msg);
+          toast.error("Invitation impossible — voir le détail affiché.");
           return;
         }
         invitePassword.textContent = data.password;
