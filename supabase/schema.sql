@@ -141,6 +141,48 @@ create table if not exists public.orders (
 );
 
 -- -----------------------------------------------------------------------------
+-- LOCATION — catalogue d'articles louables (distinct du matériel de vente)
+-- -----------------------------------------------------------------------------
+create table if not exists public.rental_items (
+  id             uuid primary key default gen_random_uuid(),
+  name           text not null,
+  category       text not null default 'accessoires',
+  price_per_day  numeric(12,2) not null default 0, -- tarif journalier (MGA)
+  price_per_week numeric(12,2),                     -- tarif hebdomadaire (optionnel)
+  deposit        numeric(12,2),                     -- caution (optionnel)
+  stock          integer not null default 0,        -- quantité disponible
+  image          text,
+  description    text,
+  featured       boolean not null default false,
+  tags           text[] not null default '{}',
+  created_at     timestamptz not null default now()
+);
+
+-- -----------------------------------------------------------------------------
+-- RÉSERVATIONS DE LOCATION (demandes client — pas de paiement en ligne)
+-- status : 'new' | 'confirmed' | 'returned' | 'cancelled'
+-- -----------------------------------------------------------------------------
+create table if not exists public.rentals (
+  id             uuid primary key default gen_random_uuid(),
+  reference      text not null,
+  customer_name  text not null,
+  customer_email text not null,
+  customer_phone text,
+  item_id        uuid references public.rental_items (id) on delete set null,
+  item_name      text not null,
+  quantity       integer not null default 1,
+  start_date     date not null,
+  end_date       date not null,
+  days           integer not null default 1,
+  unit_price     numeric(12,2) not null default 0, -- tarif journalier figé (MGA)
+  total          numeric(12,2) not null default 0, -- total estimé (MGA)
+  deposit        numeric(12,2),                     -- caution totale (MGA)
+  note           text,
+  status         text not null default 'new' check (status in ('new','confirmed','returned','cancelled')),
+  created_at     timestamptz not null default now()
+);
+
+-- -----------------------------------------------------------------------------
 -- SERVICES
 -- -----------------------------------------------------------------------------
 create table if not exists public.services (
@@ -197,6 +239,8 @@ alter table public.reviews   enable row level security;
 alter table public.messages  enable row level security;
 alter table public.orders    enable row level security;
 alter table public.stock_entries enable row level security;
+alter table public.rental_items  enable row level security;
+alter table public.rentals       enable row level security;
 
 -- =============================================================================
 -- RLS — politiques  (IDEMPOTENT : on supprime puis recrée → ré-exécutable)
@@ -221,6 +265,9 @@ create policy "reviews_public_read" on public.reviews
 drop policy if exists "roles_public_read" on public.roles;
 create policy "roles_public_read" on public.roles
   for select using (true);
+drop policy if exists "rental_items_public_read" on public.rental_items;
+create policy "rental_items_public_read" on public.rental_items
+  for select using (true);
 
 -- Écriture publique limitée --------------------------------------------------
 -- Le formulaire de contact peut créer un message.
@@ -235,6 +282,10 @@ create policy "reviews_public_insert" on public.reviews
 drop policy if exists "orders_public_insert" on public.orders;
 create policy "orders_public_insert" on public.orders
   for insert with check (status = 'new');
+-- Un visiteur peut envoyer une demande de location, forcément "nouvelle".
+drop policy if exists "rentals_public_insert" on public.rentals;
+create policy "rentals_public_insert" on public.rentals
+  for insert with check (status = 'new');
 
 -- Accès complet pour l'équipe authentifiée -----------------------------------
 -- (un bloc par table : select/insert/update/delete)
@@ -242,7 +293,7 @@ do $$
 declare t text;
 begin
   foreach t in array array[
-    'roles','profiles','articles','events','products','services','reviews','messages','orders','stock_entries'
+    'roles','profiles','articles','events','products','services','reviews','messages','orders','stock_entries','rental_items','rentals'
   ] loop
     execute format('drop policy if exists "%1$s_staff_all" on public.%1$s;', t);
     execute format($f$
@@ -260,18 +311,18 @@ insert into public.roles (id, label, description, system, permissions) values
     array['articles.view','articles.edit','articles.delete','reviews.view','reviews.moderate',
           'messages.view','messages.manage','products.view','products.manage','services.view',
           'services.manage','events.view','events.manage','orders.view','orders.manage',
-          'stock.view','stock.manage','users.manage','roles.manage']),
+          'stock.view','stock.manage','rentals.view','rentals.manage','users.manage','roles.manage']),
   ('admin', 'Administrateur', 'Accès complet à toutes les fonctionnalités.', true,
     array['articles.view','articles.edit','articles.delete','reviews.view','reviews.moderate',
           'messages.view','messages.manage','products.view','products.manage','services.view',
           'services.manage','events.view','events.manage','orders.view','orders.manage',
-          'stock.view','stock.manage','users.manage','roles.manage']),
+          'stock.view','stock.manage','rentals.view','rentals.manage','users.manage','roles.manage']),
   ('editor', 'Éditeur', 'Gère le contenu et consulte les messages.', false,
     array['articles.view','articles.edit','reviews.view','reviews.moderate','messages.view',
           'products.view','products.manage','services.view','services.manage','events.view','events.manage',
-          'orders.view','orders.manage','stock.view','stock.manage']),
+          'orders.view','orders.manage','stock.view','stock.manage','rentals.view','rentals.manage']),
   ('viewer', 'Lecteur', 'Consultation seule.', false,
-    array['articles.view','reviews.view','messages.view','products.view','services.view','events.view','orders.view','stock.view'])
+    array['articles.view','reviews.view','messages.view','products.view','services.view','events.view','orders.view','stock.view','rentals.view'])
 on conflict (id) do nothing;
 
 -- =============================================================================

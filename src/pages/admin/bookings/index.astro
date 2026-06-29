@@ -1,0 +1,232 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Réservations de location" active="bookings">
+  <!-- Statistiques rapides -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Total réservations</p>
+      <p id="kpi-total" class="mt-1 text-2xl font-bold">0</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Nouvelles</p>
+      <p id="kpi-new" class="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">0</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">En cours / à venir</p>
+      <p id="kpi-active" class="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Revenu location</p>
+      <p id="kpi-revenue" class="mt-1 text-2xl font-bold">0 Ar</p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <p class="text-sm text-gray-500 dark:text-gray-400"><span id="booking-count">0</span> réservation(s)</p>
+    <div class="flex gap-2 overflow-x-auto" id="status-filters">
+      <button data-filter="all" class="filter-btn whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium bg-green-600 text-white">Toutes</button>
+      <button data-filter="new" class="filter-btn whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Nouvelles</button>
+      <button data-filter="confirmed" class="filter-btn whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Confirmées</button>
+      <button data-filter="returned" class="filter-btn whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Rendues</button>
+      <button data-filter="cancelled" class="filter-btn whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">Annulées</button>
+    </div>
+  </div>
+
+  <div id="bookings-list" class="space-y-3"></div>
+  <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400">Aucune réservation de location pour le moment.</p>
+
+  <!-- Modale détail -->
+  <div id="booking-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="booking-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="relative w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <button id="booking-close" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Fermer">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+      <h3 id="bm-ref" class="text-lg font-bold"></h3>
+      <p id="bm-date" class="text-sm text-gray-400 mt-0.5"></p>
+
+      <div class="mt-4 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 text-sm space-y-1">
+        <p><span class="text-gray-500 dark:text-gray-400">Client :</span> <span id="bm-name" class="font-medium"></span></p>
+        <p><span class="text-gray-500 dark:text-gray-400">Email :</span> <a id="bm-email" class="text-green-700 dark:text-green-400 hover:underline" href="#"></a></p>
+        <p id="bm-phone-row"><span class="text-gray-500 dark:text-gray-400">Téléphone :</span> <span id="bm-phone"></span></p>
+      </div>
+
+      <div class="mt-4 rounded-lg border border-gray-100 dark:border-gray-800 p-4 text-sm space-y-1.5">
+        <p class="font-semibold" id="bm-item"></p>
+        <p><span class="text-gray-500 dark:text-gray-400">Période :</span> <span id="bm-period" class="font-medium"></span></p>
+        <p><span class="text-gray-500 dark:text-gray-400">Durée :</span> <span id="bm-duration"></span></p>
+        <p><span class="text-gray-500 dark:text-gray-400">Quantité :</span> <span id="bm-qty"></span></p>
+        <p id="bm-deposit-row"><span class="text-gray-500 dark:text-gray-400">Caution :</span> <span id="bm-deposit"></span></p>
+      </div>
+
+      <div id="bm-note-row" class="mt-3 text-sm">
+        <p class="text-gray-500 dark:text-gray-400 mb-1">Note du client :</p>
+        <p id="bm-note" class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3 text-gray-700 dark:text-gray-200"></p>
+      </div>
+
+      <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 font-bold">
+        <span>Total estimé</span>
+        <span id="bm-total" class="text-green-700 dark:text-green-400"></span>
+      </div>
+
+      <div class="mt-5" data-requires="rentals.manage">
+        <label for="bm-status" class="block text-sm font-medium mb-1.5">Statut de la réservation</label>
+        <select id="bm-status" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+          <option value="new">Nouvelle</option>
+          <option value="confirmed">Confirmée</option>
+          <option value="returned">Rendue</option>
+          <option value="cancelled">Annulée</option>
+        </select>
+        <div class="flex gap-3 mt-4">
+          <button id="bm-save" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Enregistrer</button>
+          <button id="bm-delete" class="rounded-lg border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 px-5 py-2.5 text-sm font-medium transition-colors">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import type { Rental, RentalStatus } from '../../../utils/store';
+    import { rentalsData } from '../../../utils/db';
+    import { can } from '../../../utils/auth';
+    import { formatMGA } from '../../../utils/format';
+    import { toast } from '../../../utils/toast';
+
+    const canManage = can('rentals.manage');
+    const $ = (id: string) => document.getElementById(id)!;
+    const list = $('bookings-list');
+    const empty = $('empty-state');
+    const modal = $('booking-modal');
+    let filter: 'all' | RentalStatus = 'all';
+    let currentId: string | null = null;
+
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    const STATUS: Record<RentalStatus, { label: string; cls: string }> = {
+      new: { label: 'Nouvelle', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+      confirmed: { label: 'Confirmée', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
+      returned: { label: 'Rendue', cls: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' },
+      cancelled: { label: 'Annulée', cls: 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' },
+    };
+
+    const fmtDate = (iso: string) =>
+      new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const fmtDay = (d: string) =>
+      d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+    function renderKpis(bookings: Rental[]) {
+      $('kpi-total').textContent = String(bookings.length);
+      $('kpi-new').textContent = String(bookings.filter((b) => b.status === 'new').length);
+      $('kpi-active').textContent = String(bookings.filter((b) => b.status === 'confirmed').length);
+      const rev = bookings.filter((b) => b.status !== 'cancelled').reduce((s, b) => s + (b.total || 0), 0);
+      $('kpi-revenue').textContent = formatMGA(rev);
+    }
+
+    async function render() {
+      const all = (await rentalsData.list()).sort((a, b) => b.date.localeCompare(a.date));
+      renderKpis(all);
+      const bookings = filter === 'all' ? all : all.filter((b) => b.status === filter);
+      $('booking-count').textContent = String(bookings.length);
+      empty.classList.toggle('hidden', bookings.length > 0);
+      list.innerHTML = bookings.map((b) => {
+        const s = STATUS[b.status];
+        return `
+          <button data-open="${escape(b.id)}" class="w-full text-left rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4 hover:border-green-300 dark:hover:border-green-700 transition-colors">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-3">
+                <span class="font-bold">${escape(b.reference)}</span>
+                <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${s.cls}">${s.label}</span>
+              </div>
+              <span class="font-bold text-green-700 dark:text-green-400">${formatMGA(b.total)}</span>
+            </div>
+            <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+              <span class="font-medium text-gray-700 dark:text-gray-200">${escape(b.itemName)}</span>
+              <span>·</span>
+              <span>${escape(b.customer.name)}</span>
+              <span>·</span>
+              <span>${fmtDay(b.startDate)} → ${fmtDay(b.endDate)}</span>
+            </div>
+          </button>`;
+      }).join('');
+    }
+
+    async function openBooking(id: string) {
+      const b = await rentalsData.get(id);
+      if (!b) return;
+      currentId = id;
+      $('bm-ref').textContent = b.reference;
+      $('bm-date').textContent = `Demandée le ${fmtDate(b.date)}`;
+      $('bm-name').textContent = b.customer.name;
+      const emailEl = $('bm-email') as HTMLAnchorElement;
+      emailEl.textContent = b.customer.email;
+      emailEl.href = `mailto:${b.customer.email}`;
+      $('bm-phone-row').classList.toggle('hidden', !b.customer.phone);
+      $('bm-phone').textContent = b.customer.phone ?? '';
+      $('bm-item').textContent = b.itemName;
+      $('bm-period').textContent = `${fmtDay(b.startDate)} → ${fmtDay(b.endDate)}`;
+      $('bm-duration').textContent = `${b.days} jour${b.days > 1 ? 's' : ''} · ${formatMGA(b.unitPrice)}/jour`;
+      $('bm-qty').textContent = String(b.quantity);
+      $('bm-deposit-row').classList.toggle('hidden', !b.deposit);
+      $('bm-deposit').textContent = b.deposit ? formatMGA(b.deposit) : '';
+      $('bm-note-row').classList.toggle('hidden', !b.note);
+      $('bm-note').textContent = b.note ?? '';
+      $('bm-total').textContent = formatMGA(b.total);
+      ($('bm-status') as HTMLSelectElement).value = b.status;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeBooking() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      currentId = null;
+    }
+
+    list.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-open]');
+      if (btn) openBooking(btn.dataset.open!);
+    });
+
+    $('status-filters').addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-filter]');
+      if (!btn) return;
+      filter = btn.dataset.filter as typeof filter;
+      document.querySelectorAll<HTMLButtonElement>('.filter-btn').forEach((b) => {
+        const on = b.dataset.filter === filter;
+        b.classList.toggle('bg-green-600', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('bg-gray-100', !on);
+        b.classList.toggle('dark:bg-gray-800', !on);
+        b.classList.toggle('text-gray-700', !on);
+        b.classList.toggle('dark:text-gray-300', !on);
+      });
+      render();
+    });
+
+    $('booking-close').addEventListener('click', closeBooking);
+    $('booking-backdrop').addEventListener('click', closeBooking);
+
+    if (canManage) {
+      $('bm-save').addEventListener('click', async () => {
+        if (!currentId) return;
+        await rentalsData.update(currentId, { status: ($('bm-status') as HTMLSelectElement).value as RentalStatus });
+        closeBooking();
+        await render();
+        toast.success('Réservation mise à jour.');
+      });
+      $('bm-delete').addEventListener('click', async () => {
+        if (!currentId) return;
+        if (confirm('Supprimer définitivement cette réservation ?')) {
+          await rentalsData.remove(currentId);
+          closeBooking();
+          await render();
+          toast.success('Réservation supprimée.');
+        }
+      });
+    }
+
+    render();
+  </script>
+</AdminLayout>

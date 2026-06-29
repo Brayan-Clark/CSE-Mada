@@ -1,0 +1,466 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { withBase } from '../utils/url';
+import { PRODUCT_CATEGORIES } from '../utils/store';
+
+const categoryIcons: Record<string, string> = {
+  tentes: '⛺', 'sac-couchage': '🛌', cuisine: '🍳', randonnee: '🥾', 'camping-car': '🚐', accessoires: '🎒',
+};
+const categories = PRODUCT_CATEGORIES.map((c) => ({ ...c, icon: categoryIcons[c.id] ?? '•' }));
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<Layout title="Location de matériel de camping" description="Louez du matériel de camping de qualité à Madagascar : tentes, sacs de couchage, kits de randonnée. Tarifs au jour et à la semaine, réservation en ligne avec vos dates.">
+  <!-- Hero compact -->
+  <div class="relative bg-gray-900 overflow-hidden">
+    <img class="absolute inset-0 w-full h-full object-cover opacity-40" src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?q=80&w=1000&auto=format&fit=crop" alt="Location de matériel de camping" />
+    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
+    <div class="relative max-w-7xl mx-auto py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-green-600/90 text-white px-3 py-1 text-xs font-semibold">⛺ Location</span>
+      <h1 class="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Louez votre matériel de camping</h1>
+      <p class="mt-3 max-w-2xl text-lg text-gray-200">Pas besoin d'acheter pour une seule sortie. Choisissez vos articles, vos dates, et envoyez votre demande de réservation. Nous vous recontactons pour confirmer.</p>
+    </div>
+  </div>
+
+  <!-- Barre de recherche & filtres -->
+  <div class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-gray-900/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+      <div class="relative flex-1 sm:max-w-xs">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
+        <input id="search" type="search" placeholder="Rechercher un article…" class={`${inputClass} pl-9 w-full`} />
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <select id="sort" class={`${inputClass} flex-1 sm:w-44`}>
+          <option value="featured">En avant</option>
+          <option value="price-asc">Prix / jour croissant</option>
+          <option value="price-desc">Prix / jour décroissant</option>
+          <option value="name">Nom (A→Z)</option>
+        </select>
+        <label class="inline-flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-3 text-sm whitespace-nowrap cursor-pointer">
+          <input id="stock-only" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500" />
+          Disponible
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grille -->
+  <div class="bg-gray-50 dark:bg-gray-800 py-8 min-h-[40vh]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="relative mb-8">
+        <button id="cat-prev" class="absolute -left-1 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-0 transition" aria-label="Précédent">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <div id="category-filters" class="flex gap-2.5 overflow-x-auto scroll-smooth px-10 py-1" style="scrollbar-width:none;-ms-overflow-style:none;">
+          <button data-cat="all" class="cat-btn whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors bg-green-600 text-white shadow-sm">Tout</button>
+          {categories.map((c) => (
+            <button data-cat={c.id} class="cat-btn whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-green-400 dark:hover:border-green-600">
+              <span class="mr-1">{c.icon}</span>{c.name}
+            </button>
+          ))}
+        </div>
+        <button id="cat-next" class="absolute -right-1 top-1/2 -translate-y-1/2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md text-gray-600 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-0 transition" aria-label="Suivant">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-gray-500 dark:text-gray-400"><span id="result-count">0</span> article(s)</p>
+        <button id="reset-filters" class="hidden text-sm text-green-700 dark:text-green-400 hover:underline">Réinitialiser les filtres</button>
+      </div>
+
+      <div id="rental-grid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"></div>
+      <p id="rental-empty" class="hidden text-center text-gray-500 dark:text-gray-400 py-16">Aucun article ne correspond à votre recherche.</p>
+    </div>
+  </div>
+
+  <style is:global>
+    #category-filters::-webkit-scrollbar { display: none; }
+  </style>
+
+  <!-- Modale détail + réservation -->
+  <div id="rental-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="rental-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="relative w-full max-w-3xl rounded-2xl bg-white dark:bg-gray-900 shadow-xl overflow-hidden max-h-[90vh] grid md:grid-cols-2">
+      <button id="rental-close" class="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-700 shadow" aria-label="Fermer">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+      <div id="rm-image" class="bg-gray-100 dark:bg-gray-800 min-h-[220px] md:min-h-full"></div>
+      <div class="p-6 overflow-y-auto flex flex-col">
+        <!-- Vue détail / réservation -->
+        <div id="rm-detail" class="flex flex-col flex-1">
+          <p id="rm-category" class="text-xs font-medium text-green-700 dark:text-green-400 uppercase tracking-wide"></p>
+          <h3 id="rm-name" class="text-2xl font-bold mt-1"></h3>
+          <div id="rm-tags" class="flex flex-wrap gap-1.5 mt-3"></div>
+          <p id="rm-description" class="mt-3 text-gray-600 dark:text-gray-300 text-sm leading-relaxed"></p>
+          <div class="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span id="rm-price-day" class="text-2xl font-bold text-green-700 dark:text-green-400"></span>
+            <span id="rm-price-week" class="text-sm text-gray-500 dark:text-gray-400"></span>
+          </div>
+          <p id="rm-deposit" class="mt-1 text-sm text-gray-500 dark:text-gray-400"></p>
+          <p id="rm-stock" class="mt-1 text-sm"></p>
+
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div>
+              <label for="rm-start" class="block text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Du</label>
+              <input id="rm-start" type="date" class={inputClass} />
+            </div>
+            <div>
+              <label for="rm-end" class="block text-xs font-medium mb-1 text-gray-500 dark:text-gray-400">Au</label>
+              <input id="rm-end" type="date" class={inputClass} />
+            </div>
+          </div>
+          <div class="mt-3 flex items-center gap-3">
+            <span class="text-sm text-gray-500 dark:text-gray-400">Quantité</span>
+            <div class="inline-flex items-center rounded-lg border border-gray-300 dark:border-gray-700">
+              <button id="rm-minus" type="button" class="px-3 py-1.5 text-lg" aria-label="Diminuer">−</button>
+              <span id="rm-qty" class="w-10 text-center font-medium">1</span>
+              <button id="rm-plus" type="button" class="px-3 py-1.5 text-lg" aria-label="Augmenter">+</button>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-lg bg-gray-50 dark:bg-gray-800 p-3 text-sm">
+            <div class="flex items-center justify-between"><span id="rm-calc" class="text-gray-500 dark:text-gray-400">Sélectionnez vos dates</span><span id="rm-total" class="font-bold text-green-700 dark:text-green-400"></span></div>
+          </div>
+          <p id="rm-error" class="hidden mt-2 text-sm text-red-600 dark:text-red-400"></p>
+
+          <div class="mt-auto pt-5">
+            <button id="rm-reserve" type="button" class="w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 transition-colors">Réserver ces dates</button>
+          </div>
+        </div>
+
+        <!-- Vue formulaire client -->
+        <form id="rm-form" class="hidden flex-col flex-1">
+          <button type="button" id="rm-back" class="text-sm text-green-700 dark:text-green-400 hover:underline inline-flex items-center gap-1 mb-3">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            Retour
+          </button>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Aucun paiement en ligne : nous vous recontactons pour confirmer la disponibilité, la caution et le retrait du matériel.</p>
+          <div class="space-y-3">
+            <div>
+              <label for="c-name" class="block text-sm font-medium mb-1">Nom complet *</label>
+              <input id="c-name" type="text" required class={inputClass} />
+            </div>
+            <div>
+              <label for="c-email" class="block text-sm font-medium mb-1">Email *</label>
+              <input id="c-email" type="email" required class={inputClass} />
+            </div>
+            <div>
+              <label for="c-phone" class="block text-sm font-medium mb-1">Téléphone</label>
+              <input id="c-phone" type="tel" class={inputClass} />
+            </div>
+            <div>
+              <label for="c-note" class="block text-sm font-medium mb-1">Note (optionnel)</label>
+              <textarea id="c-note" rows="2" placeholder="Précisions…" class={inputClass}></textarea>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-sm font-semibold mt-3 pt-1">
+            <span>Total estimé</span>
+            <span id="rm-form-total" class="text-green-700 dark:text-green-400"></span>
+          </div>
+          <div class="mt-auto pt-4">
+            <button type="submit" class="w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 transition-colors">Envoyer la demande</button>
+          </div>
+        </form>
+
+        <!-- Confirmation -->
+        <div id="rm-success" class="hidden flex-col items-center justify-center text-center flex-1 space-y-4 py-8">
+          <span class="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 text-3xl">✅</span>
+          <h3 class="text-xl font-bold">Demande envoyée !</h3>
+          <p class="text-gray-500 dark:text-gray-400">Merci. Votre référence : <strong id="rm-ref" class="text-gray-900 dark:text-white"></strong>.<br />Notre équipe vous recontactera très vite.</p>
+          <button id="rm-success-close" type="button" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2.5 transition-colors">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA achat -->
+  <div class="bg-white dark:bg-gray-900 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <p class="text-gray-600 dark:text-gray-300">Vous préférez acheter votre matériel ?</p>
+      <a href={withBase('/materiel')} class="mt-3 inline-flex items-center gap-2 rounded-lg border border-green-600 text-green-700 dark:text-green-400 px-5 py-2.5 text-sm font-medium hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+        Voir la boutique
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    import { DEFAULT_RENTAL_ITEMS, PRODUCT_CATEGORIES, rentalDays, rentalPrice } from '../utils/store';
+    import type { RentalItem } from '../utils/store';
+    import { rentalItemsData, rentalsData } from '../utils/db';
+    import { formatMGA } from '../utils/format';
+    import { toast } from '../utils/toast';
+
+    rentalItemsData.seedIfEmpty(DEFAULT_RENTAL_ITEMS);
+    // Règle : base non vide → on l'affiche ; sinon catalogue par défaut.
+    const fromDb = await rentalItemsData.list();
+    const items: RentalItem[] = fromDb.length ? fromDb : DEFAULT_RENTAL_ITEMS;
+
+    const catLabel = (id: string) => PRODUCT_CATEGORIES.find((c) => c.id === id)?.name ?? id;
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const $ = (id: string) => document.getElementById(id)!;
+    const grid = $('rental-grid');
+    const empty = $('rental-empty');
+
+    let activeCat = 'all';
+    let search = '';
+    let sort = 'featured';
+    let stockOnly = false;
+
+    function filtered(): RentalItem[] {
+      let list = items;
+      if (activeCat !== 'all') list = list.filter((i) => i.category === activeCat);
+      if (stockOnly) list = list.filter((i) => i.stock > 0);
+      if (search) {
+        const q = search.toLowerCase();
+        list = list.filter((i) => i.name.toLowerCase().includes(q) || (i.description ?? '').toLowerCase().includes(q));
+      }
+      switch (sort) {
+        case 'price-asc': list = [...list].sort((a, b) => a.pricePerDay - b.pricePerDay); break;
+        case 'price-desc': list = [...list].sort((a, b) => b.pricePerDay - a.pricePerDay); break;
+        case 'name': list = [...list].sort((a, b) => a.name.localeCompare(b.name)); break;
+        default: list = [...list].sort((a, b) => Number(b.featured) - Number(a.featured));
+      }
+      return list;
+    }
+
+    function renderGrid() {
+      const list = filtered();
+      empty.classList.toggle('hidden', list.length > 0);
+      $('result-count').textContent = String(list.length);
+      const dirty = activeCat !== 'all' || search !== '' || stockOnly || sort !== 'featured';
+      $('reset-filters').classList.toggle('hidden', !dirty);
+      grid.innerHTML = list.map((i) => {
+        const img = i.image
+          ? `<img src="${escape(i.image)}" alt="${escape(i.name)}" class="h-52 w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />`
+          : '<div class="h-52 w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-400">Pas d\'image</div>';
+        const tags = (i.tags ?? []).slice(0, 2).map((t) =>
+          `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">${escape(t)}</span>`).join('');
+        const out = i.stock <= 0;
+        const week = i.pricePerWeek ? `<span class="block text-xs text-gray-400">${formatMGA(i.pricePerWeek)} / semaine</span>` : '';
+        return `
+          <article class="group relative bg-white dark:bg-gray-700 rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow flex flex-col">
+            <button data-view="${escape(i.id)}" class="block text-left overflow-hidden">
+              <div class="relative">${img}
+                <div class="absolute top-3 left-3 flex gap-1.5">${tags}</div>
+                ${out ? '<span class="absolute top-3 right-3 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300 text-xs font-medium px-2 py-0.5 rounded-full">Indisponible</span>' : ''}
+              </div>
+            </button>
+            <div class="p-4 flex flex-col flex-1">
+              <p class="text-xs text-gray-400">${escape(catLabel(i.category))}</p>
+              <h3 class="font-semibold text-gray-900 dark:text-white mt-0.5 line-clamp-2">
+                <button data-view="${escape(i.id)}" class="text-left hover:text-green-600 dark:hover:text-green-400 transition-colors">${escape(i.name)}</button>
+              </h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-300 line-clamp-2">${escape(i.description ?? '')}</p>
+              <div class="mt-auto pt-4 flex items-end justify-between gap-2">
+                <span>
+                  <span class="font-bold text-gray-900 dark:text-white">${formatMGA(i.pricePerDay)}</span><span class="text-xs text-gray-400"> / jour</span>
+                  ${week}
+                </span>
+                ${out
+                  ? '<span class="text-xs font-medium text-red-600 dark:text-red-400">Indisponible</span>'
+                  : `<button data-view="${escape(i.id)}" class="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-sm font-medium transition-colors">Réserver</button>`}
+              </div>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    // --- Filtres ---
+    const catTrack = $('category-filters');
+    function syncCatButtons() {
+      document.querySelectorAll<HTMLButtonElement>('.cat-btn').forEach((b) => {
+        const on = b.dataset.cat === activeCat;
+        b.classList.toggle('bg-green-600', on);
+        b.classList.toggle('text-white', on);
+        b.classList.toggle('shadow-sm', on);
+        b.classList.toggle('bg-white', !on);
+        b.classList.toggle('dark:bg-gray-900', !on);
+        b.classList.toggle('border', !on);
+        b.classList.toggle('border-gray-200', !on);
+        b.classList.toggle('dark:border-gray-700', !on);
+        b.classList.toggle('text-gray-700', !on);
+        b.classList.toggle('dark:text-gray-300', !on);
+      });
+    }
+    catTrack.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-cat]');
+      if (!btn) return;
+      activeCat = btn.dataset.cat!;
+      syncCatButtons();
+      renderGrid();
+    });
+    ($('search') as HTMLInputElement).addEventListener('input', (e) => { search = (e.target as HTMLInputElement).value.trim(); renderGrid(); });
+    ($('sort') as HTMLSelectElement).addEventListener('change', (e) => { sort = (e.target as HTMLSelectElement).value; renderGrid(); });
+    ($('stock-only') as HTMLInputElement).addEventListener('change', (e) => { stockOnly = (e.target as HTMLInputElement).checked; renderGrid(); });
+    $('reset-filters').addEventListener('click', () => {
+      activeCat = 'all'; search = ''; sort = 'featured'; stockOnly = false;
+      ($('search') as HTMLInputElement).value = '';
+      ($('sort') as HTMLSelectElement).value = 'featured';
+      ($('stock-only') as HTMLInputElement).checked = false;
+      syncCatButtons();
+      renderGrid();
+    });
+
+    // --- Chevrons catégories ---
+    const catPrev = $('cat-prev') as HTMLButtonElement;
+    const catNext = $('cat-next') as HTMLButtonElement;
+    function updateChevrons() {
+      const max = catTrack.scrollWidth - catTrack.clientWidth - 1;
+      catPrev.disabled = catTrack.scrollLeft <= 0;
+      catNext.disabled = catTrack.scrollLeft >= max;
+    }
+    catPrev.addEventListener('click', () => catTrack.scrollBy({ left: -240, behavior: 'smooth' }));
+    catNext.addEventListener('click', () => catTrack.scrollBy({ left: 240, behavior: 'smooth' }));
+    catTrack.addEventListener('scroll', updateChevrons);
+    window.addEventListener('resize', updateChevrons);
+    updateChevrons();
+
+    // --- Modale réservation ---
+    const modal = $('rental-modal');
+    let current: RentalItem | null = null;
+    let qty = 1;
+
+    const todayStr = () => new Date().toISOString().slice(0, 10);
+
+    function showView(view: 'detail' | 'form' | 'success') {
+      $('rm-detail').classList.toggle('hidden', view !== 'detail');
+      $('rm-detail').classList.toggle('flex', view === 'detail');
+      $('rm-form').classList.toggle('hidden', view !== 'form');
+      $('rm-form').classList.toggle('flex', view === 'form');
+      $('rm-success').classList.toggle('hidden', view !== 'success');
+      $('rm-success').classList.toggle('flex', view === 'success');
+    }
+
+    function currentCalc() {
+      const start = ($('rm-start') as HTMLInputElement).value;
+      const end = ($('rm-end') as HTMLInputElement).value;
+      if (!current || !start || !end) return null;
+      if (new Date(end) < new Date(start)) return null;
+      const days = rentalDays(start, end);
+      const total = rentalPrice(current, days, qty);
+      return { start, end, days, total };
+    }
+
+    function refreshCalc() {
+      const calc = currentCalc();
+      const err = $('rm-error');
+      const start = ($('rm-start') as HTMLInputElement).value;
+      const end = ($('rm-end') as HTMLInputElement).value;
+      if (start && end && new Date(end) < new Date(start)) {
+        err.textContent = 'La date de fin doit être après la date de début.';
+        err.classList.remove('hidden');
+      } else {
+        err.classList.add('hidden');
+      }
+      if (!calc) {
+        $('rm-calc').textContent = 'Sélectionnez vos dates';
+        $('rm-total').textContent = '';
+        return;
+      }
+      const depTxt = current?.deposit ? ` + caution ${formatMGA(current.deposit * qty)}` : '';
+      $('rm-calc').textContent = `${calc.days} jour${calc.days > 1 ? 's' : ''} × ${qty}${depTxt}`;
+      $('rm-total').textContent = formatMGA(calc.total);
+    }
+
+    function openItem(id: string) {
+      const i = items.find((x) => x.id === id);
+      if (!i || i.stock <= 0) return;
+      current = i;
+      qty = 1;
+      $('rm-category').textContent = catLabel(i.category);
+      $('rm-name').textContent = i.name;
+      $('rm-image').innerHTML = i.image
+        ? `<img src="${escape(i.image)}" alt="${escape(i.name)}" class="h-full w-full object-cover" />`
+        : '<div class="h-full w-full flex items-center justify-center text-gray-400">Pas d\'image</div>';
+      $('rm-tags').innerHTML = (i.tags ?? []).map((t) =>
+        `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">${escape(t)}</span>`).join('');
+      $('rm-description').textContent = i.description ?? 'Aucune description disponible.';
+      $('rm-price-day').textContent = `${formatMGA(i.pricePerDay)} / jour`;
+      $('rm-price-week').textContent = i.pricePerWeek ? `ou ${formatMGA(i.pricePerWeek)} / semaine` : '';
+      $('rm-deposit').textContent = i.deposit ? `Caution : ${formatMGA(i.deposit)} par article` : '';
+      $('rm-stock').innerHTML = `<span class="text-gray-500 dark:text-gray-400">Disponible : ${i.stock}</span>`;
+      $('rm-qty').textContent = '1';
+      const startEl = $('rm-start') as HTMLInputElement;
+      const endEl = $('rm-end') as HTMLInputElement;
+      startEl.min = todayStr(); endEl.min = todayStr();
+      startEl.value = ''; endEl.value = '';
+      refreshCalc();
+      showView('detail');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      current = null;
+    }
+
+    $('rm-minus').addEventListener('click', () => { qty = Math.max(1, qty - 1); $('rm-qty').textContent = String(qty); refreshCalc(); });
+    $('rm-plus').addEventListener('click', () => { if (current && qty < current.stock) { qty++; $('rm-qty').textContent = String(qty); refreshCalc(); } });
+    ($('rm-start') as HTMLInputElement).addEventListener('change', () => {
+      const startEl = ($('rm-start') as HTMLInputElement).value;
+      if (startEl) ($('rm-end') as HTMLInputElement).min = startEl;
+      refreshCalc();
+    });
+    ($('rm-end') as HTMLInputElement).addEventListener('change', refreshCalc);
+
+    $('rm-reserve').addEventListener('click', () => {
+      const calc = currentCalc();
+      if (!calc) { toast.error('Choisissez une période de location valide.'); return; }
+      $('rm-form-total').textContent = formatMGA(calc.total);
+      showView('form');
+    });
+    $('rm-back').addEventListener('click', () => showView('detail'));
+    $('rental-close').addEventListener('click', closeModal);
+    $('rental-backdrop').addEventListener('click', closeModal);
+    $('rm-success-close').addEventListener('click', closeModal);
+
+    grid.addEventListener('click', (e) => {
+      const view = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-view]');
+      if (view) openItem(view.dataset.view!);
+    });
+
+    ($('rm-form') as HTMLFormElement).addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const calc = currentCalc();
+      if (!current || !calc) { toast.error('Période de location invalide.'); return; }
+      const reference = 'LOC-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+      try {
+        await rentalsData.create({
+          reference,
+          customer: {
+            name: ($('c-name') as HTMLInputElement).value.trim(),
+            email: ($('c-email') as HTMLInputElement).value.trim(),
+            phone: ($('c-phone') as HTMLInputElement).value.trim() || undefined,
+          },
+          itemId: current.id,
+          itemName: current.name,
+          quantity: qty,
+          startDate: calc.start,
+          endDate: calc.end,
+          days: calc.days,
+          unitPrice: current.pricePerDay,
+          total: calc.total,
+          deposit: current.deposit ? current.deposit * qty : undefined,
+          note: ($('c-note') as HTMLTextAreaElement).value.trim() || undefined,
+          status: 'new',
+          date: new Date().toISOString(),
+        });
+      } catch {
+        toast.error("Échec de l'envoi de la demande. Réessayez.");
+        return;
+      }
+      ($('rm-form') as HTMLFormElement).reset();
+      $('rm-ref').textContent = reference;
+      showView('success');
+      toast.success(`Demande de location ${reference} envoyée !`);
+    });
+
+    renderGrid();
+  </script>
+</Layout>
