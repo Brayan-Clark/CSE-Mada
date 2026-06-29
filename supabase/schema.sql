@@ -183,6 +183,35 @@ create table if not exists public.rentals (
 );
 
 -- -----------------------------------------------------------------------------
+-- DISPONIBILITÉ ÉVÉNEMENTS — dates bloquées manuellement par l'équipe
+-- (ex. client privé hors agenda public). Occupent le calendrier de réservation.
+-- -----------------------------------------------------------------------------
+create table if not exists public.blocked_dates (
+  id         uuid primary key default gen_random_uuid(),
+  date       date not null,
+  reason     text,
+  created_at timestamptz not null default now()
+);
+
+-- -----------------------------------------------------------------------------
+-- RÉSERVATIONS D'ÉVÉNEMENTS (demandes visiteurs — pas de paiement)
+-- status : 'new' | 'confirmed' | 'cancelled'
+-- -----------------------------------------------------------------------------
+create table if not exists public.event_bookings (
+  id             uuid primary key default gen_random_uuid(),
+  reference      text not null,
+  customer_name  text not null,
+  customer_email text not null,
+  customer_phone text,
+  date           date not null,
+  event_type     text,
+  guests         integer,
+  message        text,
+  status         text not null default 'new' check (status in ('new','confirmed','cancelled')),
+  created_at     timestamptz not null default now()
+);
+
+-- -----------------------------------------------------------------------------
 -- SERVICES
 -- -----------------------------------------------------------------------------
 create table if not exists public.services (
@@ -241,6 +270,8 @@ alter table public.orders    enable row level security;
 alter table public.stock_entries enable row level security;
 alter table public.rental_items  enable row level security;
 alter table public.rentals       enable row level security;
+alter table public.blocked_dates enable row level security;
+alter table public.event_bookings enable row level security;
 
 -- =============================================================================
 -- RLS — politiques  (IDEMPOTENT : on supprime puis recrée → ré-exécutable)
@@ -268,6 +299,10 @@ create policy "roles_public_read" on public.roles
 drop policy if exists "rental_items_public_read" on public.rental_items;
 create policy "rental_items_public_read" on public.rental_items
   for select using (true);
+-- Le calendrier public a besoin de connaître les dates bloquées (sans PII).
+drop policy if exists "blocked_dates_public_read" on public.blocked_dates;
+create policy "blocked_dates_public_read" on public.blocked_dates
+  for select using (true);
 
 -- Écriture publique limitée --------------------------------------------------
 -- Le formulaire de contact peut créer un message.
@@ -286,6 +321,11 @@ create policy "orders_public_insert" on public.orders
 drop policy if exists "rentals_public_insert" on public.rentals;
 create policy "rentals_public_insert" on public.rentals
   for insert with check (status = 'new');
+-- Un visiteur peut envoyer une demande de réservation d'événement (status 'new').
+-- (Pas de lecture publique : ces demandes contiennent des données personnelles.)
+drop policy if exists "event_bookings_public_insert" on public.event_bookings;
+create policy "event_bookings_public_insert" on public.event_bookings
+  for insert with check (status = 'new');
 
 -- Accès complet pour l'équipe authentifiée -----------------------------------
 -- (un bloc par table : select/insert/update/delete)
@@ -293,7 +333,7 @@ do $$
 declare t text;
 begin
   foreach t in array array[
-    'roles','profiles','articles','events','products','services','reviews','messages','orders','stock_entries','rental_items','rentals'
+    'roles','profiles','articles','events','products','services','reviews','messages','orders','stock_entries','rental_items','rentals','blocked_dates','event_bookings'
   ] loop
     execute format('drop policy if exists "%1$s_staff_all" on public.%1$s;', t);
     execute format($f$
@@ -311,18 +351,18 @@ insert into public.roles (id, label, description, system, permissions) values
     array['articles.view','articles.edit','articles.delete','reviews.view','reviews.moderate',
           'messages.view','messages.manage','products.view','products.manage','services.view',
           'services.manage','events.view','events.manage','orders.view','orders.manage',
-          'stock.view','stock.manage','rentals.view','rentals.manage','users.manage','roles.manage']),
+          'stock.view','stock.manage','rentals.view','rentals.manage','reservations.view','reservations.manage','users.manage','roles.manage']),
   ('admin', 'Administrateur', 'Accès complet à toutes les fonctionnalités.', true,
     array['articles.view','articles.edit','articles.delete','reviews.view','reviews.moderate',
           'messages.view','messages.manage','products.view','products.manage','services.view',
           'services.manage','events.view','events.manage','orders.view','orders.manage',
-          'stock.view','stock.manage','rentals.view','rentals.manage','users.manage','roles.manage']),
+          'stock.view','stock.manage','rentals.view','rentals.manage','reservations.view','reservations.manage','users.manage','roles.manage']),
   ('editor', 'Éditeur', 'Gère le contenu et consulte les messages.', false,
     array['articles.view','articles.edit','reviews.view','reviews.moderate','messages.view',
           'products.view','products.manage','services.view','services.manage','events.view','events.manage',
-          'orders.view','orders.manage','stock.view','stock.manage','rentals.view','rentals.manage']),
+          'orders.view','orders.manage','stock.view','stock.manage','rentals.view','rentals.manage','reservations.view','reservations.manage']),
   ('viewer', 'Lecteur', 'Consultation seule.', false,
-    array['articles.view','reviews.view','messages.view','products.view','services.view','events.view','orders.view','stock.view','rentals.view'])
+    array['articles.view','reviews.view','messages.view','products.view','services.view','events.view','orders.view','stock.view','rentals.view','reservations.view'])
 on conflict (id) do nothing;
 
 -- =============================================================================

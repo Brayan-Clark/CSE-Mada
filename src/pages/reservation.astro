@@ -1,0 +1,232 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { withBase } from '../utils/url';
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<Layout title="Réserver une date d'événement" description="Vérifiez les dates disponibles et réservez votre événement à Madagascar : anniversaires, séminaires, team building, événements privés. Calendrier de disponibilité en ligne.">
+  <!-- Hero -->
+  <div class="relative bg-gray-900 overflow-hidden">
+    <img class="absolute inset-0 w-full h-full object-cover opacity-40" src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=1000&auto=format&fit=crop" alt="Réservation d'événement" />
+    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent"></div>
+    <div class="relative max-w-7xl mx-auto py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-green-600/90 text-white px-3 py-1 text-xs font-semibold">📅 Réservation</span>
+      <h1 class="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">Réservez votre événement</h1>
+      <p class="mt-3 max-w-2xl text-lg text-gray-200">Consultez les dates libres dans le calendrier ci-dessous et envoyez votre demande. Les dates occupées (événements en cours ou réservations privées) apparaissent grisées.</p>
+    </div>
+  </div>
+
+  <div class="bg-gray-50 dark:bg-gray-800 py-10 min-h-[50vh]">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm p-5 sm:p-7">
+        <!-- En-tête calendrier -->
+        <div class="flex items-center justify-between mb-5">
+          <button id="cal-prev" class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" aria-label="Mois précédent">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <h2 id="cal-title" class="text-lg font-bold capitalize"></h2>
+          <button id="cal-next" class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" aria-label="Mois suivant">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
+
+        <!-- En-têtes jours -->
+        <div id="cal-weekdays" class="grid grid-cols-7 gap-1.5 mb-1.5 text-center text-xs font-medium text-gray-400"></div>
+        <!-- Grille -->
+        <div id="cal-grid" class="grid grid-cols-7 gap-1.5"></div>
+
+        <!-- Légende -->
+        <div class="mt-6 flex flex-wrap gap-4 text-sm">
+          <span class="inline-flex items-center gap-2"><span class="h-3.5 w-3.5 rounded bg-green-100 dark:bg-green-900/40 border border-green-300 dark:border-green-700"></span> Libre</span>
+          <span class="inline-flex items-center gap-2"><span class="h-3.5 w-3.5 rounded bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800"></span> Occupé</span>
+          <span class="inline-flex items-center gap-2"><span class="h-3.5 w-3.5 rounded bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"></span> Passé</span>
+        </div>
+      </div>
+
+      <p class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">Cliquez sur une date libre pour envoyer votre demande de réservation.</p>
+    </div>
+  </div>
+
+  <!-- Modale de demande -->
+  <div id="rsv-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="rsv-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-xl max-h-[90vh] overflow-y-auto p-6">
+      <button id="rsv-close" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Fermer">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+
+      <!-- Formulaire -->
+      <form id="rsv-form">
+        <h3 class="text-lg font-bold">Demande de réservation</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Date souhaitée : <strong id="rsv-date-label" class="text-green-700 dark:text-green-400 capitalize"></strong></p>
+        <p class="mt-2 text-xs text-gray-400">Aucun paiement en ligne : nous confirmons la disponibilité et les détails par email/téléphone.</p>
+        <div class="mt-4 space-y-3">
+          <div>
+            <label for="r-name" class="block text-sm font-medium mb-1">Nom complet *</label>
+            <input id="r-name" type="text" required class={inputClass} />
+          </div>
+          <div>
+            <label for="r-email" class="block text-sm font-medium mb-1">Email *</label>
+            <input id="r-email" type="email" required class={inputClass} />
+          </div>
+          <div>
+            <label for="r-phone" class="block text-sm font-medium mb-1">Téléphone</label>
+            <input id="r-phone" type="tel" class={inputClass} />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="r-type" class="block text-sm font-medium mb-1">Type</label>
+              <select id="r-type" class={inputClass}>
+                <option value="Anniversaire">Anniversaire</option>
+                <option value="Mariage">Mariage</option>
+                <option value="Séminaire / entreprise">Séminaire / entreprise</option>
+                <option value="Team building">Team building</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+            <div>
+              <label for="r-guests" class="block text-sm font-medium mb-1">Participants</label>
+              <input id="r-guests" type="number" min="1" step="1" placeholder="ex. 25" class={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label for="r-message" class="block text-sm font-medium mb-1">Message (optionnel)</label>
+            <textarea id="r-message" rows="3" placeholder="Précisez votre projet…" class={inputClass}></textarea>
+          </div>
+        </div>
+        <button type="submit" class="mt-5 w-full rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium py-2.5 transition-colors">Envoyer la demande</button>
+      </form>
+
+      <!-- Confirmation -->
+      <div id="rsv-success" class="hidden flex-col items-center justify-center text-center space-y-4 py-6">
+        <span class="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40 text-3xl">✅</span>
+        <h3 class="text-xl font-bold">Demande envoyée !</h3>
+        <p class="text-gray-500 dark:text-gray-400">Votre référence : <strong id="rsv-ref" class="text-gray-900 dark:text-white"></strong>.<br />Nous vous recontactons pour confirmer la disponibilité.</p>
+        <button id="rsv-success-close" type="button" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2.5 transition-colors">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA contact -->
+  <div class="bg-white dark:bg-gray-900 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <p class="text-gray-600 dark:text-gray-300">Une question avant de réserver ?</p>
+      <a href={withBase('/contact')} class="mt-3 inline-flex items-center gap-2 rounded-lg border border-green-600 text-green-700 dark:text-green-400 px-5 py-2.5 text-sm font-medium hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+        Nous contacter
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    import { eventsData, blockedDatesData, eventBookingsData } from '../utils/db';
+    import { monthCells, MONTH_NAMES, WEEKDAY_NAMES, todayYmd, longDate } from '../utils/calendar';
+    import { toast } from '../utils/toast';
+
+    const $ = (id: string) => document.getElementById(id)!;
+    const today = todayYmd();
+    const occupied: Record<string, string> = {}; // date → motif (pour le titre)
+
+    // Sources d'occupation : événements publiés + dates bloquées par l'admin.
+    const [events, blocked] = await Promise.all([eventsData.list(), blockedDatesData.list()]);
+    events.filter((e) => !e.draft && e.date).forEach((e) => { occupied[e.date.slice(0, 10)] = e.title || 'Événement'; });
+    blocked.forEach((b) => { occupied[b.date] = b.reason || 'Indisponible'; });
+
+    const now = new Date();
+    let viewYear = now.getFullYear();
+    let viewMonth = now.getMonth();
+
+    // En-têtes des jours.
+    $('cal-weekdays').innerHTML = WEEKDAY_NAMES.map((d) => `<div>${d}</div>`).join('');
+
+    function renderCalendar() {
+      $('cal-title').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+      const cells = monthCells(viewYear, viewMonth);
+      $('cal-grid').innerHTML = cells.map((date) => {
+        if (!date) return '<div></div>';
+        const day = Number(date.slice(8, 10));
+        const isPast = date < today;
+        const isOcc = date in occupied;
+        if (isPast) {
+          return `<div class="aspect-square flex items-center justify-center rounded-lg text-sm bg-gray-100 dark:bg-gray-800 text-gray-400">${day}</div>`;
+        }
+        if (isOcc) {
+          const why = occupied[date] || 'Occupé';
+          return `<div title="${why.replace(/"/g, '&quot;')}" class="aspect-square flex items-center justify-center rounded-lg text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 cursor-not-allowed">${day}</div>`;
+        }
+        return `<button data-date="${date}" class="cal-free aspect-square flex items-center justify-center rounded-lg text-sm bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 hover:bg-green-600 hover:text-white dark:hover:bg-green-600 transition-colors font-medium">${day}</button>`;
+      }).join('');
+    }
+
+    $('cal-prev').addEventListener('click', () => {
+      viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+      renderCalendar();
+    });
+    $('cal-next').addEventListener('click', () => {
+      viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+      renderCalendar();
+    });
+
+    // --- Modale ---
+    const modal = $('rsv-modal');
+    let selectedDate = '';
+
+    function openModal(date: string) {
+      selectedDate = date;
+      $('rsv-date-label').textContent = longDate(date);
+      $('rsv-form').classList.remove('hidden');
+      $('rsv-success').classList.add('hidden');
+      $('rsv-success').classList.remove('flex');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    $('cal-grid').addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-date]');
+      if (btn) openModal(btn.dataset.date!);
+    });
+    $('rsv-close').addEventListener('click', closeModal);
+    $('rsv-backdrop').addEventListener('click', closeModal);
+    $('rsv-success-close').addEventListener('click', closeModal);
+
+    ($('rsv-form') as HTMLFormElement).addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!selectedDate) return;
+      const reference = 'RSV-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+      const guests = Number(($('r-guests') as HTMLInputElement).value) || undefined;
+      try {
+        await eventBookingsData.create({
+          reference,
+          customer: {
+            name: ($('r-name') as HTMLInputElement).value.trim(),
+            email: ($('r-email') as HTMLInputElement).value.trim(),
+            phone: ($('r-phone') as HTMLInputElement).value.trim() || undefined,
+          },
+          date: selectedDate,
+          eventType: ($('r-type') as HTMLSelectElement).value,
+          guests,
+          message: ($('r-message') as HTMLTextAreaElement).value.trim() || undefined,
+          status: 'new',
+          createdAt: new Date().toISOString(),
+        });
+      } catch {
+        toast.error("Échec de l'envoi de la demande. Réessayez.");
+        return;
+      }
+      ($('rsv-form') as HTMLFormElement).reset();
+      $('rsv-ref').textContent = reference;
+      $('rsv-form').classList.add('hidden');
+      $('rsv-success').classList.remove('hidden');
+      $('rsv-success').classList.add('flex');
+      toast.success(`Demande ${reference} envoyée !`);
+    });
+
+    renderCalendar();
+  </script>
+</Layout>

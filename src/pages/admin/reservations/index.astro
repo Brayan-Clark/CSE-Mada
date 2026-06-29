@@ -1,0 +1,334 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const inputClass =
+  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent';
+---
+
+<AdminLayout title="Réservations d'événements" active="reservations">
+  <!-- KPIs -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Demandes</p>
+      <p id="kpi-total" class="mt-1 text-2xl font-bold">0</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Nouvelles</p>
+      <p id="kpi-new" class="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">0</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Confirmées</p>
+      <p id="kpi-confirmed" class="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">0</p>
+    </div>
+    <div class="rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Dates bloquées</p>
+      <p id="kpi-blocked" class="mt-1 text-2xl font-bold">0</p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-5">
+    <!-- Calendrier -->
+    <section class="lg:col-span-3 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-bold">Calendrier de disponibilité</h2>
+        <button id="block-add" data-requires="reservations.manage" class="inline-flex items-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-medium transition-colors">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+          Bloquer une date
+        </button>
+      </div>
+      <div class="flex items-center justify-between my-4">
+        <button id="cal-prev" class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" aria-label="Mois précédent">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <h3 id="cal-title" class="font-semibold capitalize"></h3>
+        <button id="cal-next" class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800" aria-label="Mois suivant">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+      <div id="cal-weekdays" class="grid grid-cols-7 gap-1.5 mb-1.5 text-center text-xs font-medium text-gray-400"></div>
+      <div id="cal-grid" class="grid grid-cols-7 gap-1.5"></div>
+      <div class="mt-5 flex flex-wrap gap-4 text-xs">
+        <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded bg-blue-100 dark:bg-blue-900/40 border border-blue-300 dark:border-blue-700"></span> Événement</span>
+        <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-800"></span> Bloquée (clic = libérer)</span>
+        <span class="inline-flex items-center gap-2"><span class="h-3 w-3 rounded bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"></span> Libre (clic = bloquer)</span>
+      </div>
+    </section>
+
+    <!-- Demandes -->
+    <section class="lg:col-span-2">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="font-bold">Demandes de réservation</h2>
+        <select id="status-filter" class="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2.5 py-1.5 text-xs">
+          <option value="all">Toutes</option>
+          <option value="new">Nouvelles</option>
+          <option value="confirmed">Confirmées</option>
+          <option value="cancelled">Annulées</option>
+        </select>
+      </div>
+      <div id="bookings-list" class="space-y-2.5"></div>
+      <p id="empty-state" class="hidden px-4 py-10 text-center text-gray-400 text-sm">Aucune demande de réservation.</p>
+    </section>
+  </div>
+
+  <!-- Modale bloquer une date -->
+  <div id="block-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl">
+      <h3 class="text-lg font-bold mb-4">Bloquer une date</h3>
+      <form id="block-form" class="space-y-4">
+        <div>
+          <label for="block-date" class="block text-sm font-medium mb-1.5">Date</label>
+          <input id="block-date" type="date" required class={inputClass} />
+        </div>
+        <div>
+          <label for="block-reason" class="block text-sm font-medium mb-1.5">Motif <span class="font-normal text-gray-400">(optionnel)</span></label>
+          <input id="block-reason" type="text" placeholder="Client privé, maintenance…" class={inputClass} />
+        </div>
+        <div class="flex items-center gap-3 pt-1">
+          <button type="submit" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Bloquer</button>
+          <button type="button" id="block-cancel" class="rounded-lg border border-gray-200 dark:border-gray-700 px-5 py-2.5 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale détail demande -->
+  <div id="booking-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="booking-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <button id="booking-close" class="absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Fermer">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+      <h3 id="bm-ref" class="text-lg font-bold"></h3>
+      <p id="bm-date" class="text-sm text-green-700 dark:text-green-400 mt-0.5 capitalize"></p>
+      <div class="mt-4 rounded-lg bg-gray-50 dark:bg-gray-800 p-4 text-sm space-y-1">
+        <p><span class="text-gray-500 dark:text-gray-400">Client :</span> <span id="bm-name" class="font-medium"></span></p>
+        <p><span class="text-gray-500 dark:text-gray-400">Email :</span> <a id="bm-email" class="text-green-700 dark:text-green-400 hover:underline" href="#"></a></p>
+        <p id="bm-phone-row"><span class="text-gray-500 dark:text-gray-400">Téléphone :</span> <span id="bm-phone"></span></p>
+        <p><span class="text-gray-500 dark:text-gray-400">Type :</span> <span id="bm-type"></span></p>
+        <p id="bm-guests-row"><span class="text-gray-500 dark:text-gray-400">Participants :</span> <span id="bm-guests"></span></p>
+      </div>
+      <div id="bm-message-row" class="mt-3 text-sm">
+        <p class="text-gray-500 dark:text-gray-400 mb-1">Message :</p>
+        <p id="bm-message" class="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3 text-gray-700 dark:text-gray-200"></p>
+      </div>
+      <div class="mt-5" data-requires="reservations.manage">
+        <label for="bm-status" class="block text-sm font-medium mb-1.5">Statut</label>
+        <select id="bm-status" class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+          <option value="new">Nouvelle</option>
+          <option value="confirmed">Confirmée (bloque la date)</option>
+          <option value="cancelled">Annulée</option>
+        </select>
+        <div class="flex gap-3 mt-4">
+          <button id="bm-save" class="rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium px-5 py-2.5 text-sm transition-colors">Enregistrer</button>
+          <button id="bm-delete" class="rounded-lg border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 px-5 py-2.5 text-sm font-medium transition-colors">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import type { EventBooking, EventBookingStatus, BlockedDate } from '../../../utils/store';
+    import { eventsData, blockedDatesData, eventBookingsData } from '../../../utils/db';
+    import { monthCells, MONTH_NAMES, WEEKDAY_NAMES, longDate } from '../../../utils/calendar';
+    import { can } from '../../../utils/auth';
+    import { toast } from '../../../utils/toast';
+
+    const canManage = can('reservations.manage');
+    const $ = (id: string) => document.getElementById(id)!;
+    const escape = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    // Occupation : événements (info) + dates bloquées (supprimables).
+    type Occ = { type: 'event' | 'blocked'; label: string; blockId?: string };
+    let occupied: Record<string, Occ> = {};
+    let bookings: EventBooking[] = [];
+    let blocked: BlockedDate[] = [];
+
+    const now = new Date();
+    let viewYear = now.getFullYear();
+    let viewMonth = now.getMonth();
+    let filter: 'all' | EventBookingStatus = 'all';
+    let currentId: string | null = null;
+
+    $('cal-weekdays').innerHTML = WEEKDAY_NAMES.map((d) => `<div>${d}</div>`).join('');
+
+    async function loadData() {
+      const [events, blk, bks] = await Promise.all([
+        eventsData.list(), blockedDatesData.list(), eventBookingsData.list(),
+      ]);
+      blocked = blk;
+      bookings = bks;
+      occupied = {};
+      events.filter((e) => !e.draft && e.date).forEach((e) => {
+        occupied[e.date.slice(0, 10)] = { type: 'event', label: e.title || 'Événement' };
+      });
+      blk.forEach((b) => { occupied[b.date] = { type: 'blocked', label: b.reason || 'Bloquée', blockId: b.id }; });
+    }
+
+    const STATUS: Record<EventBookingStatus, { label: string; cls: string }> = {
+      new: { label: 'Nouvelle', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400' },
+      confirmed: { label: 'Confirmée', cls: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' },
+      cancelled: { label: 'Annulée', cls: 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300' },
+    };
+
+    function renderKpis() {
+      $('kpi-total').textContent = String(bookings.length);
+      $('kpi-new').textContent = String(bookings.filter((b) => b.status === 'new').length);
+      $('kpi-confirmed').textContent = String(bookings.filter((b) => b.status === 'confirmed').length);
+      $('kpi-blocked').textContent = String(blocked.length);
+    }
+
+    function renderCalendar() {
+      $('cal-title').textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+      const cells = monthCells(viewYear, viewMonth);
+      $('cal-grid').innerHTML = cells.map((date) => {
+        if (!date) return '<div></div>';
+        const day = Number(date.slice(8, 10));
+        const occ = occupied[date];
+        if (occ?.type === 'event') {
+          return `<div title="${escape(occ.label)}" class="aspect-square flex items-center justify-center rounded-lg text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700">${day}</div>`;
+        }
+        if (occ?.type === 'blocked') {
+          const attr = canManage ? `data-unblock="${occ.blockId}" data-date="${date}"` : '';
+          const cls = canManage ? 'cursor-pointer hover:ring-2 hover:ring-red-400' : '';
+          return `<button ${attr} title="${escape(occ.label)}" class="aspect-square flex items-center justify-center rounded-lg text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 ${cls}">${day}</button>`;
+        }
+        const attr = canManage ? `data-block="${date}"` : '';
+        const cls = canManage ? 'hover:bg-green-600 hover:text-white' : '';
+        return `<button ${attr} class="aspect-square flex items-center justify-center rounded-lg text-sm bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800 transition-colors ${cls}">${day}</button>`;
+      }).join('');
+    }
+
+    function renderBookings() {
+      const list = filter === 'all' ? bookings : bookings.filter((b) => b.status === filter);
+      const sorted = [...list].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+      $('empty-state').classList.toggle('hidden', sorted.length > 0);
+      $('bookings-list').innerHTML = sorted.map((b) => {
+        const s = STATUS[b.status];
+        return `
+          <button data-open="${escape(b.id)}" class="w-full text-left rounded-xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3.5 hover:border-green-300 dark:hover:border-green-700 transition-colors">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-semibold text-sm">${escape(b.reference)}</span>
+              <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}">${s.label}</span>
+            </div>
+            <p class="mt-1 text-sm capitalize text-green-700 dark:text-green-400">${escape(longDate(b.date))}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">${escape(b.customer.name)}${b.eventType ? ' · ' + escape(b.eventType) : ''}${b.guests ? ' · ' + b.guests + ' pers.' : ''}</p>
+          </button>`;
+      }).join('');
+    }
+
+    async function refresh() {
+      await loadData();
+      renderKpis();
+      renderCalendar();
+      renderBookings();
+    }
+
+    // --- Navigation calendrier ---
+    $('cal-prev').addEventListener('click', () => { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar(); });
+    $('cal-next').addEventListener('click', () => { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar(); });
+
+    // --- Blocage / déblocage via calendrier ---
+    const blockModal = $('block-modal');
+    function openBlockModal(date?: string) {
+      ($('block-date') as HTMLInputElement).value = date ?? '';
+      ($('block-reason') as HTMLInputElement).value = '';
+      blockModal.classList.remove('hidden');
+      blockModal.classList.add('flex');
+    }
+    function closeBlockModal() { blockModal.classList.add('hidden'); blockModal.classList.remove('flex'); }
+
+    if (canManage) {
+      $('block-add').addEventListener('click', () => openBlockModal());
+      $('block-cancel').addEventListener('click', closeBlockModal);
+      blockModal.addEventListener('click', (e) => { if (e.target === blockModal) closeBlockModal(); });
+
+      $('cal-grid').addEventListener('click', async (e) => {
+        const target = e.target as HTMLElement;
+        const block = target.closest<HTMLButtonElement>('[data-block]');
+        if (block) { openBlockModal(block.dataset.block!); return; }
+        const unblock = target.closest<HTMLButtonElement>('[data-unblock]');
+        if (unblock && confirm('Libérer cette date ?')) {
+          await blockedDatesData.remove(unblock.dataset.unblock!);
+          await refresh();
+          toast.success('Date libérée.');
+        }
+      });
+
+      ($('block-form') as HTMLFormElement).addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const date = ($('block-date') as HTMLInputElement).value;
+        if (!date) return;
+        if (occupied[date]) { toast.error('Cette date est déjà occupée.'); return; }
+        await blockedDatesData.create({ date, reason: ($('block-reason') as HTMLInputElement).value.trim() || undefined });
+        closeBlockModal();
+        await refresh();
+        toast.success('Date bloquée.');
+      });
+    }
+
+    // --- Détail demande ---
+    const bookingModal = $('booking-modal');
+    async function openBooking(id: string) {
+      const b = await eventBookingsData.get(id);
+      if (!b) return;
+      currentId = id;
+      $('bm-ref').textContent = b.reference;
+      $('bm-date').textContent = longDate(b.date);
+      $('bm-name').textContent = b.customer.name;
+      const emailEl = $('bm-email') as HTMLAnchorElement;
+      emailEl.textContent = b.customer.email;
+      emailEl.href = `mailto:${b.customer.email}`;
+      $('bm-phone-row').classList.toggle('hidden', !b.customer.phone);
+      $('bm-phone').textContent = b.customer.phone ?? '';
+      $('bm-type').textContent = b.eventType ?? '—';
+      $('bm-guests-row').classList.toggle('hidden', !b.guests);
+      $('bm-guests').textContent = b.guests ? String(b.guests) : '';
+      $('bm-message-row').classList.toggle('hidden', !b.message);
+      $('bm-message').textContent = b.message ?? '';
+      ($('bm-status') as HTMLSelectElement).value = b.status;
+      bookingModal.classList.remove('hidden');
+      bookingModal.classList.add('flex');
+    }
+    function closeBooking() { bookingModal.classList.add('hidden'); bookingModal.classList.remove('flex'); currentId = null; }
+
+    $('bookings-list').addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-open]');
+      if (btn) openBooking(btn.dataset.open!);
+    });
+    ($('status-filter') as HTMLSelectElement).addEventListener('change', (e) => {
+      filter = (e.target as HTMLSelectElement).value as typeof filter;
+      renderBookings();
+    });
+    $('booking-close').addEventListener('click', closeBooking);
+    $('booking-backdrop').addEventListener('click', closeBooking);
+
+    if (canManage) {
+      $('bm-save').addEventListener('click', async () => {
+        if (!currentId) return;
+        const b = await eventBookingsData.get(currentId);
+        if (!b) return;
+        const status = ($('bm-status') as HTMLSelectElement).value as EventBookingStatus;
+        await eventBookingsData.update(currentId, { status });
+        // Confirmer une demande bloque automatiquement la date (si libre).
+        if (status === 'confirmed' && b.date && !occupied[b.date]) {
+          await blockedDatesData.create({ date: b.date, reason: `Réservation ${b.reference} — ${b.customer.name}` });
+        }
+        closeBooking();
+        await refresh();
+        toast.success('Réservation mise à jour.');
+      });
+      $('bm-delete').addEventListener('click', async () => {
+        if (!currentId) return;
+        if (confirm('Supprimer définitivement cette demande ?')) {
+          await eventBookingsData.remove(currentId);
+          closeBooking();
+          await refresh();
+          toast.success('Demande supprimée.');
+        }
+      });
+    }
+
+    refresh();
+  </script>
+</AdminLayout>

@@ -176,6 +176,29 @@ export function rentalPrice(
   return unit * Math.max(1, qty);
 }
 
+// --- Réservation d'événements (calendrier de disponibilité) ----------------
+// Date occupée définie manuellement par l'admin (ex. client privé hors agenda).
+export interface BlockedDate {
+  id: string;
+  date: string; // YYYY-MM-DD
+  reason?: string; // motif (privé, maintenance…)
+}
+
+export type EventBookingStatus = 'new' | 'confirmed' | 'cancelled';
+
+// Demande de réservation d'événement envoyée par un visiteur.
+export interface EventBooking {
+  id: string;
+  reference: string; // référence lisible, ex: RSV-1A2B
+  customer: { name: string; email: string; phone?: string };
+  date: string; // date souhaitée (YYYY-MM-DD)
+  eventType?: string; // type d'événement (anniversaire, séminaire…)
+  guests?: number; // nombre de participants
+  message?: string;
+  status: EventBookingStatus;
+  createdAt: string; // ISO 8601
+}
+
 export interface Service {
   id: string;
   title: string;
@@ -283,6 +306,8 @@ export const ordersRepo = createRepository<Order>('cse_admin_orders');
 export const stockEntriesRepo = createRepository<StockEntry>('cse_admin_stock_entries');
 export const rentalItemsRepo = createRepository<RentalItem>('cse_admin_rental_items');
 export const rentalsRepo = createRepository<Rental>('cse_admin_rentals');
+export const blockedDatesRepo = createRepository<BlockedDate>('cse_admin_blocked_dates');
+export const eventBookingsRepo = createRepository<EventBooking>('cse_admin_event_bookings');
 
 // ---------------------------------------------------------------------------
 // Permissions (matrice rôle → permissions)
@@ -305,6 +330,8 @@ export const PERMISSIONS: Record<string, string> = {
   'orders.manage': 'Gérer les commandes (statut / suppression)',
   'rentals.view': 'Consulter la location (catalogue / réservations)',
   'rentals.manage': 'Gérer la location (catalogue / réservations)',
+  'reservations.view': "Consulter les réservations d'événements",
+  'reservations.manage': "Gérer les réservations d'événements et les dates bloquées",
   'stock.view': 'Consulter le stock et les achats',
   'stock.manage': 'Gérer les achats / entrées de stock',
   'users.manage': 'Gérer les utilisateurs',
@@ -335,8 +362,9 @@ const DEFAULT_PERMISSION_MATRIX: Record<string, string[]> = {
     'articles.view', 'articles.edit', 'reviews.view', 'reviews.moderate', 'messages.view',
     'products.view', 'products.manage', 'services.view', 'services.manage', 'events.view', 'events.manage',
     'orders.view', 'orders.manage', 'stock.view', 'stock.manage', 'rentals.view', 'rentals.manage',
+    'reservations.view', 'reservations.manage',
   ],
-  viewer: ['articles.view', 'reviews.view', 'messages.view', 'products.view', 'services.view', 'events.view', 'orders.view', 'stock.view', 'rentals.view'],
+  viewer: ['articles.view', 'reviews.view', 'messages.view', 'products.view', 'services.view', 'events.view', 'orders.view', 'stock.view', 'rentals.view', 'reservations.view'],
 };
 
 export function getPermissionMatrix(): Record<string, string[]> {

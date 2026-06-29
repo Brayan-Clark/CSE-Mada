@@ -10,11 +10,11 @@ import { getSupabase } from './supabase';
 import {
   articlesRepo, eventsRepo, productsRepo, servicesRepo, reviewsRepo,
   messagesRepo, usersRepo, rolesRepo, ordersRepo, stockEntriesRepo,
-  rentalItemsRepo, rentalsRepo,
+  rentalItemsRepo, rentalsRepo, blockedDatesRepo, eventBookingsRepo,
 } from './store';
 import type {
   Article, EventItem, Product, Service, Review, ContactMessage, User, RoleDef, Order, StockEntry,
-  RentalItem, Rental,
+  RentalItem, Rental, BlockedDate, EventBooking,
 } from './store';
 
 type Row = Record<string, unknown>;
@@ -337,6 +337,55 @@ export const rentalsData = createData<Rental>(
       note: (r.note as string) ?? undefined,
       status: (r.status as Rental['status']) ?? 'new',
       date: (r.created_at as string) ?? new Date().toISOString(),
+    }),
+  },
+);
+
+// DATES BLOQUÉES — disponibilité événements (date occupée manuellement).
+export const blockedDatesData = createData<BlockedDate>(
+  blockedDatesRepo,
+  'blocked_dates',
+  { column: 'date', ascending: true },
+);
+
+// RÉSERVATIONS D'ÉVÉNEMENTS — `customer` plat ; `eventType ↔ event_type` ;
+// `createdAt ↔ created_at`.
+export const eventBookingsData = createData<EventBooking>(
+  eventBookingsRepo,
+  'event_bookings',
+  { column: 'created_at', ascending: false },
+  {
+    toRow: (b) => {
+      const row: Row = {};
+      if (b.id !== undefined) row.id = b.id;
+      if (b.reference !== undefined) row.reference = b.reference;
+      if (b.customer !== undefined) {
+        row.customer_name = b.customer.name;
+        row.customer_email = b.customer.email;
+        row.customer_phone = b.customer.phone ?? null;
+      }
+      if (b.date !== undefined) row.date = b.date;
+      if (b.eventType !== undefined) row.event_type = b.eventType ?? null;
+      if (b.guests !== undefined) row.guests = b.guests ?? null;
+      if (b.message !== undefined) row.message = b.message ?? null;
+      if (b.status !== undefined) row.status = b.status;
+      if (b.createdAt !== undefined) row.created_at = b.createdAt;
+      return row;
+    },
+    fromRow: (r) => ({
+      id: String(r.id),
+      reference: (r.reference as string) ?? '',
+      customer: {
+        name: (r.customer_name as string) ?? '',
+        email: (r.customer_email as string) ?? '',
+        phone: (r.customer_phone as string) ?? undefined,
+      },
+      date: (r.date as string) ?? '',
+      eventType: (r.event_type as string) ?? undefined,
+      guests: r.guests != null ? Number(r.guests) : undefined,
+      message: (r.message as string) ?? undefined,
+      status: (r.status as EventBooking['status']) ?? 'new',
+      createdAt: (r.created_at as string) ?? new Date().toISOString(),
     }),
   },
 );
