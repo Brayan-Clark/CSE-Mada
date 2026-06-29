@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { withBase } from '../../utils/url';
+---
+
+<Layout title="Article" description="Lecture de l'article">
+  <article class="min-h-screen bg-white dark:bg-gray-900 pb-20">
+    <!-- Hero -->
+    <div id="post-hero" class="relative h-[45vh] min-h-[360px] w-full overflow-hidden bg-gradient-to-br from-green-700 to-emerald-800">
+      <div class="absolute inset-0 bg-gradient-to-t from-gray-900/85 via-gray-900/30 to-transparent"></div>
+      <div class="absolute bottom-0 left-0 right-0 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
+        <div id="post-tags" class="hidden flex-wrap gap-2 mb-4"></div>
+        <h1 id="post-title" class="text-3xl md:text-5xl font-bold text-white leading-tight"></h1>
+        <div class="mt-3 flex flex-wrap gap-5 text-gray-200">
+          <span id="post-author" class="hidden items-center gap-2"></span>
+          <span id="post-date" class="inline-flex items-center gap-2 capitalize"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100 dark:border-gray-700">
+        <p id="post-description" class="hidden text-xl text-gray-600 dark:text-gray-300 font-medium mb-6"></p>
+        <div id="post-content" class="prose prose-lg dark:prose-invert max-w-none"></div>
+      </div>
+
+      <!-- Introuvable -->
+      <div id="post-missing" class="hidden text-center py-16">
+        <p class="text-4xl mb-3">🔍</p>
+        <p class="text-gray-500 dark:text-gray-400">Cet article est introuvable.</p>
+        <a href={withBase('/blog')} class="mt-4 inline-flex items-center gap-1.5 font-semibold text-green-700 dark:text-green-400 hover:underline">← Retour au blog</a>
+      </div>
+
+      <div class="mt-8">
+        <a href={withBase('/blog')} class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-green-700 dark:hover:text-green-400">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          Retour au blog
+        </a>
+      </div>
+    </div>
+  </article>
+
+  <script>
+    import { articlesData } from '../../utils/db';
+    import { withBase } from '../../utils/url';
+    import { marked } from 'marked';
+
+    const $ = (id: string) => document.getElementById(id)!;
+    const id = new URLSearchParams(window.location.search).get('id');
+
+    function showMissing() {
+      $('post-hero').classList.add('hidden');
+      $('post-description').classList.add('hidden');
+      $('post-content').classList.add('hidden');
+      $('post-missing').classList.remove('hidden');
+    }
+
+    const post = id ? await articlesData.get(id) : undefined;
+    if (!post) {
+      showMissing();
+    } else {
+      document.title = `${post.title} | Camping Store & Event`;
+      if (post.image) {
+        const img = document.createElement('img');
+        img.src = withBase(post.image);
+        img.alt = post.title;
+        img.className = 'absolute inset-0 w-full h-full object-cover';
+        $('post-hero').prepend(img);
+      }
+      $('post-title').textContent = post.title;
+
+      if (Array.isArray(post.tags) && post.tags.length) {
+        const tagsEl = $('post-tags');
+        tagsEl.classList.remove('hidden');
+        tagsEl.classList.add('flex');
+        tagsEl.innerHTML = post.tags
+          .map((t: string) => `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-600 text-white shadow-lg">${t}</span>`)
+          .join('');
+      }
+
+      if (post.author) {
+        const au = $('post-author');
+        au.classList.remove('hidden'); au.classList.add('flex');
+        au.innerHTML = `<svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg><span>${post.author}</span>`;
+      }
+
+      const d = new Date(post.pubDate);
+      const fdate = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+      $('post-date').innerHTML = `<svg class="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span>${fdate}</span>`;
+
+      if (post.description) {
+        $('post-description').classList.remove('hidden');
+        $('post-description').textContent = post.description;
+      }
+      if (post.content && post.content.trim()) {
+        $('post-content').innerHTML = await marked.parse(post.content);
+      } else {
+        $('post-content').innerHTML = '<p class="text-gray-500 dark:text-gray-400">Contenu à venir.</p>';
+      }
+    }
+  </script>
+</Layout>
